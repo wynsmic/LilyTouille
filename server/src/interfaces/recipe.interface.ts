@@ -20,10 +20,3 @@ export interface RecipeFilters {
   difficulty?: string;
   author?: string;
 }
-
-export interface RecipeQueryParams {
-  tag?: string;
-  ingredient?: string;
-  difficulty?: string;
-  author?: string;
-}

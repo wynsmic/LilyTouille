@@ -1,6 +1,8 @@
-import { Recipe, RecipeFilters } from '../models/Recipe';
+import { Injectable } from '@nestjs/common';
+import { Recipe, RecipeFilters } from '../interfaces/recipe.interface';
 import recipesData from '../data/recipes.json';
 
+@Injectable()
 export class RecipeService {
   private recipes: Recipe[] = recipesData as Recipe[];
 
