@@ -50,17 +50,7 @@ const FilterBar: React.FC = () => {
 
         {/* Tag Filters */}
         <div>
-          {(searchQuery || selectedTags.length > 0) && (
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={handleClearFilters}
-                className="text-sm font-medium text-primary-600 hover:text-primary-800 transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-primary-50"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 items-center">
             {allTags.map(tag => (
               <button
                 key={tag}
@@ -74,45 +64,29 @@ const FilterBar: React.FC = () => {
                 {tag}
               </button>
             ))}
+            {(searchQuery || selectedTags.length > 0) && (
+              <button
+                onClick={handleClearFilters}
+                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-full border border-gray-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 ml-2"
+                title="Clear all filters"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
-
-        {/* Active Filters Summary */}
-        {(searchQuery || selectedTags.length > 0) && (
-          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <svg
-                className="w-4 h-4 text-primary-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                />
-              </svg>
-              <span className="text-sm font-medium text-primary-800">
-                Active Filters
-              </span>
-            </div>
-            <div className="text-sm text-primary-700">
-              {searchQuery && (
-                <div className="mb-1">
-                  <span className="font-medium">Search:</span> "{searchQuery}"
-                </div>
-              )}
-              {selectedTags.length > 0 && (
-                <div>
-                  <span className="font-medium">Categories:</span>{' '}
-                  {selectedTags.join(', ')}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
