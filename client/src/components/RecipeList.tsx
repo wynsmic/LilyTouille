@@ -3,7 +3,7 @@ import { useRecipes } from '../hooks';
 import RecipeCard from './RecipeCard';
 
 interface RecipeListProps {
-  onRecipeClick: (recipeId: string) => void;
+  onRecipeClick: (recipeId: number) => void;
 }
 
 const RecipeList: React.FC<RecipeListProps> = ({ onRecipeClick }) => {

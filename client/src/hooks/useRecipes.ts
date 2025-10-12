@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
 import {
@@ -11,36 +11,39 @@ import {
   setSearchQuery,
   setSelectedTags,
 } from '../store/recipeSlice';
-import { Recipe } from '../data/recipes';
-
-// Mock data for now - this will be replaced with API calls later
-import { recipes as mockRecipes } from '../data/recipes';
+import { useRecipesQuery, useInvalidateRecipes } from './useRecipeQueries';
+import { Recipe } from '../services/api';
 
 export const useRecipes = () => {
   const dispatch = useDispatch();
   const state = useSelector((state: RootState) => state.recipes);
 
-  // Fetch recipes (currently using mock data)
-  const fetchRecipes = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      dispatch(setError(null));
+  // Use React Query to fetch recipes
+  const {
+    data: recipes = [],
+    isLoading: isRecipesLoading,
+    error: recipesError,
+    refetch: refetchRecipes,
+  } = useRecipesQuery();
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // For now, use mock data. Later this will be replaced with actual API call
-      dispatch(setRecipes(mockRecipes));
-    } catch (error) {
-      dispatch(
-        setError(
-          error instanceof Error ? error.message : 'Failed to fetch recipes'
-        )
-      );
-    } finally {
-      dispatch(setLoading(false));
+  // Sync React Query data with Redux store
+  React.useEffect(() => {
+    if (recipes.length > 0) {
+      dispatch(setRecipes(recipes));
     }
-  }, [dispatch]);
+  }, [recipes, dispatch]);
+
+  React.useEffect(() => {
+    dispatch(setLoading(isRecipesLoading));
+  }, [isRecipesLoading, dispatch]);
+
+  React.useEffect(() => {
+    if (recipesError) {
+      dispatch(setError(recipesError.message || 'Failed to fetch recipes'));
+    } else {
+      dispatch(setError(null));
+    }
+  }, [recipesError, dispatch]);
 
   // Toggle favorite status of a recipe
   const toggleFavoriteRecipe = useCallback(
@@ -80,9 +83,11 @@ export const useRecipes = () => {
   }, [dispatch]);
 
   // Get favorite recipes
-  const favoriteRecipes = state.recipes.filter(recipe =>
-    state.favoriteRecipeIds.includes(recipe.id)
-  );
+  const favoriteRecipes = useMemo(() => {
+    return state.recipes.filter(recipe =>
+      state.favoriteRecipeIds.includes(recipe.id.toString())
+    );
+  }, [state.recipes, state.favoriteRecipeIds]);
 
   // Check if a recipe is favorite
   const isFavorite = useCallback(
@@ -104,7 +109,7 @@ export const useRecipes = () => {
     error: state.error,
 
     // Actions
-    fetchRecipes,
+    fetchRecipes: refetchRecipes,
     toggleFavoriteRecipe,
     setFavoriteRecipes,
     applyFilters,

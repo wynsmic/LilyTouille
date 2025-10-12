@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRecipes } from '../hooks';
-import { Recipe } from '../data/recipes';
+import { Recipe } from '../services/api';
 import Layout from '../components/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,8 +12,8 @@ const RecipeDetail: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const recipe = recipes.find((r: Recipe) => r.id === id);
-  const isRecipeFavorite = recipe ? isFavorite(recipe.id) : false;
+  const recipe = recipes.find((r: Recipe) => r.id === parseInt(id || '0'));
+  const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +86,7 @@ const RecipeDetail: React.FC = () => {
           {/* Recipe Image */}
           <div className="relative h-64 md:h-80">
             <motion.img
-              src={recipe.image}
+              src={recipe.imageUrl}
               alt={recipe.title}
               className="w-full h-full object-cover"
               initial={{ scale: 1.1 }}
@@ -100,7 +100,7 @@ const RecipeDetail: React.FC = () => {
               transition={{ delay: 0.3, duration: 0.5 }}
             >
               <motion.button
-                onClick={() => toggleFavoriteRecipe(recipe.id)}
+                onClick={() => toggleFavoriteRecipe(recipe.id.toString())}
                 className={`p-2 rounded-full transition-colors ${
                   isRecipeFavorite
                     ? 'bg-red-500 text-white hover:bg-red-600'

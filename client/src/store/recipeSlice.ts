@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Recipe } from '../data/recipes';
+import { Recipe } from '../services/api';
 
 interface RecipeState {
   recipes: Recipe[];

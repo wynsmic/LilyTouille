@@ -1,19 +1,19 @@
 import React from 'react';
-import { Recipe } from '../data/recipes';
+import { Recipe } from '../services/api';
 import { useRecipes } from '../hooks';
 
 interface RecipeCardProps {
   recipe: Recipe;
-  onClick: (recipeId: string) => void;
+  onClick: (recipeId: number) => void;
 }
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { toggleFavoriteRecipe, isFavorite } = useRecipes();
-  const isRecipeFavorite = isFavorite(recipe.id);
+  const isRecipeFavorite = isFavorite(recipe.id.toString());
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when clicking favorite button
-    toggleFavoriteRecipe(recipe.id);
+    toggleFavoriteRecipe(recipe.id.toString());
   };
 
   return (
@@ -23,7 +23,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
     >
       <div className="relative h-48 overflow-hidden">
         <img
-          src={recipe.image}
+          src={recipe.imageUrl}
           alt={recipe.title}
           className="w-full h-full object-cover"
         />

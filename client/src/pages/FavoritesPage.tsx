@@ -8,7 +8,7 @@ const FavoritesPage: React.FC = () => {
   const navigate = useNavigate();
   const { favoriteRecipes } = useRecipes();
 
-  const handleRecipeClick = (recipeId: string) => {
+  const handleRecipeClick = (recipeId: number) => {
     navigate(`/recipe/${recipeId}`);
   };
 

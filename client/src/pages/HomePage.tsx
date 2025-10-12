@@ -7,7 +7,7 @@ import RecipeList from '../components/RecipeList';
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleRecipeClick = (recipeId: string) => {
+  const handleRecipeClick = (recipeId: number) => {
     navigate(`/recipe/${recipeId}`);
   };
 
