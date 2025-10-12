@@ -81,6 +81,7 @@ const RecipeCard = styled.div`
 const ImageContainer = styled.div`
   position: relative;
   height: 16rem;
+  overflow: hidden;
 
   @media (min-width: 768px) {
     height: 20rem;
@@ -91,6 +92,7 @@ const RecipeImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
 `;
 
 const ImageOverlay = styled.div`
