@@ -1,9 +1,16 @@
+export interface RecipeStep {
+  type: 'text' | 'image';
+  content: string;
+  imageUrl?: string;
+}
+
 export interface Recipe {
   id: number;
   title: string;
   description: string;
   ingredients: string[];
-  instructions: string[];
+  overview: string[];
+  recipeSteps: RecipeStep[];
   prepTime: number;
   cookTime: number;
   servings: number;

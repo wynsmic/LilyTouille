@@ -4,12 +4,27 @@ import {
   IsArray,
   IsOptional,
   IsEnum,
+  ValidateNested,
+  IsIn,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum Difficulty {
   EASY = 'easy',
   MEDIUM = 'medium',
   HARD = 'hard',
+}
+
+export class RecipeStepDto {
+  @IsIn(['text', 'image'])
+  type: 'text' | 'image';
+
+  @IsString()
+  content: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 export class RecipeDto {
@@ -28,7 +43,12 @@ export class RecipeDto {
 
   @IsArray()
   @IsString({ each: true })
-  instructions: string[];
+  overview: string[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipeStepDto)
+  recipeSteps: RecipeStepDto[];
 
   @IsNumber()
   prepTime: number;
@@ -69,7 +89,12 @@ export class CreateRecipeDto {
 
   @IsArray()
   @IsString({ each: true })
-  instructions: string[];
+  overview: string[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipeStepDto)
+  recipeSteps: RecipeStepDto[];
 
   @IsNumber()
   prepTime: number;

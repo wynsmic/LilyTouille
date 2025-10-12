@@ -12,13 +12,54 @@
       "Black pepper",
       "Salt"
     ],
-    "instructions": [
+    "overview": [
       "Cook spaghetti according to package directions",
       "Cut pancetta into small cubes and cook until crispy",
       "Beat eggs with grated cheese and black pepper",
       "Drain pasta and mix with pancetta",
       "Remove from heat and quickly stir in egg mixture",
       "Serve immediately with extra cheese"
+    ],
+    "recipeSteps": [
+      {
+        "type": "text",
+        "content": "Start by bringing a large pot of salted water to boil for the spaghetti. While waiting, prepare your ingredients."
+      },
+      {
+        "type": "image",
+        "content": "Fresh ingredients ready for carbonara",
+        "imageUrl": "https://images.unsplash.com/photo-1551183053-bf91a1d81141"
+      },
+      {
+        "type": "text",
+        "content": "Cut the pancetta into small cubes and cook in a large skillet over medium heat until crispy and golden brown, about 5-7 minutes."
+      },
+      {
+        "type": "image",
+        "content": "Crispy pancetta cubes",
+        "imageUrl": "https://images.unsplash.com/photo-1574484284002-952d92456975"
+      },
+      {
+        "type": "text",
+        "content": "In a bowl, beat the eggs with grated pecorino romano cheese and freshly ground black pepper. This creates the creamy sauce base."
+      },
+      {
+        "type": "text",
+        "content": "Cook the spaghetti according to package directions until al dente. Reserve 1 cup of pasta water before draining."
+      },
+      {
+        "type": "image",
+        "content": "Perfectly cooked al dente spaghetti",
+        "imageUrl": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5"
+      },
+      {
+        "type": "text",
+        "content": "Immediately add the hot pasta to the pancetta pan, tossing to combine. Remove from heat and quickly stir in the egg mixture, adding pasta water as needed to create a creamy sauce."
+      },
+      {
+        "type": "text",
+        "content": "Serve immediately with extra grated cheese and black pepper. The heat from the pasta cooks the eggs perfectly without scrambling them."
+      }
     ],
     "prepTime": 15,
     "cookTime": 20,
@@ -46,7 +87,7 @@
       "Basmati rice",
       "Fresh cilantro"
     ],
-    "instructions": [
+    "overview": [
       "Cut chicken into bite-sized pieces",
       "Marinate chicken with yogurt and spices for 30 minutes",
       "Cook chicken until golden brown",
@@ -55,6 +96,47 @@
       "Simmer for 20 minutes",
       "Add cream and cooked chicken",
       "Serve with basmati rice and cilantro"
+    ],
+    "recipeSteps": [
+      {
+        "type": "text",
+        "content": "Begin by cutting the chicken breast into bite-sized pieces and marinating them with yogurt, garam masala, turmeric, and cumin for at least 30 minutes."
+      },
+      {
+        "type": "image",
+        "content": "Marinated chicken pieces",
+        "imageUrl": "https://images.unsplash.com/photo-1563379091339-03246963d0b8"
+      },
+      {
+        "type": "text",
+        "content": "Heat oil in a large pan and cook the marinated chicken until golden brown and cooked through, about 8-10 minutes. Remove and set aside."
+      },
+      {
+        "type": "text",
+        "content": "In the same pan, sauté finely chopped onions until translucent, then add minced garlic and ginger, cooking for another 2 minutes until fragrant."
+      },
+      {
+        "type": "image",
+        "content": "Sautéed aromatics",
+        "imageUrl": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136"
+      },
+      {
+        "type": "text",
+        "content": "Add the remaining spices and tomato sauce, bringing to a simmer. Let it cook for about 20 minutes until the sauce thickens and flavors meld."
+      },
+      {
+        "type": "text",
+        "content": "Stir in the heavy cream and return the cooked chicken to the pan. Simmer for another 5 minutes until everything is heated through."
+      },
+      {
+        "type": "image",
+        "content": "Finished Chicken Tikka Masala",
+        "imageUrl": "https://images.unsplash.com/photo-1563379091339-03246963d0b8"
+      },
+      {
+        "type": "text",
+        "content": "Serve hot over basmati rice, garnished with fresh cilantro. The creamy, spiced sauce pairs perfectly with the tender chicken."
+      }
     ],
     "prepTime": 30,
     "cookTime": 45,
@@ -80,7 +162,7 @@
       "2 tsp vanilla extract",
       "2 cups chocolate chips"
     ],
-    "instructions": [
+    "overview": [
       "Preheat oven to 375°F (190°C)",
       "Mix flour, baking soda, and salt in a bowl",
       "Cream butter and sugars until fluffy",
@@ -90,6 +172,55 @@
       "Drop rounded tablespoons onto ungreased baking sheets",
       "Bake 9-11 minutes until golden brown"
     ],
+    "recipeSteps": [
+      {
+        "type": "text",
+        "content": "Preheat your oven to 375°F (190°C) and prepare your baking sheets. You don't need to grease them for this recipe."
+      },
+      {
+        "type": "image",
+        "content": "Fresh ingredients for chocolate chip cookies",
+        "imageUrl": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e"
+      },
+      {
+        "type": "text",
+        "content": "In a medium bowl, whisk together the flour, baking soda, and salt. This ensures even distribution of the leavening agent."
+      },
+      {
+        "type": "text",
+        "content": "In a large bowl, cream together the softened butter with both granulated and brown sugar until light and fluffy, about 3-4 minutes."
+      },
+      {
+        "type": "image",
+        "content": "Creamed butter and sugar mixture",
+        "imageUrl": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136"
+      },
+      {
+        "type": "text",
+        "content": "Beat in the eggs one at a time, then add the vanilla extract. Mix until well combined."
+      },
+      {
+        "type": "text",
+        "content": "Gradually add the flour mixture to the wet ingredients, mixing just until combined. Don't overmix!"
+      },
+      {
+        "type": "text",
+        "content": "Fold in the chocolate chips until evenly distributed throughout the dough."
+      },
+      {
+        "type": "image",
+        "content": "Cookie dough with chocolate chips",
+        "imageUrl": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e"
+      },
+      {
+        "type": "text",
+        "content": "Drop rounded tablespoons of dough onto the ungreased baking sheets, spacing them about 2 inches apart."
+      },
+      {
+        "type": "text",
+        "content": "Bake for 9-11 minutes until the edges are golden brown but the centers still look slightly underdone. Let cool on the sheet for 2 minutes before transferring to a wire rack."
+      }
+    ],
     "prepTime": 20,
     "cookTime": 12,
     "servings": 24,
@@ -98,77 +229,5 @@
     "imageUrl": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e",
     "rating": 4.9,
     "author": "Chef Sarah"
-  },
-  {
-    "id": 4,
-    "title": "Caesar Salad",
-    "description": "Fresh romaine lettuce with homemade Caesar dressing",
-    "ingredients": [
-      "2 heads romaine lettuce",
-      "1/2 cup parmesan cheese",
-      "1/2 cup croutons",
-      "2 cloves garlic",
-      "2 anchovy fillets",
-      "1/4 cup olive oil",
-      "2 tbsp lemon juice",
-      "1 tsp Dijon mustard",
-      "1 egg yolk",
-      "Salt and pepper"
-    ],
-    "instructions": [
-      "Wash and chop romaine lettuce",
-      "Make dressing by blending garlic, anchovies, and egg yolk",
-      "Slowly whisk in olive oil",
-      "Add lemon juice and mustard",
-      "Season with salt and pepper",
-      "Toss lettuce with dressing",
-      "Top with parmesan cheese and croutons",
-      "Serve immediately"
-    ],
-    "prepTime": 15,
-    "cookTime": 0,
-    "servings": 4,
-    "difficulty": "easy",
-    "tags": ["salad", "healthy", "vegetarian"],
-    "imageUrl": "https://images.unsplash.com/photo-1546793665-c74683f339c1",
-    "rating": 4.4,
-    "author": "Chef Alex"
-  },
-  {
-    "id": 5,
-    "title": "Beef Stir Fry",
-    "description": "Quick and flavorful Asian-style beef stir fry",
-    "ingredients": [
-      "500g beef sirloin",
-      "2 bell peppers",
-      "1 broccoli head",
-      "2 carrots",
-      "3 cloves garlic",
-      "1 inch ginger",
-      "3 tbsp soy sauce",
-      "2 tbsp oyster sauce",
-      "1 tbsp sesame oil",
-      "2 tbsp vegetable oil",
-      "Rice noodles"
-    ],
-    "instructions": [
-      "Slice beef thinly against the grain",
-      "Cut vegetables into bite-sized pieces",
-      "Heat oil in a wok or large pan",
-      "Stir-fry beef until browned, remove",
-      "Add vegetables and stir-fry for 3-4 minutes",
-      "Add garlic and ginger",
-      "Return beef to pan",
-      "Add sauces and stir-fry for 2 minutes",
-      "Serve over rice noodles"
-    ],
-    "prepTime": 20,
-    "cookTime": 15,
-    "servings": 4,
-    "difficulty": "easy",
-    "tags": ["asian", "stir-fry", "quick"],
-    "imageUrl": "https://images.unsplash.com/photo-1603133872878-684f208fb84b",
-    "rating": 4.5,
-    "author": "Chef David"
   }
 ]

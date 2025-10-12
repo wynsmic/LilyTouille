@@ -299,6 +299,52 @@ const InstructionText = styled.span`
   line-height: 1.625;
 `;
 
+const RecipeStepsSection = styled.div`
+  margin-top: var(--space-8);
+`;
+
+const RecipeStepsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+`;
+
+const RecipeStepItem = styled.div<{ $type: 'text' | 'image' }>`
+  ${props =>
+    props.$type === 'text' &&
+    `
+    padding: var(--space-4);
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    color: var(--color-gray-700);
+    line-height: 1.625;
+  `}
+
+  ${props =>
+    props.$type === 'image' &&
+    `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+  `}
+`;
+
+const RecipeStepImage = styled.img`
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+`;
+
+const RecipeStepImageCaption = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  font-style: italic;
+`;
+
 const FloatingButton = styled.div`
   position: fixed;
   bottom: var(--space-6);
@@ -639,9 +685,9 @@ const RecipeDetail: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6, duration: 0.6 }}
                 >
-                  <SectionTitle>Instructions</SectionTitle>
+                  <SectionTitle>Overview</SectionTitle>
                   <InstructionsContainer>
-                    {recipe.instructions.map((instruction, index) => (
+                    {recipe.overview.map((instruction, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
@@ -657,6 +703,42 @@ const RecipeDetail: React.FC = () => {
                   </InstructionsContainer>
                 </motion.div>
               </InstructionsSection>
+
+              <RecipeStepsSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                >
+                  <SectionTitle>Recipe Steps</SectionTitle>
+                  <RecipeStepsContainer>
+                    {recipe.recipeSteps.map((step, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
+                      >
+                        <RecipeStepItem $type={step.type}>
+                          {step.type === 'text' ? (
+                            <span>{step.content}</span>
+                          ) : (
+                            <>
+                              <RecipeStepImage
+                                src={step.imageUrl}
+                                alt={step.content}
+                              />
+                              <RecipeStepImageCaption>
+                                {step.content}
+                              </RecipeStepImageCaption>
+                            </>
+                          )}
+                        </RecipeStepItem>
+                      </motion.div>
+                    ))}
+                  </RecipeStepsContainer>
+                </motion.div>
+              </RecipeStepsSection>
             </ContentContainer>
           </RecipeCard>
         </motion.div>
