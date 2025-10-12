@@ -9,12 +9,18 @@ const FilterContainer = styled.div`
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--color-gray-100);
   margin-bottom: var(--space-8);
+  position: relative;
 `;
 
 const FilterContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+  padding-right: 12rem; /* Make space for AI buttons */
+
+  @media (max-width: 768px) {
+    padding-right: 10rem; /* Smaller space on mobile */
+  }
 `;
 
 const SearchContainer = styled.div`
@@ -38,11 +44,11 @@ const SearchInput = styled.input`
 
   &:focus {
     outline: none;
-    
+
     &::placeholder {
       color: var(--color-gray-400);
     }
-    
+
     box-shadow: 0 0 0 1px var(--color-primary-500);
     border-color: var(--color-primary-500);
   }
@@ -61,14 +67,20 @@ const TagButton = styled.button<{ $isSelected: boolean }>`
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-normal);
-  border: ${props => props.$isSelected ? 'none' : '1px solid var(--color-gray-200)'};
-  background-color: ${props => props.$isSelected ? 'var(--color-primary-500)' : 'var(--color-gray-50)'};
-  color: ${props => props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-600)'};
+  border: ${props =>
+    props.$isSelected ? 'none' : '1px solid var(--color-gray-200)'};
+  background-color: ${props =>
+    props.$isSelected ? 'var(--color-primary-500)' : 'var(--color-gray-50)'};
+  color: ${props =>
+    props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-600)'};
 
   &:hover {
-    background-color: ${props => props.$isSelected ? 'var(--color-primary-600)' : 'var(--color-gray-100)'};
-    color: ${props => props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-800)'};
-    border-color: ${props => props.$isSelected ? 'none' : 'var(--color-gray-300)'};
+    background-color: ${props =>
+      props.$isSelected ? 'var(--color-primary-600)' : 'var(--color-gray-100)'};
+    color: ${props =>
+      props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-800)'};
+    border-color: ${props =>
+      props.$isSelected ? 'none' : 'var(--color-gray-300)'};
   }
 `;
 
@@ -104,6 +116,87 @@ const ClearIcon = styled.svg`
   height: 1rem;
 `;
 
+const AIButtonsContainer = styled.div`
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  z-index: 10;
+`;
+
+const AIButton = styled.button<{ $variant: 'scrape' | 'invent' }>`
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-normal);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+
+  ${props =>
+    props.$variant === 'scrape' &&
+    `
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+  `}
+
+  ${props =>
+    props.$variant === 'invent' &&
+    `
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, #ee82f0 0%, #f4475a 100%);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+  `}
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const AIIcon = styled.div<{ $variant: 'scrape' | 'invent' }>`
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+
+  ${props =>
+    props.$variant === 'scrape' &&
+    `
+    background: rgba(255, 255, 255, 0.2);
+  `}
+
+  ${props =>
+    props.$variant === 'invent' &&
+    `
+    background: rgba(255, 255, 255, 0.2);
+  `}
+`;
+
+const ButtonText = styled.span`
+  white-space: nowrap;
+`;
+
 const FilterBar: React.FC = () => {
   const { recipes, searchQuery, selectedTags, applyFilters, clearFilters } =
     useRecipes();
@@ -137,6 +230,16 @@ const FilterBar: React.FC = () => {
     clearFilters();
   };
 
+  const handleScrapeRecipe = () => {
+    // TODO: Implement AI recipe scraping functionality
+    console.log('Scrape recipe from URL');
+  };
+
+  const handleInventRecipe = () => {
+    // TODO: Implement AI recipe invention functionality
+    console.log('Invent new recipe with AI');
+  };
+
   return (
     <FilterContainer>
       <FilterContent>
@@ -160,15 +263,8 @@ const FilterBar: React.FC = () => {
             </TagButton>
           ))}
           {(searchQuery || selectedTags.length > 0) && (
-            <ClearButton
-              onClick={handleClearFilters}
-              title="Clear all filters"
-            >
-              <ClearIcon
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+            <ClearButton onClick={handleClearFilters} title="Clear all filters">
+              <ClearIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -180,6 +276,26 @@ const FilterBar: React.FC = () => {
           )}
         </TagsContainer>
       </FilterContent>
+
+      <AIButtonsContainer>
+        <AIButton $variant="scrape" onClick={handleScrapeRecipe}>
+          <AIIcon $variant="scrape">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+          </AIIcon>
+          <ButtonText>Scrape Recipe</ButtonText>
+        </AIButton>
+
+        <AIButton $variant="invent" onClick={handleInventRecipe}>
+          <AIIcon $variant="invent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+            </svg>
+          </AIIcon>
+          <ButtonText>Invent Recipe</ButtonText>
+        </AIButton>
+      </AIButtonsContainer>
     </FilterContainer>
   );
 };
