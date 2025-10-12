@@ -27,7 +27,10 @@ const recipeSlice = createSlice({
   reducers: {
     setRecipes: (state, action: PayloadAction<Recipe[]>) => {
       state.recipes = action.payload;
-      state.filteredRecipes = action.payload;
+      // Sort recipes by name when they are initially loaded
+      state.filteredRecipes = [...action.payload].sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
@@ -57,6 +60,9 @@ const recipeSlice = createSlice({
           state.selectedTags.some(tag => recipe.tags.includes(tag))
         );
       }
+
+      // Sort by recipe name (title)
+      filtered = filtered.sort((a, b) => a.title.localeCompare(b.title));
 
       state.filteredRecipes = filtered;
     },
