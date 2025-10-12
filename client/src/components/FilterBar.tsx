@@ -35,58 +35,40 @@ const FilterBar: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <div className="flex flex-col space-y-4">
+    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-8">
+      <div className="flex flex-col space-y-6">
         {/* Search Input */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
           <input
             type="text"
-            placeholder="Search recipes by name, description, or ingredients..."
+            placeholder="Search recipes..."
             value={localSearchQuery}
             onChange={e => setLocalSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            className="block w-full px-4 py-4 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-gray-900"
           />
         </div>
 
         {/* Tag Filters */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-700">
-              Filter by tags:
-            </h3>
-            {(searchQuery || selectedTags.length > 0) && (
+          {(searchQuery || selectedTags.length > 0) && (
+            <div className="flex justify-end mb-4">
               <button
                 onClick={handleClearFilters}
-                className="text-sm text-primary-600 hover:text-primary-800"
+                className="text-sm font-medium text-primary-600 hover:text-primary-800 transition-colors duration-200 px-3 py-1 rounded-lg hover:bg-primary-50"
               >
-                Clear filters
+                Clear all
               </button>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1">
             {allTags.map(tag => (
               <button
                 key={tag}
                 onClick={() => handleTagToggle(tag)}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
                   selectedTags.includes(tag)
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-primary-500 text-white hover:bg-primary-600'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 border border-gray-200'
                 }`}
               >
                 {tag}
@@ -97,12 +79,38 @@ const FilterBar: React.FC = () => {
 
         {/* Active Filters Summary */}
         {(searchQuery || selectedTags.length > 0) && (
-          <div className="text-sm text-gray-600">
-            {searchQuery && <span>Searching for: "{searchQuery}"</span>}
-            {searchQuery && selectedTags.length > 0 && <span> • </span>}
-            {selectedTags.length > 0 && (
-              <span>Tags: {selectedTags.join(', ')}</span>
-            )}
+          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <svg
+                className="w-4 h-4 text-primary-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+              <span className="text-sm font-medium text-primary-800">
+                Active Filters
+              </span>
+            </div>
+            <div className="text-sm text-primary-700">
+              {searchQuery && (
+                <div className="mb-1">
+                  <span className="font-medium">Search:</span> "{searchQuery}"
+                </div>
+              )}
+              {selectedTags.length > 0 && (
+                <div>
+                  <span className="font-medium">Categories:</span>{' '}
+                  {selectedTags.join(', ')}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
