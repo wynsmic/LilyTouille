@@ -37,23 +37,6 @@ export class RecipeController {
   }
 
   /**
-   * GET /recipes/:id - Get a single recipe by ID
-   */
-  @Get(':id')
-  getRecipeById(@Param('id', ParseIntPipe) id: number) {
-    const recipe = this.recipeService.getRecipeById(id);
-
-    if (!recipe) {
-      throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);
-    }
-
-    return {
-      success: true,
-      data: recipe,
-    };
-  }
-
-  /**
    * GET /recipes/tags - Get all available tags
    */
   @Get('tags')
@@ -89,6 +72,23 @@ export class RecipeController {
     return {
       success: true,
       data: authors,
+    };
+  }
+
+  /**
+   * GET /recipes/:id - Get a single recipe by ID
+   */
+  @Get(':id')
+  getRecipeById(@Param('id', ParseIntPipe) id: number) {
+    const recipe = this.recipeService.getRecipeById(id);
+
+    if (!recipe) {
+      throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      success: true,
+      data: recipe,
     };
   }
 }
