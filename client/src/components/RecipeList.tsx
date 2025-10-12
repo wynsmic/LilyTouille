@@ -1,6 +1,5 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useRecipes } from '../hooks';
 import RecipeCard from './RecipeCard';
 
 interface RecipeListProps {
@@ -8,9 +7,7 @@ interface RecipeListProps {
 }
 
 const RecipeList: React.FC<RecipeListProps> = ({ onRecipeClick }) => {
-  const { filteredRecipes, isLoading, error } = useSelector(
-    (state: RootState) => state.recipes
-  );
+  const { filteredRecipes, isLoading, error } = useRecipes();
 
   if (isLoading) {
     return (

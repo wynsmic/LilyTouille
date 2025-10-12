@@ -1,4 +1,3 @@
-// Placeholder for pages
-// This directory will contain page components
-
-export {};
+export { default as HomePage } from './HomePage';
+export { default as RecipeDetail } from './RecipeDetail';
+export { default as FavoritesPage } from './FavoritesPage';

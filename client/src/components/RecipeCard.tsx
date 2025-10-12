@@ -1,5 +1,6 @@
 import React from 'react';
 import { Recipe } from '../data/recipes';
+import { useRecipes } from '../hooks';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -7,6 +8,14 @@ interface RecipeCardProps {
 }
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
+  const { toggleFavoriteRecipe, isFavorite } = useRecipes();
+  const isRecipeFavorite = isFavorite(recipe.id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking favorite button
+    toggleFavoriteRecipe(recipe.id);
+  };
+
   return (
     <div
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
@@ -18,7 +27,32 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
           alt={recipe.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex gap-2">
+          <button
+            onClick={handleFavoriteClick}
+            className={`p-2 rounded-full transition-colors ${
+              isRecipeFavorite
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-white text-gray-400 hover:text-red-500 hover:bg-red-50'
+            }`}
+            aria-label={
+              isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
+            }
+          >
+            <svg
+              className="w-4 h-4"
+              fill={isRecipeFavorite ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          </button>
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
               recipe.difficulty === 'easy'

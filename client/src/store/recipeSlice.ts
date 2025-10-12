@@ -6,6 +6,7 @@ interface RecipeState {
   filteredRecipes: Recipe[];
   searchQuery: string;
   selectedTags: string[];
+  favoriteRecipeIds: string[];
   isLoading: boolean;
   error: string | null;
 }
@@ -15,6 +16,7 @@ const initialState: RecipeState = {
   filteredRecipes: [],
   searchQuery: '',
   selectedTags: [],
+  favoriteRecipeIds: [],
   isLoading: false,
   error: null,
 };
@@ -64,6 +66,21 @@ const recipeSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    toggleFavorite: (state, action: PayloadAction<string>) => {
+      const recipeId = action.payload;
+      const isFavorite = state.favoriteRecipeIds.includes(recipeId);
+
+      if (isFavorite) {
+        state.favoriteRecipeIds = state.favoriteRecipeIds.filter(
+          id => id !== recipeId
+        );
+      } else {
+        state.favoriteRecipeIds.push(recipeId);
+      }
+    },
+    setFavorites: (state, action: PayloadAction<string[]>) => {
+      state.favoriteRecipeIds = action.payload;
+    },
   },
 });
 
@@ -74,6 +91,8 @@ export const {
   filterRecipes,
   setLoading,
   setError,
+  toggleFavorite,
+  setFavorites,
 } = recipeSlice.actions;
 
 export default recipeSlice.reducer;

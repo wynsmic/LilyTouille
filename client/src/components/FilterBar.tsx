@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import {
-  setSearchQuery,
-  setSelectedTags,
-  filterRecipes,
-} from '../store/recipeSlice';
+import { useRecipes } from '../hooks';
 
 const FilterBar: React.FC = () => {
-  const dispatch = useDispatch();
-  const { recipes, searchQuery, selectedTags } = useSelector(
-    (state: RootState) => state.recipes
-  );
+  const { recipes, searchQuery, selectedTags, applyFilters, clearFilters } =
+    useRecipes();
 
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
@@ -23,30 +15,23 @@ const FilterBar: React.FC = () => {
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      dispatch(setSearchQuery(localSearchQuery));
-      dispatch(filterRecipes());
+      applyFilters(localSearchQuery, selectedTags);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [localSearchQuery, dispatch]);
-
-  // Filter recipes when tags change
-  useEffect(() => {
-    dispatch(filterRecipes());
-  }, [selectedTags, dispatch]);
+  }, [localSearchQuery, selectedTags, applyFilters]);
 
   const handleTagToggle = (tag: string) => {
     const newSelectedTags = selectedTags.includes(tag)
       ? selectedTags.filter(t => t !== tag)
       : [...selectedTags, tag];
 
-    dispatch(setSelectedTags(newSelectedTags));
+    applyFilters(searchQuery, newSelectedTags);
   };
 
-  const clearFilters = () => {
+  const handleClearFilters = () => {
     setLocalSearchQuery('');
-    dispatch(setSearchQuery(''));
-    dispatch(setSelectedTags([]));
+    clearFilters();
   };
 
   return (
@@ -86,7 +71,7 @@ const FilterBar: React.FC = () => {
             </h3>
             {(searchQuery || selectedTags.length > 0) && (
               <button
-                onClick={clearFilters}
+                onClick={handleClearFilters}
                 className="text-sm text-primary-600 hover:text-primary-800"
               >
                 Clear filters
