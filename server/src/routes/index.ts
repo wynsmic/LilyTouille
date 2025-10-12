@@ -1,4 +1,3 @@
-// Placeholder for routes
-// This directory will contain Express route definitions
+import recipeRoutes from './recipeRoutes';
 
-export {};
+export { recipeRoutes };
