@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Recipe } from '../services/api';
 import { useRecipes } from '../hooks';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
@@ -7,6 +8,149 @@ interface RecipeCardProps {
   recipe: Recipe;
   onClick: (recipeId: number) => void;
 }
+
+const Card = styled.div`
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  position: relative;
+  transition: box-shadow var(--transition-normal);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+`;
+
+const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
+  transition: color var(--transition-fast);
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  flex: 0 0 auto;
+  width: 32px;
+  margin-right: var(--space-2);
+  text-align: center;
+  cursor: pointer;
+  color: ${(props: { $isFavorite: boolean }) =>
+    props.$isFavorite ? '#ef4444' : 'var(--color-gray-400)'};
+
+  &:hover {
+    color: ${(props: { $isFavorite: boolean }) =>
+      props.$isFavorite ? '#dc2626' : '#ef4444'};
+  }
+`;
+
+const ContentSection = styled.div`
+  flex: 1 1 auto;
+  padding-right: var(--space-1);
+  padding-left: var(--space-8);
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+`;
+
+const Title = styled.h3`
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  flex: 1;
+  margin-right: var(--space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+const DifficultyBadge = styled.span<{ $difficulty: string }>`
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+  background-color: ${(props: { $difficulty: string }) =>
+    props.$difficulty === 'easy'
+      ? 'var(--color-green-100)'
+      : props.$difficulty === 'medium'
+        ? 'var(--color-yellow-100)'
+        : 'var(--color-red-100)'};
+  color: ${(props: { $difficulty: string }) =>
+    props.$difficulty === 'easy'
+      ? 'var(--color-green-800)'
+      : props.$difficulty === 'medium'
+        ? 'var(--color-yellow-800)'
+        : 'var(--color-red-800)'};
+`;
+
+const Description = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--space-2);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
+const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+`;
+
+const Tag = styled.span`
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-800);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-full);
+`;
+
+const MoreTags = styled.span`
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-full);
+`;
+
+const MetaInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+`;
+
+const ImageContainer = styled.div`
+  width: 4rem;
+  height: 4rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+`;
+
+const RecipeImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-width: 64px;
+  max-height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+`;
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   const { toggleFavoriteRecipe, isFavorite } = useRecipes();
@@ -18,100 +162,50 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
   };
 
   return (
-    <div
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer flex items-center justify-between p-4 relative"
-      onClick={() => onClick(recipe.id)}
-    >
-      {/* Favorite button - positioned at top left of card */}
-      <button
+    <Card onClick={() => onClick(recipe.id)}>
+      <FavoriteButton
         onClick={handleFavoriteClick}
-        className={`transition-colors z-10 bg-transparent border-none p-0 m-0 cursor-pointer ${
-          isRecipeFavorite
-            ? 'text-red-500 hover:text-red-600'
-            : 'text-gray-400 hover:text-red-500'
-        }`}
-        style={{
-          background: 'none',
-          border: 'none',
-          padding: 0,
-          margin: 0,
-          outline: 'none',
-          flex: '0 0 auto ',
-          width: '32px',
-          marginRight: '8px',
-          textAlign: 'center',
-        }}
+        $isFavorite={isRecipeFavorite}
         aria-label={
           isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
         }
       >
         {isRecipeFavorite ? (
-          <Favorite className="w-4 h-4" />
+          <Favorite style={{ width: '16px', height: '16px' }} />
         ) : (
-          <FavoriteBorder className="w-4 h-4" />
+          <FavoriteBorder style={{ width: '16px', height: '16px' }} />
         )}
-      </button>
+      </FavoriteButton>
 
-      {/* Content section */}
-      <div className="flex-1 pr-1 pl-8" style={{ flex: '1 1 auto' }}>
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 flex-1 mr-2">
-            {recipe.title}
-          </h3>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-              recipe.difficulty === 'easy'
-                ? 'bg-green-100 text-green-800'
-                : recipe.difficulty === 'medium'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-            }`}
-          >
+      <ContentSection>
+        <HeaderRow>
+          <Title>{recipe.title}</Title>
+          <DifficultyBadge $difficulty={recipe.difficulty}>
             {recipe.difficulty}
-          </span>
-        </div>
+          </DifficultyBadge>
+        </HeaderRow>
 
-        <p className="text-gray-600 text-xs mb-2 line-clamp-2">
-          {recipe.description}
-        </p>
+        <Description>{recipe.description}</Description>
 
-        <div className="flex flex-wrap gap-1 mb-2">
+        <TagsContainer>
           {recipe.tags.slice(0, 2).map(tag => (
-            <span
-              key={tag}
-              className="px-2 py-1 bg-primary-100 text-primary-800 text-xs rounded-full"
-            >
-              {tag}
-            </span>
+            <Tag key={tag}>{tag}</Tag>
           ))}
           {recipe.tags.length > 2 && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-              +{recipe.tags.length - 2}
-            </span>
+            <MoreTags>+{recipe.tags.length - 2}</MoreTags>
           )}
-        </div>
+        </TagsContainer>
 
-        <div className="flex justify-between text-xs text-gray-500">
+        <MetaInfo>
           <span>{recipe.prepTime + recipe.cookTime} min</span>
           <span>{recipe.servings} servings</span>
-        </div>
-      </div>
+        </MetaInfo>
+      </ContentSection>
 
-      {/* Image section - small and constant size on the right */}
-      <div className="w-16 h-16 flex-shrink-0 overflow-hidden rounded-xl shadow-sm">
-        <img
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          className="w-full h-full object-cover"
-          style={{
-            maxWidth: '64px',
-            maxHeight: '64px',
-            minWidth: '64px',
-            minHeight: '64px',
-          }}
-        />
-      </div>
-    </div>
+      <ImageContainer>
+        <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
+      </ImageContainer>
+    </Card>
   );
 };
 

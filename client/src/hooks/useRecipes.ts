@@ -11,8 +11,7 @@ import {
   setSearchQuery,
   setSelectedTags,
 } from '../store/recipeSlice';
-import { useRecipesQuery, useInvalidateRecipes } from './useRecipeQueries';
-import { Recipe } from '../services/api';
+import { useRecipesQuery } from './useRecipeQueries';
 
 export const useRecipes = () => {
   const dispatch = useDispatch();

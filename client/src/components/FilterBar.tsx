@@ -1,5 +1,108 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { useRecipes } from '../hooks';
+
+const FilterContainer = styled.div`
+  background-color: var(--color-white);
+  padding: var(--space-8);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-gray-100);
+  margin-bottom: var(--space-8);
+`;
+
+const FilterContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+`;
+
+const SearchContainer = styled.div`
+  position: relative;
+`;
+
+const SearchInput = styled.input`
+  display: block;
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-lg);
+  line-height: 1.25;
+  background-color: var(--color-white);
+  color: var(--color-gray-900);
+  transition: all var(--transition-normal);
+
+  &::placeholder {
+    color: var(--color-gray-500);
+  }
+
+  &:focus {
+    outline: none;
+    
+    &::placeholder {
+      color: var(--color-gray-400);
+    }
+    
+    box-shadow: 0 0 0 1px var(--color-primary-500);
+    border-color: var(--color-primary-500);
+  }
+`;
+
+const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  align-items: center;
+`;
+
+const TagButton = styled.button<{ $isSelected: boolean }>`
+  padding: var(--space-3) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
+  border: ${props => props.$isSelected ? 'none' : '1px solid var(--color-gray-200)'};
+  background-color: ${props => props.$isSelected ? 'var(--color-primary-500)' : 'var(--color-gray-50)'};
+  color: ${props => props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-600)'};
+
+  &:hover {
+    background-color: ${props => props.$isSelected ? 'var(--color-primary-600)' : 'var(--color-gray-100)'};
+    color: ${props => props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-800)'};
+    border-color: ${props => props.$isSelected ? 'none' : 'var(--color-gray-300)'};
+  }
+`;
+
+const ClearButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-gray-500);
+  background-color: transparent;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-full);
+  margin-left: var(--space-2);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-gray-700);
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-300);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-500);
+    opacity: 0.5;
+  }
+`;
+
+const ClearIcon = styled.svg`
+  width: 1rem;
+  height: 1rem;
+`;
 
 const FilterBar: React.FC = () => {
   const { recipes, searchQuery, selectedTags, applyFilters, clearFilters } =
@@ -35,60 +138,49 @@ const FilterBar: React.FC = () => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 mb-8">
-      <div className="flex flex-col space-y-6">
-        {/* Search Input */}
-        <div className="relative">
-          <input
+    <FilterContainer>
+      <FilterContent>
+        <SearchContainer>
+          <SearchInput
             type="text"
             placeholder="Search recipes..."
             value={localSearchQuery}
             onChange={e => setLocalSearchQuery(e.target.value)}
-            className="block w-full px-4 py-4 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 text-gray-900"
           />
-        </div>
+        </SearchContainer>
 
-        {/* Tag Filters */}
-        <div>
-          <div className="flex flex-wrap gap-1 items-center">
-            {allTags.map(tag => (
-              <button
-                key={tag}
-                onClick={() => handleTagToggle(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
-                  selectedTags.includes(tag)
-                    ? 'bg-primary-500 text-white hover:bg-primary-600'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 border border-gray-200'
-                }`}
+        <TagsContainer>
+          {allTags.map(tag => (
+            <TagButton
+              key={tag}
+              onClick={() => handleTagToggle(tag)}
+              $isSelected={selectedTags.includes(tag)}
+            >
+              {tag}
+            </TagButton>
+          ))}
+          {(searchQuery || selectedTags.length > 0) && (
+            <ClearButton
+              onClick={handleClearFilters}
+              title="Clear all filters"
+            >
+              <ClearIcon
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {tag}
-              </button>
-            ))}
-            {(searchQuery || selectedTags.length > 0) && (
-              <button
-                onClick={handleClearFilters}
-                className="flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-full border border-gray-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50 ml-2"
-                title="Clear all filters"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </ClearIcon>
+            </ClearButton>
+          )}
+        </TagsContainer>
+      </FilterContent>
+    </FilterContainer>
   );
 };
 

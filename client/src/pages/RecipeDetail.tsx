@@ -1,9 +1,446 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRecipes } from '../hooks';
 import { Recipe } from '../services/api';
 import Layout from '../components/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const Container = styled.div`
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+`;
+
+const NotFoundContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24rem;
+`;
+
+const NotFoundContent = styled.div`
+  text-align: center;
+`;
+
+const NotFoundTitle = styled.h1`
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+`;
+
+const BackButton = styled.button`
+  background-color: var(--color-primary-500);
+  color: var(--color-white);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-primary-600);
+  }
+`;
+
+const BackButtonContainer = styled.div`
+  margin-bottom: var(--space-6);
+`;
+
+const BackButtonLink = styled.button`
+  display: flex;
+  align-items: center;
+  color: var(--color-primary-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: var(--space-4);
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary-800);
+  }
+`;
+
+const BackIcon = styled.svg`
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: var(--space-2);
+`;
+
+const RecipeCard = styled.div`
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+`;
+
+const ImageContainer = styled.div`
+  position: relative;
+  height: 16rem;
+
+  @media (min-width: 768px) {
+    height: 20rem;
+  }
+`;
+
+const RecipeImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const ImageOverlay = styled.div`
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  display: flex;
+  gap: var(--space-2);
+`;
+
+const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+  background-color: ${props =>
+    props.$isFavorite ? '#ef4444' : 'var(--color-white)'};
+  color: ${props =>
+    props.$isFavorite ? 'var(--color-white)' : 'var(--color-gray-400)'};
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${props => (props.$isFavorite ? '#dc2626' : '#fef2f2')};
+    color: ${props => (props.$isFavorite ? 'var(--color-white)' : '#ef4444')};
+  }
+`;
+
+const FavoriteIcon = styled.svg`
+  width: 1.25rem;
+  height: 1.25rem;
+`;
+
+const DifficultyBadge = styled.span<{ $difficulty: string }>`
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  background-color: ${props =>
+    props.$difficulty === 'easy'
+      ? 'var(--color-green-100)'
+      : props.$difficulty === 'medium'
+        ? 'var(--color-yellow-100)'
+        : 'var(--color-red-100)'};
+  color: ${props =>
+    props.$difficulty === 'easy'
+      ? 'var(--color-green-800)'
+      : props.$difficulty === 'medium'
+        ? 'var(--color-yellow-800)'
+        : 'var(--color-red-800)'};
+`;
+
+const ContentContainer = styled.div`
+  padding: var(--space-6);
+
+  @media (min-width: 768px) {
+    padding: var(--space-8);
+  }
+`;
+
+const TitleSection = styled.div`
+  margin-bottom: var(--space-6);
+`;
+
+const RecipeTitle = styled.h1`
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-3);
+`;
+
+const RecipeDescription = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-lg);
+`;
+
+const TagsSection = styled.div`
+  margin-bottom: var(--space-6);
+`;
+
+const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+`;
+
+const Tag = styled.span`
+  padding: var(--space-1) var(--space-3);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-800);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-full);
+`;
+
+const IngredientsSection = styled.div`
+  margin-bottom: var(--space-8);
+`;
+
+const SectionTitle = styled.h2`
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+`;
+
+const IngredientsList = styled.div`
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+`;
+
+const IngredientsUl = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const IngredientItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const IngredientBullet = styled.span`
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-primary-500);
+  border-radius: var(--radius-full);
+  margin-top: 0.5rem;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+`;
+
+const IngredientText = styled.span`
+  color: var(--color-gray-700);
+`;
+
+const MetadataGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-4);
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+`;
+
+const MetadataCard = styled.div`
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  text-align: center;
+`;
+
+const MetadataValue = styled.div`
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-600);
+`;
+
+const MetadataLabel = styled.div`
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+`;
+
+const InstructionsSection = styled.div``;
+
+const InstructionsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+`;
+
+const InstructionItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-4);
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-lg);
+`;
+
+const InstructionNumber = styled.span`
+  background-color: var(--color-primary-500);
+  color: var(--color-white);
+  border-radius: var(--radius-full);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  margin-right: var(--space-4);
+  flex-shrink: 0;
+`;
+
+const InstructionText = styled.span`
+  color: var(--color-gray-700);
+  line-height: 1.625;
+`;
+
+const FloatingButton = styled.div`
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  z-index: 50;
+`;
+
+const FloatingButtonElement = styled.button`
+  background-color: var(--color-primary-500);
+  color: var(--color-white);
+  padding: var(--space-4);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-primary-600);
+  }
+`;
+
+const FloatingIcon = styled.svg`
+  width: 1.5rem;
+  height: 1.5rem;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: var(--space-4);
+`;
+
+const ModalContent = styled.div`
+  background-color: var(--color-white);
+  border-radius: var(--radius-lg);
+  max-width: 28rem;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+`;
+
+const ModalHeader = styled.div`
+  padding: var(--space-6);
+`;
+
+const ModalHeaderContent = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+`;
+
+const ModalTitle = styled.h3`
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+`;
+
+const CloseButton = styled.button`
+  color: var(--color-gray-400);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-gray-600);
+  }
+`;
+
+const CloseIcon = styled.svg`
+  width: 1.5rem;
+  height: 1.5rem;
+`;
+
+const ModalIngredients = styled.div`
+  margin-bottom: var(--space-6);
+`;
+
+const ModalIngredientsTitle = styled.h4`
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-3);
+`;
+
+const ModalIngredientsList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+`;
+
+const ModalIngredientItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+`;
+
+const ModalIngredientBullet = styled.span`
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-primary-500);
+  border-radius: var(--radius-full);
+  margin-top: 0.5rem;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+`;
+
+const ModalIngredientText = styled.span`
+  color: var(--color-gray-700);
+  font-size: var(--font-size-sm);
+`;
+
+const ModalMetadataGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+`;
+
+const ModalMetadataCard = styled.div`
+  background-color: var(--color-gray-50);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  text-align: center;
+`;
+
+const ModalMetadataValue = styled.div`
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-600);
+`;
+
+const ModalMetadataLabel = styled.div`
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+`;
 
 const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,19 +464,14 @@ const RecipeDetail: React.FC = () => {
   if (!recipe) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-96">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Recipe not found
-            </h1>
-            <button
-              onClick={() => navigate('/')}
-              className="bg-primary-500 text-white px-4 py-2 rounded-md hover:bg-primary-600 transition-colors"
-            >
+        <NotFoundContainer>
+          <NotFoundContent>
+            <NotFoundTitle>Recipe not found</NotFoundTitle>
+            <BackButton onClick={() => navigate('/')}>
               Back to Recipes
-            </button>
-          </div>
-        </div>
+            </BackButton>
+          </NotFoundContent>
+        </NotFoundContainer>
       </Layout>
     );
   }
@@ -48,338 +480,294 @@ const RecipeDetail: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <motion.div
-          className="mb-6"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center text-primary-600 hover:text-primary-800 mb-4 transition-colors"
+      <Container>
+        <BackButtonContainer>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-            Back to Recipes
-          </button>
-        </motion.div>
+            <BackButtonLink onClick={() => navigate('/')}>
+              <BackIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </BackIcon>
+              Back to Recipes
+            </BackButtonLink>
+          </motion.div>
+        </BackButtonContainer>
 
         <motion.div
-          className="bg-white rounded-lg shadow-lg overflow-hidden"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Recipe Image */}
-          <div className="relative h-64 md:h-80">
-            <motion.img
-              src={recipe.imageUrl}
-              alt={recipe.title}
-              className="w-full h-full object-cover"
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.8 }}
-            />
-            <motion.div
-              className="absolute top-4 right-4 flex gap-2"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              <motion.button
-                onClick={() => toggleFavoriteRecipe(recipe.id.toString())}
-                className={`p-2 rounded-full transition-colors ${
-                  isRecipeFavorite
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-white text-gray-400 hover:text-red-500 hover:bg-red-50'
-                }`}
-                aria-label={
-                  isRecipeFavorite
-                    ? 'Remove from favorites'
-                    : 'Add to favorites'
-                }
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          <RecipeCard>
+            <ImageContainer>
+              <motion.div
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.8 }}
               >
-                <svg
-                  className="w-5 h-5"
-                  fill={isRecipeFavorite ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
+              </motion.div>
+              <ImageOverlay>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </motion.button>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  recipe.difficulty === 'easy'
-                    ? 'bg-green-100 text-green-800'
-                    : recipe.difficulty === 'medium'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {recipe.difficulty}
-              </span>
-            </motion.div>
-          </div>
-
-          <div className="p-6 md:p-8">
-            {/* Title and Description */}
-            <motion.div
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-            >
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                {recipe.title}
-              </h1>
-              <p className="text-gray-600 text-lg">{recipe.description}</p>
-            </motion.div>
-
-            {/* Tags */}
-            <motion.div
-              className="mb-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-            >
-              <div className="flex flex-wrap gap-2">
-                {recipe.tags.map((tag, index) => (
-                  <motion.span
-                    key={tag}
-                    className="px-3 py-1 bg-primary-100 text-primary-800 text-sm rounded-full"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                  <FavoriteButton
+                    onClick={() => toggleFavoriteRecipe(recipe.id.toString())}
+                    $isFavorite={isRecipeFavorite}
+                    aria-label={
+                      isRecipeFavorite
+                        ? 'Remove from favorites'
+                        : 'Add to favorites'
+                    }
+                    as={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    {tag}
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Ingredients and Metadata Section */}
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Ingredients
-              </h2>
-              <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <ul className="space-y-3">
-                  {recipe.ingredients.map((ingredient, index) => (
-                    <motion.li
-                      key={index}
-                      className="flex items-start"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+                    <FavoriteIcon
+                      fill={isRecipeFavorite ? 'currentColor' : 'none'}
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <span className="w-2 h-2 bg-primary-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <span className="text-gray-700">{ingredient}</span>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Metadata */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-gray-200 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-primary-600">
-                    {totalTime}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Time (min)</div>
-                </div>
-                <div className="bg-white border border-gray-200 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-primary-600">
-                    {recipe.servings}
-                  </div>
-                  <div className="text-sm text-gray-600">Servings</div>
-                </div>
-                <div className="bg-white border border-gray-200 p-4 rounded-lg text-center">
-                  <div className="text-2xl font-bold text-primary-600 capitalize">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      />
+                    </FavoriteIcon>
+                  </FavoriteButton>
+                  <DifficultyBadge $difficulty={recipe.difficulty}>
                     {recipe.difficulty}
-                  </div>
-                  <div className="text-sm text-gray-600">Difficulty</div>
-                </div>
-              </div>
-            </motion.div>
+                  </DifficultyBadge>
+                </motion.div>
+              </ImageOverlay>
+            </ImageContainer>
 
-            {/* Instructions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-            >
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Instructions
-              </h2>
-              <div className="space-y-4">
-                {recipe.instructions.map((instruction, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-start p-4 bg-gray-50 rounded-lg"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
-                  >
-                    <span className="bg-primary-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-4 flex-shrink-0">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700 leading-relaxed">
-                      {instruction}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
+            <ContentContainer>
+              <TitleSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                >
+                  <RecipeTitle>{recipe.title}</RecipeTitle>
+                  <RecipeDescription>{recipe.description}</RecipeDescription>
+                </motion.div>
+              </TitleSection>
+
+              <TagsSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                >
+                  <TagsContainer>
+                    {recipe.tags.map((tag, index) => (
+                      <motion.div
+                        key={tag}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                      >
+                        <Tag>{tag}</Tag>
+                      </motion.div>
+                    ))}
+                  </TagsContainer>
+                </motion.div>
+              </TagsSection>
+
+              <IngredientsSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                >
+                  <SectionTitle>Ingredients</SectionTitle>
+                  <IngredientsList>
+                    <IngredientsUl>
+                      {recipe.ingredients.map((ingredient, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            delay: 0.5 + index * 0.1,
+                            duration: 0.4,
+                          }}
+                        >
+                          <IngredientItem>
+                            <IngredientBullet />
+                            <IngredientText>{ingredient}</IngredientText>
+                          </IngredientItem>
+                        </motion.div>
+                      ))}
+                    </IngredientsUl>
+                  </IngredientsList>
+
+                  <MetadataGrid>
+                    <MetadataCard>
+                      <MetadataValue>{totalTime}</MetadataValue>
+                      <MetadataLabel>Total Time (min)</MetadataLabel>
+                    </MetadataCard>
+                    <MetadataCard>
+                      <MetadataValue>{recipe.servings}</MetadataValue>
+                      <MetadataLabel>Servings</MetadataLabel>
+                    </MetadataCard>
+                    <MetadataCard>
+                      <MetadataValue>{recipe.difficulty}</MetadataValue>
+                      <MetadataLabel>Difficulty</MetadataLabel>
+                    </MetadataCard>
+                  </MetadataGrid>
+                </motion.div>
+              </IngredientsSection>
+
+              <InstructionsSection>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.6 }}
+                >
+                  <SectionTitle>Instructions</SectionTitle>
+                  <InstructionsContainer>
+                    {recipe.instructions.map((instruction, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
+                      >
+                        <InstructionItem>
+                          <InstructionNumber>{index + 1}</InstructionNumber>
+                          <InstructionText>{instruction}</InstructionText>
+                        </InstructionItem>
+                      </motion.div>
+                    ))}
+                  </InstructionsContainer>
+                </motion.div>
+              </InstructionsSection>
+            </ContentContainer>
+          </RecipeCard>
         </motion.div>
 
-        {/* Floating Ingredients/Metadata Box */}
         <AnimatePresence>
           {isScrolled && (
-            <motion.div
-              className="fixed bottom-6 right-6 z-50"
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.button
-                onClick={() => setIsModalOpen(true)}
-                className="bg-primary-500 text-white p-4 rounded-full shadow-lg hover:bg-primary-600 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            <FloatingButton>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                transition={{ duration: 0.3 }}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <motion.button
+                  onClick={() => setIsModalOpen(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </motion.button>
-            </motion.div>
+                  <FloatingButtonElement>
+                    <FloatingIcon
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </FloatingIcon>
+                  </FloatingButtonElement>
+                </motion.button>
+              </motion.div>
+            </FloatingButton>
           )}
         </AnimatePresence>
 
-        {/* Modal */}
         <AnimatePresence>
           {isModalOpen && (
-            <motion.div
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            <ModalOverlay
+              as={motion.div}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
             >
               <motion.div
-                className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 onClick={e => e.stopPropagation()}
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Recipe Info
-                    </h3>
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                <ModalContent>
+                  <ModalHeader>
+                    <ModalHeaderContent>
+                      <ModalTitle>Recipe Info</ModalTitle>
+                      <CloseButton onClick={() => setIsModalOpen(false)}>
+                        <CloseIcon
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </CloseIcon>
+                      </CloseButton>
+                    </ModalHeaderContent>
 
-                  {/* Ingredients */}
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                      Ingredients
-                    </h4>
-                    <ul className="space-y-2">
-                      {recipe.ingredients.map((ingredient, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="w-2 h-2 bg-primary-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700 text-sm">
-                            {ingredient}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                    <ModalIngredients>
+                      <ModalIngredientsTitle>Ingredients</ModalIngredientsTitle>
+                      <ModalIngredientsList>
+                        {recipe.ingredients.map((ingredient, index) => (
+                          <ModalIngredientItem key={index}>
+                            <ModalIngredientBullet />
+                            <ModalIngredientText>
+                              {ingredient}
+                            </ModalIngredientText>
+                          </ModalIngredientItem>
+                        ))}
+                      </ModalIngredientsList>
+                    </ModalIngredients>
 
-                  {/* Metadata */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-gray-50 p-3 rounded text-center">
-                      <div className="text-lg font-bold text-primary-600">
-                        {totalTime}
-                      </div>
-                      <div className="text-xs text-gray-600">Total Time</div>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded text-center">
-                      <div className="text-lg font-bold text-primary-600">
-                        {recipe.servings}
-                      </div>
-                      <div className="text-xs text-gray-600">Servings</div>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded text-center">
-                      <div className="text-lg font-bold text-primary-600 capitalize">
-                        {recipe.difficulty}
-                      </div>
-                      <div className="text-xs text-gray-600">Difficulty</div>
-                    </div>
-                  </div>
-                </div>
+                    <ModalMetadataGrid>
+                      <ModalMetadataCard>
+                        <ModalMetadataValue>{totalTime}</ModalMetadataValue>
+                        <ModalMetadataLabel>Total Time</ModalMetadataLabel>
+                      </ModalMetadataCard>
+                      <ModalMetadataCard>
+                        <ModalMetadataValue>
+                          {recipe.servings}
+                        </ModalMetadataValue>
+                        <ModalMetadataLabel>Servings</ModalMetadataLabel>
+                      </ModalMetadataCard>
+                      <ModalMetadataCard>
+                        <ModalMetadataValue>
+                          {recipe.difficulty}
+                        </ModalMetadataValue>
+                        <ModalMetadataLabel>Difficulty</ModalMetadataLabel>
+                      </ModalMetadataCard>
+                    </ModalMetadataGrid>
+                  </ModalHeader>
+                </ModalContent>
               </motion.div>
-            </motion.div>
+            </ModalOverlay>
           )}
         </AnimatePresence>
-      </div>
+      </Container>
     </Layout>
   );
 };

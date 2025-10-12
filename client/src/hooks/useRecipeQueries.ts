@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { recipeApi, Recipe, RecipeFilters } from '../services/api';
+import { recipeApi, RecipeFilters } from '../services/api';
 
 // Query keys for React Query
 export const recipeKeys = {

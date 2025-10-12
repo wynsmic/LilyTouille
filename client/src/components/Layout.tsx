@@ -1,58 +1,113 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import styled from 'styled-components';
 import { useRecipes } from '../hooks';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: var(--color-gray-50);
+`;
+
+const Header = styled.header`
+  background-color: var(--color-white);
+  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--color-gray-200);
+`;
+
+const HeaderContent = styled.div`
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+`;
+
+const HeaderFlex = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const Logo = styled(Link)`
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary-600);
+  }
+`;
+
+const Nav = styled.nav`
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+`;
+
+const NavLink = styled(Link)<{ $isActive: boolean }>`
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: ${props => props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-600)'};
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: relative;
+
+  &:hover {
+    color: ${props => props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-900)'};
+  }
+`;
+
+const Badge = styled.span`
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background-color: #ef4444;
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-full);
+  height: 1.25rem;
+  width: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { favoriteRecipeIds } = useRecipes();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link
-              to="/"
-              className="text-2xl font-bold text-gray-900 hover:text-primary-600 transition-colors"
-            >
+    <Container>
+      <Header>
+        <HeaderContent>
+          <HeaderFlex>
+            <Logo to="/">
               LaBonneBoubouffe
-            </Link>
-            <nav className="flex items-center space-x-6">
-              <Link
-                to="/"
-                className={`text-sm font-medium transition-colors ${
-                  location.pathname === '/'
-                    ? 'text-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
+            </Logo>
+            <Nav>
+              <NavLink to="/" $isActive={location.pathname === '/'}>
                 All Recipes
-              </Link>
-              <Link
-                to="/favorites"
-                className={`text-sm font-medium transition-colors relative ${
-                  location.pathname === '/favorites'
-                    ? 'text-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
+              </NavLink>
+              <NavLink to="/favorites" $isActive={location.pathname === '/favorites'}>
                 Favorites
                 {favoriteRecipeIds.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <Badge>
                     {favoriteRecipeIds.length}
-                  </span>
+                  </Badge>
                 )}
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+              </NavLink>
+            </Nav>
+          </HeaderFlex>
+        </HeaderContent>
+      </Header>
       <main>{children}</main>
-    </div>
+    </Container>
   );
 };
 
