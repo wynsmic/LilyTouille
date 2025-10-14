@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useRecipes } from '../hooks';
+import { ScrapeRecipeModal } from '.';
 
 const FilterContainer = styled.div`
   background-color: var(--color-white);
@@ -230,9 +231,10 @@ const FilterBar: React.FC = () => {
     clearFilters();
   };
 
+  const [isScrapeOpen, setIsScrapeOpen] = useState(false);
+
   const handleScrapeRecipe = () => {
-    // TODO: Implement AI recipe scraping functionality
-    console.log('Scrape recipe from URL');
+    setIsScrapeOpen(true);
   };
 
   const handleInventRecipe = () => {
@@ -296,6 +298,11 @@ const FilterBar: React.FC = () => {
           <ButtonText>Invent Recipe</ButtonText>
         </AIButton>
       </AIButtonsContainer>
+
+      <ScrapeRecipeModal
+        open={isScrapeOpen}
+        onClose={() => setIsScrapeOpen(false)}
+      />
     </FilterContainer>
   );
 };
