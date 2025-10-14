@@ -1,13 +1,10 @@
 import 'dotenv/config';
-import path from 'path';
-import { mkdir, writeFile } from 'fs/promises';
 import axios from 'axios';
 import puppeteer from 'puppeteer';
-import { RedisQueue } from './queue';
-import { QueueMessage, ScrapeTaskPayload } from './types';
+import { RedisService } from '../services/redis.service';
+import { ProgressUpdate } from './types';
 
-const OUTPUT_DIR = path.resolve(__dirname, '..', 'data', 'scrapes');
-const QUEUE_NAME = process.env.SCRAPE_QUEUE_NAME || 'scrape';
+const CONCURRENCY = Number(process.env.SCRAPE_CONCURRENCY || 1);
 
 async function fetchWithAxios(url: string): Promise<string> {
   const res = await axios.get<string>(url, {
@@ -33,80 +30,72 @@ async function fetchWithPuppeteer(url: string): Promise<string> {
   }
 }
 
-function buildSafeFilename(url: string): string {
+async function scrapeUrl(url: string): Promise<string> {
   try {
-    const u = new URL(url);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const pathPart =
-      u.pathname.replace(/\/+$/, '').replace(/\//g, '_') || 'root';
-    const queryHash = u.search ? hashString(u.search) : 'noquery';
-    return `${u.hostname}${pathPart ? '_' + pathPart : ''}_${queryHash}_${timestamp}`
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .slice(0, 200);
-  } catch {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    return `scrape_${timestamp}`;
-  }
-}
-
-function hashString(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const chr = input.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(36);
-}
-
-async function saveHtml(url: string, html: string): Promise<string> {
-  await mkdir(OUTPUT_DIR, { recursive: true });
-  const filename = `${buildSafeFilename(url)}.html`;
-  const filePath = path.join(OUTPUT_DIR, filename);
-  await writeFile(filePath, html, 'utf-8');
-  return filePath;
-}
-
-async function handleScrape(url: string): Promise<string> {
-  try {
-    const html = await fetchWithAxios(url);
-    return await saveHtml(url, html);
+    return await fetchWithAxios(url);
   } catch (e) {
-    const html = await fetchWithPuppeteer(url);
-    return await saveHtml(url, html);
+    return await fetchWithPuppeteer(url);
   }
 }
 
 async function runDirect(url: string): Promise<void> {
-  const filePath = await handleScrape(url);
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ status: 'succeeded', filePath }, null, 2));
+  const redis = new RedisService();
+  try {
+    const html = await scrapeUrl(url);
+    await redis.pushAiTask(url, html);
+    await redis.publishProgress({
+      url,
+      stage: 'scraped',
+      timestamp: Date.now(),
+    });
+    console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+  } finally {
+    await redis.close();
+  }
 }
 
 async function runQueue(): Promise<void> {
-  const queue = new RedisQueue<ScrapeTaskPayload>(QUEUE_NAME);
-  await queue.consume(
-    async (msg: QueueMessage<ScrapeTaskPayload>) => {
+  const redis = new RedisService();
+
+  const worker = async () => {
+    for (;;) {
       try {
-        const filePath = await handleScrape(msg.payload.url);
-        // eslint-disable-next-line no-console
-        console.log(
-          JSON.stringify({ id: msg.id, status: 'succeeded', filePath })
-        );
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(
-          JSON.stringify({
-            id: msg.id,
-            status: 'failed',
-            error: (err as Error).message,
-          })
-        );
-        throw err;
+        const url = await redis.blockPopUrl(5);
+        if (!url) continue;
+
+        try {
+          const html = await scrapeUrl(url);
+          await redis.pushAiTask(url, html);
+          await redis.publishProgress({
+            url,
+            stage: 'scraped',
+            timestamp: Date.now(),
+          });
+          console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+        } catch (err) {
+          console.error(
+            JSON.stringify({
+              url,
+              status: 'failed',
+              error: (err as Error).message,
+            })
+          );
+          // Re-queue the URL for retry
+          await redis.pushUrl(url);
+        }
+      } catch (e) {
+        console.error('Worker error:', e);
+        await sleep(1000);
       }
-    },
-    { concurrency: Number(process.env.SCRAPE_CONCURRENCY || 1) }
-  );
+    }
+  };
+
+  // Start multiple workers based on concurrency
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main(): Promise<void> {

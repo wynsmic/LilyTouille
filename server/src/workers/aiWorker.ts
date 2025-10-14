@@ -1,20 +1,33 @@
 import 'dotenv/config';
-import path from 'path';
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { RedisQueue } from './queue';
-import { AiTaskPayload, QueueMessage, RecipeType } from './types';
+import { RedisService } from '../services/redis.service';
+import { DatabaseService } from '../services/database.service';
+import { AiTaskPayload, ProgressUpdate, RecipeType } from './types';
 
-const OUTPUT_DIR = path.resolve(__dirname, '..', 'data', 'scrapes');
-const QUEUE_NAME = process.env.AI_QUEUE_NAME || 'ai';
+const CONCURRENCY = Number(process.env.AI_CONCURRENCY || 1);
 
-interface AiClientResponse {
-  recipe: RecipeType;
+function cleanHtml(html: string): string {
+  // Remove script tags and their content
+  let cleaned = html.replace(
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    ''
+  );
+
+  // Remove style tags and their content
+  cleaned = cleaned.replace(
+    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+    ''
+  );
+
+  // Remove HTML comments
+  cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+
+  // Remove extra whitespace and normalize
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+  return cleaned;
 }
 
-async function callAiForRecipe(
-  html: string,
-  url?: string
-): Promise<RecipeType> {
+async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
   const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
   const endpoint =
     process.env.AI_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
@@ -22,10 +35,13 @@ async function callAiForRecipe(
     throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
   }
 
+  // Clean the HTML before sending to AI
+  const cleanedHtml = cleanHtml(html);
+
   // Minimal schema-constrained call using JSON mode if supported
   const system =
     'You are a parser that extracts structured recipe JSON. Respond with strict JSON matching the schema.';
-  const user = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string). Source URL: ${url ?? ''}. HTML:\n${html}`;
+  const user = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string). Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -56,55 +72,93 @@ async function callAiForRecipe(
   return recipe;
 }
 
-async function processHtml(htmlPath: string, url?: string): Promise<string> {
-  const html = await readFile(htmlPath, 'utf-8');
+async function processRecipe(url: string, html: string): Promise<RecipeType> {
   const recipe = await callAiForRecipe(html, url);
-  const outName = path.basename(htmlPath).replace(/\.html?$/i, '.recipe.json');
-  const outPath = path.join(OUTPUT_DIR, outName);
-  await mkdir(OUTPUT_DIR, { recursive: true });
-  await writeFile(outPath, JSON.stringify(recipe, null, 2), 'utf-8');
-  return outPath;
+  return recipe;
 }
 
-async function runDirect(htmlPath: string, url?: string): Promise<void> {
-  const outPath = await processHtml(htmlPath, url);
-  // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ status: 'succeeded', outPath }, null, 2));
+async function storeRecipe(recipe: RecipeType): Promise<void> {
+  const db = new DatabaseService();
+  await db.initialize();
+  await db.saveRecipe(recipe);
+}
+
+async function runDirect(url: string, html: string): Promise<void> {
+  const redis = new RedisService();
+  try {
+    const recipe = await processRecipe(url, html);
+    await storeRecipe(recipe);
+    await redis.publishProgress({
+      url,
+      stage: 'ai_processed',
+      timestamp: Date.now(),
+    });
+    await redis.publishProgress({
+      url,
+      stage: 'stored',
+      timestamp: Date.now(),
+    });
+    console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+  } finally {
+    await redis.close();
+  }
 }
 
 async function runQueue(): Promise<void> {
-  const queue = new RedisQueue<AiTaskPayload>(QUEUE_NAME);
-  await queue.consume(
-    async (msg: QueueMessage<AiTaskPayload>) => {
+  const redis = new RedisService();
+
+  const worker = async () => {
+    for (;;) {
       try {
-        const outPath = await processHtml(
-          msg.payload.htmlPath,
-          msg.payload.url
-        );
-        // eslint-disable-next-line no-console
-        console.log(
-          JSON.stringify({ id: msg.id, status: 'succeeded', outPath })
-        );
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error(
-          JSON.stringify({
-            id: msg.id,
-            status: 'failed',
-            error: (err as Error).message,
-          })
-        );
-        throw err;
+        const task = await redis.blockPopAiTask(5);
+        if (!task) continue;
+
+        try {
+          const recipe = await processRecipe(task.url, task.html);
+          await storeRecipe(recipe);
+          await redis.publishProgress({
+            url: task.url,
+            stage: 'ai_processed',
+            timestamp: Date.now(),
+          });
+          await redis.publishProgress({
+            url: task.url,
+            stage: 'stored',
+            timestamp: Date.now(),
+          });
+          console.log(
+            JSON.stringify({ status: 'succeeded', url: task.url }, null, 2)
+          );
+        } catch (err) {
+          console.error(
+            JSON.stringify({
+              url: task.url,
+              status: 'failed',
+              error: (err as Error).message,
+            })
+          );
+          // Re-queue the task for retry
+          await redis.pushAiTask(task.url, task.html);
+        }
+      } catch (e) {
+        console.error('Worker error:', e);
+        await sleep(1000);
       }
-    },
-    { concurrency: Number(process.env.AI_CONCURRENCY || 1) }
-  );
+    }
+  };
+
+  // Start multiple workers based on concurrency
+  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function main(): Promise<void> {
-  const [htmlPath, url] = [process.argv[2], process.argv[3]];
-  if (htmlPath) {
-    await runDirect(htmlPath, url);
+  const [url, html] = [process.argv[2], process.argv[3]];
+  if (url && html) {
+    await runDirect(url, html);
   } else {
     await runQueue();
   }

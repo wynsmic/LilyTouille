@@ -20,8 +20,14 @@ export interface ScrapeTaskPayload {
 }
 
 export interface AiTaskPayload {
-  url?: string;
-  htmlPath: string;
+  url: string;
+  html: string;
+}
+
+export interface ProgressUpdate {
+  url: string;
+  stage: 'scraped' | 'ai_processed' | 'stored';
+  timestamp: number;
 }
 
 export type RecipeType = Recipe;
