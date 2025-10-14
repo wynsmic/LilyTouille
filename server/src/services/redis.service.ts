@@ -1,14 +1,17 @@
 import 'dotenv/config';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import IORedis, { Redis } from 'ioredis';
 import { ProgressUpdate } from '../workers/types';
 
-export class RedisService {
-  private readonly redis: Redis;
+@Injectable()
+export class RedisService implements OnModuleDestroy {
+  public readonly redis: Redis;
   private readonly processingQueueKey = 'processingQueue';
   private readonly aiQueueKey = 'aiQueue';
   private readonly progressChannel = 'progressChannel';
 
-  constructor(redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379') {
+  constructor() {
+    const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
     this.redis = new IORedis(redisUrl, {
       lazyConnect: false,
       maxRetriesPerRequest: null,
@@ -98,5 +101,9 @@ export class RedisService {
 
   async close(): Promise<void> {
     await this.redis.quit();
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.close();
   }
 }

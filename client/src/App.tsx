@@ -3,7 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { useRecipes } from './hooks';
-import { HomePage, RecipeDetail, FavoritesPage } from './pages';
+import {
+  HomePage,
+  RecipeDetail,
+  FavoritesPage,
+  ScrapeProgressPage,
+} from './pages';
 
 const AppContent: React.FC = () => {
   const { fetchRecipes } = useRecipes();
@@ -19,6 +24,7 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
         <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/scrape-progress" element={<ScrapeProgressPage />} />
       </Routes>
     </Router>
   );

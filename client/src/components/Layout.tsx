@@ -53,13 +53,15 @@ const Nav = styled.nav`
 const NavLink = styled(Link)<{ $isActive: boolean }>`
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: ${props => props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-600)'};
+  color: ${props =>
+    props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-600)'};
   text-decoration: none;
   transition: color var(--transition-fast);
   position: relative;
 
   &:hover {
-    color: ${props => props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-900)'};
+    color: ${props =>
+      props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-900)'};
   }
 `;
 
@@ -87,20 +89,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Header>
         <HeaderContent>
           <HeaderFlex>
-            <Logo to="/">
-              LaBonneBoubouffe
-            </Logo>
+            <Logo to="/">LaBonneBoubouffe</Logo>
             <Nav>
               <NavLink to="/" $isActive={location.pathname === '/'}>
                 All Recipes
               </NavLink>
-              <NavLink to="/favorites" $isActive={location.pathname === '/favorites'}>
+              <NavLink
+                to="/favorites"
+                $isActive={location.pathname === '/favorites'}
+              >
                 Favorites
                 {favoriteRecipeIds.length > 0 && (
-                  <Badge>
-                    {favoriteRecipeIds.length}
-                  </Badge>
+                  <Badge>{favoriteRecipeIds.length}</Badge>
                 )}
+              </NavLink>
+              <NavLink
+                to="/scrape-progress"
+                $isActive={location.pathname === '/scrape-progress'}
+              >
+                Scrape Progress
               </NavLink>
             </Nav>
           </HeaderFlex>

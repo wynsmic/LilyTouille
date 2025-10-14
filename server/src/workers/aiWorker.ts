@@ -65,11 +65,11 @@ async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
   }
   const data = (await res.json()) as any;
   const content: string = data.choices?.[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(content) as AiClientResponse | RecipeType;
-  const recipe = (parsed as any).recipe
-    ? (parsed as AiClientResponse).recipe
-    : (parsed as RecipeType);
-  return recipe;
+  const parsed = JSON.parse(content) as any;
+
+  // Handle both wrapped and direct recipe responses
+  const recipe = parsed.recipe ? parsed.recipe : parsed;
+  return recipe as RecipeType;
 }
 
 async function processRecipe(url: string, html: string): Promise<RecipeType> {

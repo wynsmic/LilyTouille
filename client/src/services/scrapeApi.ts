@@ -10,11 +10,23 @@ interface ScrapeResponse {
   filePath: string;
 }
 
+interface QueueScrapeResponse {
+  message: string;
+  url: string;
+}
+
+interface QueueStatusResponse {
+  processing: number;
+  ai: number;
+  timestamp: number;
+}
+
 export const scrapeApi = createApi({
   reducerPath: 'scrapeApi',
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   }),
+  tagTypes: ['QueueStatus'],
   endpoints: builder => ({
     scrape: builder.mutation<ScrapeResponse, ScrapeRequest>({
       query: body => ({
@@ -23,7 +35,23 @@ export const scrapeApi = createApi({
         body,
       }),
     }),
+    queueScrape: builder.mutation<QueueScrapeResponse, ScrapeRequest>({
+      query: body => ({
+        url: '/scrape/queue',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['QueueStatus'],
+    }),
+    getQueueStatus: builder.query<QueueStatusResponse, void>({
+      query: () => '/scrape/queue/status',
+      providesTags: ['QueueStatus'],
+    }),
   }),
 });
 
-export const { useScrapeMutation } = scrapeApi;
+export const {
+  useScrapeMutation,
+  useQueueScrapeMutation,
+  useGetQueueStatusQuery,
+} = scrapeApi;
