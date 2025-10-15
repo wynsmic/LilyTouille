@@ -1,196 +1,134 @@
-# LaBonneBoubouffe NestJS API Server
+# Backend (NestJS) – Overview & Runbook
 
-A modern TypeScript API server built with NestJS framework for managing recipes with clean architecture and dependency injection.
+## Workers
 
-## Features
+See `WORKERS.md` for worker architecture, operations, and error handling.
 
-- **NestJS Framework**: Modern, scalable Node.js framework
-- **Clean Architecture**: Module → Controller → Service pattern with dependency injection
-- **TypeScript**: Full type safety and modern JavaScript features
-- **Validation**: Automatic request validation with class-validator
-- **CORS**: Cross-origin resource sharing enabled
-- **Global Prefix**: All routes prefixed with `/api`
-- **Error Handling**: Built-in exception filters and HTTP status codes
-- **Hot Reload**: Development server with nodemon
+### What this service does
 
-## Getting Started
+- Serves recipe APIs (NestJS, TypeScript)
+- Scrapes pages → queues HTML → AI parses to structured recipe → stores JSON
+- Streams live progress via WebSocket (Socket.IO)
 
-### Prerequisites
+### Architecture (clean)
 
-- Node.js (v16 or higher)
-- npm
+- Controller → Service → Worker
+  - `controllers/scraper.controller.ts`: enqueue or direct scrape
+  - `services/scraper.service.ts`: direct HTML fetch-to-disk
+  - `workers/scrapeWorker.ts`: robust scrape (axios → puppeteer fallback)
+  - `workers/aiWorker.ts`: call AI API, validate JSON, store
+  - `services/redis.service.ts`: queues, pub/sub, idempotency helpers
+  - `gateways/progress.gateway.ts`: emits `progress-update` and `queue-status`
 
-### Installation
+### Processing flow
+
+1. Client POSTs URL → `POST /api/scrape/queue`
+2. `scrapeWorker` pulls URL, fetches HTML, publishes `scraped`, enqueues AI task
+3. `aiWorker` pulls AI task, calls model, validates JSON, stores, publishes `ai_processed` then `stored`
+4. `progress.gateway` broadcasts updates to all clients
+
+### Concurrency & idempotency
+
+- Multiple worker processes supported (configurable counts)
+- Idempotent processing using Redis sets:
+  - in-progress: prevents duplicate work across workers
+  - processed: skip already-completed items on retry
+
+### Configuration (dotenv)
+
+Managed in `src/config.ts`.
+
+Required/optional env:
+
+```env
+PORT=5000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+LOG_LEVEL=info
+
+REDIS_URL=redis://127.0.0.1:6379
+
+AI_API_KEY=sk-...
+AI_API_ENDPOINT=https://api.openai.com/v1/chat/completions
+AI_MODEL=gpt-4o-mini
+AI_CONCURRENCY=1
+
+SCRAPE_CONCURRENCY=1
+
+# Worker management
+WORKERS_AUTOSTART=true        # auto-start workers in dev by default
+WORKERS_MIN_THREADS=2         # fail fast if not enough logical CPUs
+WORKERS_SCRAPE_COUNT=1
+WORKERS_AI_COUNT=1
+```
+
+### Run it
+
+Install deps:
 
 ```bash
 cd server
 npm install
 ```
 
-### Development
+Development (autostarts workers):
 
 ```bash
 npm run dev
+# API: http://localhost:5000/api
+# WS:  connects via Socket.IO; events: progress-update, queue-status
 ```
 
-The server will start on `http://localhost:5000`
-
-### Production
+Production:
 
 ```bash
 npm run build
 npm start
+# API will start on PORT (default 5000)
+# Workers autostart only if WORKERS_AUTOSTART=true
 ```
 
-## API Endpoints
+Worker processes in production:
 
-### Base URL
-
-```
-http://localhost:5000/api
-```
-
-### Endpoints
-
-#### Get All Recipes
-
-```http
-GET /api/recipes
-```
-
-**Query Parameters:**
-
-- `tag` - Filter by tag (e.g., `?tag=pasta`)
-- `ingredient` - Filter by ingredient (e.g., `?ingredient=chicken`)
-- `difficulty` - Filter by difficulty (easy, medium, hard)
-- `author` - Filter by author name
-
-**Example:**
+- If `WORKERS_AUTOSTART=true` (recommended only if you want the API to supervise workers), the API process will spawn workers via `startWorkers()` on boot.
+- If `WORKERS_AUTOSTART=false` (common in production), start workers separately as their own processes using your process manager (pm2, systemd, Docker, k8s):
 
 ```bash
-curl "http://localhost:5000/api/recipes?tag=italian&difficulty=medium"
+# After building, run workers as standalone Node processes
+node dist/workers/scrapeWorker.js
+node dist/workers/aiWorker.js
+
+# To run multiple instances, start the command multiple times
+# or configure your process manager to set the desired instance count.
 ```
 
-#### Get Recipe by ID
+Suggested process manager setup:
 
-```http
-GET /api/recipes/:id
-```
+- Keep the API and each worker type as separate services.
+- Scale using process count; per-process concurrency is controlled by env:
+  - `AI_CONCURRENCY` and `SCRAPE_CONCURRENCY` (parallel tasks within a process)
+  - Use your manager to run N instances per worker type (total parallelism = instances × concurrency).
 
-**Example:**
+Manual worker control (optional for development):
 
 ```bash
-curl http://localhost:5000/api/recipes/1
+npx ts-node src/workers/scrapeWorker.ts
+npx ts-node src/workers/aiWorker.ts
 ```
 
-#### Get All Tags
+### Security & logging
 
-```http
-GET /api/recipes/tags
-```
+- `helmet` + CORS configured from env
+- `morgan` request logging; app logs via `src/logger.ts` (levels: error,warn,info,debug)
 
-#### Get All Ingredients
+### Key endpoints
 
-```http
-GET /api/recipes/ingredients
-```
+- `GET /api/health` – liveness
+- `POST /api/scrape` – direct fetch-to-disk (debug)
+- `POST /api/scrape/queue` – enqueue URL
+- `GET /api/scrape/queue/status` – queue lengths
 
-#### Get All Authors
+### Notes
 
-```http
-GET /api/recipes/authors
-```
-
-#### Health Check
-
-```http
-GET /api/health
-```
-
-### Response Format
-
-All responses follow this format:
-
-```json
-{
-  "success": true,
-  "data": [...],
-  "count": 5,
-  "filters": {
-    "tag": "pasta"
-  }
-}
-```
-
-Error responses:
-
-```json
-{
-  "success": false,
-  "error": "Error message"
-}
-```
-
-## Project Structure
-
-```
-src/
-├── controllers/     # Request handlers with decorators
-├── services/         # Business logic with dependency injection
-├── modules/          # Feature modules
-├── dto/              # Data Transfer Objects with validation
-├── interfaces/       # TypeScript interfaces
-├── data/             # JSON data files
-├── app.module.ts     # Root module
-└── main.ts           # Application bootstrap
-```
-
-## NestJS Features Used
-
-- **Controllers**: Handle HTTP requests with decorators (`@Get`, `@Post`, etc.)
-- **Services**: Business logic with `@Injectable()` decorator
-- **Modules**: Organize application with `@Module()` decorator
-- **DTOs**: Data validation with class-validator decorators
-- **Dependency Injection**: Automatic service injection
-- **Pipes**: Request transformation and validation
-- **Exception Filters**: Global error handling
-
-## Environment Variables
-
-Create a `.env` file in the server directory:
-
-```env
-PORT=5000
-NODE_ENV=development
-API_VERSION=v1
-CORS_ORIGIN=http://localhost:3000
-LOG_LEVEL=info
-```
-
-## Scripts
-
-- `npm run dev` - Start development server with nodemon
-- `npm run build` - Build TypeScript to JavaScript
-- `npm start` - Start production server
-- `npm run start:prod` - Start production server (alias)
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
-
-## Dependencies
-
-### Core NestJS
-
-- `@nestjs/core` - Core NestJS framework
-- `@nestjs/common` - Common utilities and decorators
-- `@nestjs/platform-express` - Express platform adapter
-
-### Validation
-
-- `class-validator` - Decorator-based validation
-- `class-transformer` - Object transformation
-
-### Development
-
-- `@nestjs/cli` - NestJS CLI tools
-- `reflect-metadata` - Metadata reflection
-- `rxjs` - Reactive programming
+- Scraped HTML files under `src/data/scrapes` are git-ignored
+- Storage is JSON-file based for now (`src/data/recipes.json`)

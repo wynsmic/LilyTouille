@@ -158,12 +158,21 @@ async function runQueue(): Promise<void> {
           });
           logger.info('ai processing + store succeeded', { url: task.url });
         } catch (err) {
+          const message = (err as Error).message || String(err);
           logger.error('ai processing failed', {
             url: task.url,
-            error: (err as Error).message,
+            error: message,
           });
-          // Re-queue the task for retry
-          await redis.pushAiTask(task.url, task.html);
+          // Do not re-queue on permanent errors to avoid infinite loops
+          const isPermanent =
+            message.includes('Missing AI_API_KEY') ||
+            message.includes('AI request failed: 401') ||
+            message.includes('AI request failed: 403');
+
+          if (!isPermanent) {
+            // Re-queue the task for transient errors
+            await redis.pushAiTask(task.url, task.html);
+          }
         }
       } catch (e) {
         logger.error('ai worker error', e);

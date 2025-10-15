@@ -18,12 +18,13 @@ export class ScraperController {
   ) {}
 
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   async scrape(@Body() dto: ScrapeRequestDto) {
-    const result = await this.scraperService.fetchAndStore(dto.url);
+    await this.redisService.pushUrl(dto.url);
     return {
-      message: 'Scrape completed',
-      ...result,
+      message: 'URL accepted for scraping',
+      url: dto.url,
+      queued: true,
     };
   }
 

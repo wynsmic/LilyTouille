@@ -104,8 +104,6 @@ async function runQueue(): Promise<void> {
           logger.info('scrape succeeded', { url });
         } catch (err) {
           logger.error('scrape failed', { url, error: (err as Error).message });
-          // Re-queue the URL for retry
-          await redis.pushUrl(url);
         } finally {
           await redis.clearScrapeInProgress(url);
         }
