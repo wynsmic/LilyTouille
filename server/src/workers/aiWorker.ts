@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { RedisService } from '../services/redis.service';
 import { DatabaseService } from '../services/database.service';
-import { AiTaskPayload, ProgressUpdate, RecipeType } from './types';
+import { RecipeType } from './types';
 import { config } from '../config';
 import { logger } from '../logger';
 
@@ -163,16 +163,7 @@ async function runQueue(): Promise<void> {
             url: task.url,
             error: message,
           });
-          // Do not re-queue on permanent errors to avoid infinite loops
-          const isPermanent =
-            message.includes('Missing AI_API_KEY') ||
-            message.includes('AI request failed: 401') ||
-            message.includes('AI request failed: 403');
-
-          if (!isPermanent) {
-            // Re-queue the task for transient errors
-            await redis.pushAiTask(task.url, task.html);
-          }
+          // No re-queue on any error (avoid infinite retry loops)
         }
       } catch (e) {
         logger.error('ai worker error', e);
