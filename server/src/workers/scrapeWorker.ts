@@ -3,8 +3,10 @@ import axios from 'axios';
 import puppeteer from 'puppeteer';
 import { RedisService } from '../services/redis.service';
 import { ProgressUpdate } from './types';
+import { config } from '../config';
+import { logger } from '../logger';
 
-const CONCURRENCY = Number(process.env.SCRAPE_CONCURRENCY || 1);
+const CONCURRENCY = config.scrape.concurrency;
 
 async function fetchWithAxios(url: string): Promise<string> {
   const res = await axios.get<string>(url, {
@@ -38,9 +40,22 @@ async function scrapeUrl(url: string): Promise<string> {
   }
 }
 
+// Process a single URL directly (useful for CLI/testing)
 async function runDirect(url: string): Promise<void> {
   const redis = new RedisService();
   try {
+    // Idempotency: skip if already processed
+    if (await redis.hasProcessedScrape(url)) {
+      logger.info('scrape skipped (already processed)', { url });
+      return;
+    }
+    // Claim this URL to prevent duplicate work across workers
+    const claimed = await redis.markScrapeInProgress(url);
+    if (!claimed) {
+      logger.info('scrape already in progress elsewhere', { url });
+      return;
+    }
+
     const html = await scrapeUrl(url);
     await redis.pushAiTask(url, html);
     await redis.publishProgress({
@@ -48,8 +63,10 @@ async function runDirect(url: string): Promise<void> {
       stage: 'scraped',
       timestamp: Date.now(),
     });
-    console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+    await redis.markScrapeProcessed(url);
+    logger.info('scrape succeeded', { url });
   } finally {
+    await redis.clearScrapeInProgress(url);
     await redis.close();
   }
 }
@@ -57,6 +74,7 @@ async function runDirect(url: string): Promise<void> {
 async function runQueue(): Promise<void> {
   const redis = new RedisService();
 
+  // Long-running worker loop. Multiple instances can run concurrently.
   const worker = async () => {
     for (;;) {
       try {
@@ -64,6 +82,17 @@ async function runQueue(): Promise<void> {
         if (!url) continue;
 
         try {
+          // Idempotency: skip if already processed or claimed elsewhere
+          if (await redis.hasProcessedScrape(url)) {
+            logger.info('queue skip (already processed)', { url });
+            continue;
+          }
+          const claimed = await redis.markScrapeInProgress(url);
+          if (!claimed) {
+            logger.info('queue skip (claimed elsewhere)', { url });
+            continue;
+          }
+
           const html = await scrapeUrl(url);
           await redis.pushAiTask(url, html);
           await redis.publishProgress({
@@ -71,20 +100,17 @@ async function runQueue(): Promise<void> {
             stage: 'scraped',
             timestamp: Date.now(),
           });
-          console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+          await redis.markScrapeProcessed(url);
+          logger.info('scrape succeeded', { url });
         } catch (err) {
-          console.error(
-            JSON.stringify({
-              url,
-              status: 'failed',
-              error: (err as Error).message,
-            })
-          );
+          logger.error('scrape failed', { url, error: (err as Error).message });
           // Re-queue the URL for retry
           await redis.pushUrl(url);
+        } finally {
+          await redis.clearScrapeInProgress(url);
         }
       } catch (e) {
-        console.error('Worker error:', e);
+        logger.error('scrape worker error', e);
         await sleep(1000);
       }
     }
@@ -108,7 +134,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(err => {
-  // eslint-disable-next-line no-console
-  console.error('scrapeWorker fatal error:', err);
+  logger.error('scrapeWorker fatal error', err);
   process.exitCode = 1;
 });

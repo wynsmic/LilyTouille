@@ -2,8 +2,10 @@ import 'dotenv/config';
 import { RedisService } from '../services/redis.service';
 import { DatabaseService } from '../services/database.service';
 import { AiTaskPayload, ProgressUpdate, RecipeType } from './types';
+import { config } from '../config';
+import { logger } from '../logger';
 
-const CONCURRENCY = Number(process.env.AI_CONCURRENCY || 1);
+const CONCURRENCY = config.ai.concurrency;
 
 function cleanHtml(html: string): string {
   // Remove script tags and their content
@@ -28,9 +30,8 @@ function cleanHtml(html: string): string {
 }
 
 async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
-  const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
-  const endpoint =
-    process.env.AI_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
+  const apiKey = config.ai.apiKey;
+  const endpoint = config.ai.endpoint;
   if (!apiKey) {
     throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
   }
@@ -50,7 +51,7 @@ async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: process.env.AI_MODEL || 'gpt-4o-mini',
+      model: config.ai.model,
       temperature: 0,
       response_format: { type: 'json_object' },
       messages: [
@@ -68,13 +69,42 @@ async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
   const parsed = JSON.parse(content) as any;
 
   // Handle both wrapped and direct recipe responses
-  const recipe = parsed.recipe ? parsed.recipe : parsed;
-  return recipe as RecipeType;
+  const recipeCandidate = parsed.recipe ? parsed.recipe : parsed;
+
+  // Validate minimal required shape to be retry-safe and prevent corrupt writes
+  validateRecipeJson(recipeCandidate);
+  return recipeCandidate as RecipeType;
 }
 
 async function processRecipe(url: string, html: string): Promise<RecipeType> {
   const recipe = await callAiForRecipe(html, url);
   return recipe;
+}
+
+// Minimal runtime validation for AI JSON output
+function validateRecipeJson(candidate: any): void {
+  const errors: string[] = [];
+  if (typeof candidate !== 'object' || candidate === null) {
+    throw new Error('AI response is not an object');
+  }
+  if (typeof candidate.title !== 'string' || candidate.title.length === 0) {
+    errors.push('title must be non-empty string');
+  }
+  if (!Array.isArray(candidate.ingredients)) {
+    errors.push('ingredients must be an array of strings');
+  }
+  if (!Array.isArray(candidate.recipeSteps)) {
+    errors.push('recipeSteps must be an array');
+  }
+  if (typeof candidate.servings !== 'number') {
+    errors.push('servings must be a number');
+  }
+  if (typeof candidate.difficulty !== 'string') {
+    errors.push('difficulty must be a string');
+  }
+  if (errors.length > 0) {
+    throw new Error(`AI JSON validation failed: ${errors.join(', ')}`);
+  }
 }
 
 async function storeRecipe(recipe: RecipeType): Promise<void> {
@@ -98,7 +128,7 @@ async function runDirect(url: string, html: string): Promise<void> {
       stage: 'stored',
       timestamp: Date.now(),
     });
-    console.log(JSON.stringify({ status: 'succeeded', url }, null, 2));
+    logger.info('ai processing + store succeeded', { url });
   } finally {
     await redis.close();
   }
@@ -126,22 +156,17 @@ async function runQueue(): Promise<void> {
             stage: 'stored',
             timestamp: Date.now(),
           });
-          console.log(
-            JSON.stringify({ status: 'succeeded', url: task.url }, null, 2)
-          );
+          logger.info('ai processing + store succeeded', { url: task.url });
         } catch (err) {
-          console.error(
-            JSON.stringify({
-              url: task.url,
-              status: 'failed',
-              error: (err as Error).message,
-            })
-          );
+          logger.error('ai processing failed', {
+            url: task.url,
+            error: (err as Error).message,
+          });
           // Re-queue the task for retry
           await redis.pushAiTask(task.url, task.html);
         }
       } catch (e) {
-        console.error('Worker error:', e);
+        logger.error('ai worker error', e);
         await sleep(1000);
       }
     }
@@ -165,7 +190,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(err => {
-  // eslint-disable-next-line no-console
-  console.error('aiWorker fatal error:', err);
+  logger.error('aiWorker fatal error', err);
   process.exitCode = 1;
 });

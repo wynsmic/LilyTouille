@@ -9,12 +9,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '../services/redis.service';
+import { config } from '../config';
 import { ProgressUpdate } from '../workers/types';
 
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: config.app.corsOrigin,
     credentials: true,
   },
 })

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import IORedis, { Redis } from 'ioredis';
 import { ProgressUpdate } from '../workers/types';
+import { config } from '../config';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
@@ -9,9 +10,13 @@ export class RedisService implements OnModuleDestroy {
   private readonly processingQueueKey = 'processingQueue';
   private readonly aiQueueKey = 'aiQueue';
   private readonly progressChannel = 'progressChannel';
+  private readonly processedScrapeSet = 'processed:scrape';
+  private readonly processedAiSet = 'processed:ai';
+  private readonly inprogressScrapeSet = 'inprogress:scrape';
+  private readonly inprogressAiSet = 'inprogress:ai';
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+    const redisUrl = config.redis.url;
     this.redis = new IORedis(redisUrl, {
       lazyConnect: false,
       maxRetriesPerRequest: null,
@@ -97,6 +102,39 @@ export class RedisService implements OnModuleDestroy {
 
   async clearQueues(): Promise<void> {
     await this.redis.del(this.processingQueueKey, this.aiQueueKey);
+  }
+
+  // Idempotency helpers
+  async hasProcessedScrape(url: string): Promise<boolean> {
+    return (await this.redis.sismember(this.processedScrapeSet, url)) === 1;
+  }
+
+  async hasProcessedAi(url: string): Promise<boolean> {
+    return (await this.redis.sismember(this.processedAiSet, url)) === 1;
+  }
+
+  async markScrapeInProgress(url: string): Promise<boolean> {
+    return (await this.redis.sadd(this.inprogressScrapeSet, url)) === 1;
+  }
+
+  async clearScrapeInProgress(url: string): Promise<void> {
+    await this.redis.srem(this.inprogressScrapeSet, url);
+  }
+
+  async markAiInProgress(url: string): Promise<boolean> {
+    return (await this.redis.sadd(this.inprogressAiSet, url)) === 1;
+  }
+
+  async clearAiInProgress(url: string): Promise<void> {
+    await this.redis.srem(this.inprogressAiSet, url);
+  }
+
+  async markScrapeProcessed(url: string): Promise<void> {
+    await this.redis.sadd(this.processedScrapeSet, url);
+  }
+
+  async markAiProcessed(url: string): Promise<void> {
+    await this.redis.sadd(this.processedAiSet, url);
   }
 
   async close(): Promise<void> {
