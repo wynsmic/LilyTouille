@@ -26,8 +26,12 @@ export interface AiTaskPayload {
 
 export interface ProgressUpdate {
   url: string;
-  stage: 'scraped' | 'ai_processed' | 'stored';
+  stage: 'scraped' | 'ai_processed' | 'stored' | 'failed';
   timestamp: number;
+  // Present when stage === 'stored'
+  recipeId?: number;
+  // Present when stage === 'failed'
+  error?: string;
 }
 
 export type RecipeType = Recipe;

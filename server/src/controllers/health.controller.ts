@@ -14,7 +14,7 @@ export class HealthController {
   @Get()
   getRoot() {
     return {
-      message: 'LaBonneBoubouffe NestJS API Server',
+      message: 'LilyTouille NestJS API Server',
       version: '1.0.0',
       status: 'running',
       endpoints: {

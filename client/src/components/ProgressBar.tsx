@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { ScrapeJob, ScrapeProgress } from '../store/scrapeProgressSlice';
 
 interface ProgressBarProps {
   progress: number;
@@ -169,20 +168,6 @@ const TimelineText = styled.span<{ isActive: boolean; isCompleted: boolean }>`
   }};
   font-weight: ${props =>
     props.isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)'};
-`;
-
-const ErrorMessage = styled.div`
-  background-color: var(--color-red-50);
-  border: 1px solid var(--color-red-200);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  margin-top: var(--space-3);
-`;
-
-const ErrorText = styled.p`
-  font-size: var(--font-size-sm);
-  color: var(--color-red-700);
-  margin: 0;
 `;
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage }) => {

@@ -13,6 +13,7 @@ export interface ScrapeProgress {
   timestamp: number;
   error?: string;
   progress?: number; // 0-100 percentage
+  recipeId?: number;
 }
 
 export interface ScrapeJob {
@@ -22,6 +23,7 @@ export interface ScrapeJob {
   createdAt: number;
   updatedAt: number;
   progress: ScrapeProgress[];
+  recipeId?: number; // Set when stored
 }
 
 interface ScrapeProgressState {
@@ -76,14 +78,44 @@ const scrapeProgressSlice = createSlice({
     },
 
     updateJobProgress: (state, action: PayloadAction<ScrapeProgress>) => {
-      const { url, stage, timestamp, error, progress } = action.payload;
+      const { url, stage, timestamp, error, progress, recipeId } =
+        action.payload;
 
       // Find the job by URL
-      const jobId = Object.keys(state.activeJobs).find(
+      let jobId = Object.keys(state.activeJobs).find(
         id => state.activeJobs[id].url === url
       );
 
-      if (!jobId) return;
+      // If job not found in active jobs, check if it's already finalized
+      if (!jobId) {
+        const alreadyCompleted = state.completedJobs.find(j => j.url === url);
+        const alreadyFailed = state.failedJobs.find(j => j.url === url);
+        if (alreadyCompleted || alreadyFailed) {
+          return;
+        }
+
+        // Create a synthetic job so we can surface the update (e.g., failure)
+        const syntheticId = `job-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
+        const now = timestamp || Date.now();
+        state.activeJobs[syntheticId] = {
+          id: syntheticId,
+          url,
+          status: 'pending',
+          createdAt: now,
+          updatedAt: now,
+          progress: [
+            {
+              url,
+              stage: 'queued',
+              timestamp: now,
+              progress: 0,
+            },
+          ],
+        };
+        jobId = syntheticId;
+      }
 
       const job = state.activeJobs[jobId];
       const progressUpdate: ScrapeProgress = {
@@ -92,6 +124,7 @@ const scrapeProgressSlice = createSlice({
         timestamp,
         error,
         progress,
+        recipeId,
       };
 
       // Add progress update
@@ -106,6 +139,9 @@ const scrapeProgressSlice = createSlice({
         delete state.activeJobs[jobId];
       } else if (stage === 'stored') {
         job.status = 'completed';
+        if (typeof recipeId === 'number') {
+          job.recipeId = recipeId;
+        }
         // Move to completed jobs
         state.completedJobs.push(job);
         delete state.activeJobs[jobId];

@@ -122,13 +122,24 @@ async function runDirect(url: string, html: string): Promise<void> {
       url,
       stage: 'ai_processed',
       timestamp: Date.now(),
+      recipeId: recipe.id,
     });
     await redis.publishProgress({
       url,
       stage: 'stored',
       timestamp: Date.now(),
+      recipeId: recipe.id,
     });
     logger.info('ai processing + store succeeded', { url });
+  } catch (err) {
+    const message = (err as Error).message || String(err);
+    await redis.publishProgress({
+      url,
+      stage: 'failed',
+      timestamp: Date.now(),
+      error: message,
+    });
+    logger.error('ai processing failed', { url, error: message });
   } finally {
     await redis.close();
   }
@@ -150,17 +161,25 @@ async function runQueue(): Promise<void> {
             url: task.url,
             stage: 'ai_processed',
             timestamp: Date.now(),
+            recipeId: recipe.id,
           });
           await redis.publishProgress({
             url: task.url,
             stage: 'stored',
             timestamp: Date.now(),
+            recipeId: recipe.id,
           });
           logger.info('ai processing + store succeeded', { url: task.url });
         } catch (err) {
           const message = (err as Error).message || String(err);
           logger.error('ai processing failed', {
             url: task.url,
+            error: message,
+          });
+          await redis.publishProgress({
+            url: task.url,
+            stage: 'failed',
+            timestamp: Date.now(),
             error: message,
           });
           // No re-queue on any error (avoid infinite retry loops)

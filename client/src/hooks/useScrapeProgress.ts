@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { webSocketService, ProgressUpdate } from '../services/websocket';
 import { useQueueScrapeMutation } from '../services/scrapeApi';
@@ -16,6 +17,7 @@ import { RootState } from '../store';
 
 export const useScrapeProgress = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const activeJobs = useSelector(selectActiveJobs);
   const completedJobs = useSelector(selectCompletedJobs);
   const failedJobs = useSelector(selectFailedJobs);
@@ -37,6 +39,12 @@ export const useScrapeProgress = () => {
         // Set up event listeners
         webSocketService.on('progress-update', (update: ProgressUpdate) => {
           dispatch(updateJobProgress(update));
+          if (
+            update.stage === 'stored' &&
+            typeof update.recipeId === 'number'
+          ) {
+            navigate(`/recipes/${update.recipeId}`);
+          }
         });
 
         webSocketService.on('connect', () => {

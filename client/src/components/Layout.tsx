@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { useRecipes } from '../hooks';
+import { UserProfile } from './index';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -89,7 +90,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Header>
         <HeaderContent>
           <HeaderFlex>
-            <Logo to="/">LaBonneBoubouffe</Logo>
+            <Logo to="/">LilyTouille</Logo>
             <Nav>
               <NavLink to="/" $isActive={location.pathname === '/'}>
                 All Recipes
@@ -110,6 +111,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 Scrape Progress
               </NavLink>
             </Nav>
+            <UserProfile />
           </HeaderFlex>
         </HeaderContent>
       </Header>
