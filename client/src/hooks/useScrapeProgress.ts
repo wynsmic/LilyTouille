@@ -38,6 +38,7 @@ export const useScrapeProgress = () => {
 
         // Set up event listeners
         webSocketService.on('progress-update', (update: ProgressUpdate) => {
+          console.log('[Hook] ← progress-update', update);
           dispatch(updateJobProgress(update));
           if (
             update.stage === 'stored' &&
@@ -48,14 +49,17 @@ export const useScrapeProgress = () => {
         });
 
         webSocketService.on('connect', () => {
+          console.log('[Hook] socket connect');
           dispatch(setConnectionStatus({ connected: true }));
         });
 
         webSocketService.on('disconnect', () => {
+          console.log('[Hook] socket disconnect');
           dispatch(setConnectionStatus({ connected: false }));
         });
 
         webSocketService.on('connect_error', error => {
+          console.error('[Hook] socket connect_error', error);
           dispatch(
             setConnectionStatus({ connected: false, error: error.message })
           );
@@ -89,11 +93,13 @@ export const useScrapeProgress = () => {
         dispatch(addJob({ id: jobId, url }));
 
         // Queue the scrape
+        console.log('[Hook] → queueScrape', { url });
         await queueScrape({ url }).unwrap();
+        console.log('[Hook] ✓ queued', { url });
 
         return { success: true, jobId };
       } catch (error) {
-        console.error('Failed to queue scrape:', error);
+        console.error('[Hook] Failed to queue scrape:', error);
         return {
           success: false,
           error:

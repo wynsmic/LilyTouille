@@ -24,42 +24,71 @@ class WebSocketService {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      // Remove /api suffix for websocket connections
+      const apiUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const serverUrl = apiUrl.replace('/api', '');
+      console.log('[WebSocket] Attempting to connect to:', serverUrl);
 
       this.socket = io(serverUrl, {
         transports: ['websocket'],
         timeout: 20000,
+        forceNew: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
       this.socket.on('connect', () => {
-        console.log('✅ WebSocket connected');
+        console.log('[WebSocket] ✅ connected', {
+          url: serverUrl,
+          socketId: this.socket?.id,
+          transport: this.socket?.io.engine.transport.name,
+        });
         this.reconnectAttempts = 0;
         resolve();
       });
 
       this.socket.on('connect_error', error => {
-        console.error('❌ WebSocket connection error:', error);
+        console.error('[WebSocket] ❌ connection error:', {
+          message: error.message,
+          url: serverUrl,
+          error: error,
+        });
         reject(error);
       });
 
       this.socket.on('disconnect', reason => {
-        console.log('🔌 WebSocket disconnected:', reason);
+        console.log('[WebSocket] 🔌 disconnected:', reason);
         this.handleReconnect();
       });
 
       // Set up automatic reconnection
       this.socket.on('reconnect', attemptNumber => {
-        console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
+        console.log('[WebSocket] 🔄 reconnected', { attemptNumber });
         this.reconnectAttempts = 0;
       });
 
       this.socket.on('reconnect_error', error => {
-        console.error('❌ WebSocket reconnection error:', error);
+        console.error('[WebSocket] ❌ reconnection error:', error);
         this.reconnectAttempts++;
       });
 
       this.socket.on('reconnect_failed', () => {
-        console.error('❌ WebSocket reconnection failed');
+        console.error('[WebSocket] ❌ reconnection failed');
+      });
+
+      // Add ping/pong listeners to debug connection issues
+      this.socket.on('ping', () => {
+        console.log('[WebSocket] 📡 received ping from server');
+      });
+
+      this.socket.on('pong', latency => {
+        console.log(
+          '[WebSocket] 📡 received pong from server, latency:',
+          latency,
+          'ms'
+        );
       });
     });
   }
@@ -112,17 +141,20 @@ class WebSocketService {
   // Emit events
   emit(event: string, data?: any) {
     if (this.socket) {
+      console.log('[WebSocket] → emit', event, data);
       this.socket.emit(event, data);
     }
   }
 
   // Join progress room
   joinProgressRoom(clientId: string) {
+    console.log('[WebSocket] join-progress-room', { clientId });
     this.emit('join-progress-room', { clientId });
   }
 
   // Request queue status
   requestQueueStatus() {
+    console.log('[WebSocket] get-queue-status');
     this.emit('get-queue-status');
   }
 }

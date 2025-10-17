@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import IORedis, { Redis } from 'ioredis';
 import { ProgressUpdate } from '../workers/types';
 import { config } from '../config';
@@ -14,8 +14,10 @@ export class RedisService implements OnModuleDestroy {
   private readonly processedAiSet = 'processed:ai';
   private readonly inprogressScrapeSet = 'inprogress:scrape';
   private readonly inprogressAiSet = 'inprogress:ai';
+  private readonly logger: Logger;
 
   constructor() {
+    this.logger = new Logger(RedisService.name);
     const redisUrl = config.redis.url;
     this.redis = new IORedis(redisUrl, {
       lazyConnect: false,
@@ -72,7 +74,17 @@ export class RedisService implements OnModuleDestroy {
 
   // Progress updates pub/sub
   async publishProgress(update: ProgressUpdate): Promise<void> {
-    await this.redis.publish(this.progressChannel, JSON.stringify(update));
+    // Lightweight trace to confirm publish path
+    try {
+      const payload = JSON.stringify(update);
+      await this.redis.publish(this.progressChannel, payload);
+      this.logger.debug(
+        `publishProgress channel=${this.progressChannel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`
+      );
+    } catch (e) {
+      this.logger.error('publishProgress error', e as any);
+      throw e;
+    }
   }
 
   async subscribeToProgress(
@@ -85,9 +97,12 @@ export class RedisService implements OnModuleDestroy {
       if (channel === this.progressChannel) {
         try {
           const update = JSON.parse(message) as ProgressUpdate;
+          this.logger.debug(
+            `subscribeToProgress <- message channel=${channel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`
+          );
           callback(update);
         } catch (error) {
-          console.error('Failed to parse progress update:', error);
+          this.logger.error('Failed to parse progress update:', error as any);
         }
       }
     });

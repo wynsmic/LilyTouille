@@ -9,6 +9,7 @@ import {
 import { ScraperService } from '../services/scraper.service';
 import { ScrapeRequestDto } from '../dto/scrape-request.dto';
 import { RedisService } from '../services/redis.service';
+import { Logger } from '@nestjs/common';
 
 @Controller('scrape')
 export class ScraperController {
@@ -17,9 +18,12 @@ export class ScraperController {
     private readonly redisService: RedisService
   ) {}
 
+  private readonly logger = new Logger(ScraperController.name);
+
   @Post()
   @HttpCode(HttpStatus.ACCEPTED)
   async scrape(@Body() dto: ScrapeRequestDto) {
+    this.logger.log(`enqueue scrape via /scrape: ${dto.url}`);
     await this.redisService.pushUrl(dto.url);
     return {
       message: 'URL accepted for scraping',
@@ -31,6 +35,7 @@ export class ScraperController {
   @Post('queue')
   @HttpCode(HttpStatus.OK)
   async queueScrape(@Body() dto: ScrapeRequestDto) {
+    this.logger.log(`enqueue scrape via /scrape/queue: ${dto.url}`);
     await this.redisService.pushUrl(dto.url);
     return {
       message: 'URL queued for scraping',
