@@ -1,74 +1,69 @@
 [
   {
     "id": 1,
-    "title": "Spaghetti Carbonara",
-    "description": "Classic Italian pasta dish with eggs, cheese, and pancetta",
+    "title": "Le gâteau nantais",
+    "description": "Recette d'un gâteau nantais, un délice à base d'amandes et de rhum.",
     "ingredients": [
-      "400g spaghetti",
-      "200g pancetta",
-      "4 large eggs",
-      "100g pecorino romano cheese",
-      "2 cloves garlic",
-      "Black pepper",
-      "Salt"
+      "3 oeufs à température ambiante",
+      "125g de beurre demi-sel très mou",
+      "150g de sucre en poudre",
+      "125g de poudre d'amandes",
+      "40g de farine",
+      "15g de rhum brun",
+      "50g de sucre glace",
+      "10g de rhum (pour le glaçage)"
     ],
     "overview": [
-      "Cook spaghetti according to package directions",
-      "Cut pancetta into small cubes and cook until crispy",
-      "Beat eggs with grated cheese and black pepper",
-      "Drain pasta and mix with pancetta",
-      "Remove from heat and quickly stir in egg mixture",
-      "Serve immediately with extra cheese"
+      "Un gâteau riche et moelleux, parfait pour les amateurs de rhum et d'amande.",
+      "Idéal pour les occasions spéciales ou simplement pour se faire plaisir."
     ],
     "recipeSteps": [
       {
         "type": "text",
-        "content": "Start by bringing a large pot of salted water to boil for the spaghetti. While waiting, prepare your ingredients."
-      },
-      {
-        "type": "image",
-        "content": "Fresh ingredients ready for carbonara",
-        "imageUrl": "https://images.unsplash.com/photo-1551183053-bf91a1d81141"
+        "content": "Préchauffez le four à 170°C chaleur tournante."
       },
       {
         "type": "text",
-        "content": "Cut the pancetta into small cubes and cook in a large skillet over medium heat until crispy and golden brown, about 5-7 minutes."
-      },
-      {
-        "type": "image",
-        "content": "Crispy pancetta cubes",
-        "imageUrl": "https://images.unsplash.com/photo-1574484284002-952d92456975"
+        "content": "Beurrez et farinez votre moule."
       },
       {
         "type": "text",
-        "content": "In a bowl, beat the eggs with grated pecorino romano cheese and freshly ground black pepper. This creates the creamy sauce base."
+        "content": "Dans un batteur, fouettez le beurre mou avec le sucre jusqu'à ce que le mélange blanchisse."
       },
       {
         "type": "text",
-        "content": "Cook the spaghetti according to package directions until al dente. Reserve 1 cup of pasta water before draining."
-      },
-      {
-        "type": "image",
-        "content": "Perfectly cooked al dente spaghetti",
-        "imageUrl": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5"
+        "content": "Ajoutez les oeufs un à un en fouettant bien après chaque ajout."
       },
       {
         "type": "text",
-        "content": "Immediately add the hot pasta to the pancetta pan, tossing to combine. Remove from heat and quickly stir in the egg mixture, adding pasta water as needed to create a creamy sauce."
+        "content": "Incorporez la poudre d'amandes et la farine, mélangez délicatement."
       },
       {
         "type": "text",
-        "content": "Serve immediately with extra grated cheese and black pepper. The heat from the pasta cooks the eggs perfectly without scrambling them."
+        "content": "Versez la pâte dans le moule et enfournez pour environ 45 minutes."
+      },
+      {
+        "type": "text",
+        "content": "Démoulez sur une grille et laissez refroidir."
+      },
+      {
+        "type": "text",
+        "content": "Mélangez le sucre glace et le rhum pour le glaçage, puis étalez sur le gâteau."
       }
     ],
-    "prepTime": 15,
-    "cookTime": 20,
-    "servings": 4,
+    "prepTime": 20,
+    "cookTime": 45,
+    "servings": 8,
     "difficulty": "medium",
-    "tags": ["italian", "pasta", "comfort-food"],
-    "imageUrl": "https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5",
-    "rating": 4.8,
-    "author": "Chef Marco"
+    "tags": [
+      "gâteau",
+      "pâtisserie",
+      "rhum",
+      "amande"
+    ],
+    "imageUrl": "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiaw0PdYAI0Z6Qz2a5zA6U9IBFvwUNpjEe9tZ50Cx9DSgoTZMfmk8SEIWEyxd815kIUbs2H7dhyphenhyphenlUzfAe4yXGPB79fJiG0AXIPcw7BQKZdPyKGXlGERrx0Fn-wyoM3bdWddSftWAIqqHNH5/s1600/DSC05672.jpg",
+    "rating": 4.5,
+    "author": "Valérie"
   },
   {
     "id": 2,
@@ -142,7 +137,11 @@
     "cookTime": 45,
     "servings": 4,
     "difficulty": "medium",
-    "tags": ["indian", "curry", "spicy"],
+    "tags": [
+      "indian",
+      "curry",
+      "spicy"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1563379091339-03246963d0b8",
     "rating": 4.6,
     "author": "Chef Priya"
@@ -225,7 +224,11 @@
     "cookTime": 12,
     "servings": 24,
     "difficulty": "easy",
-    "tags": ["dessert", "baking", "sweet"],
+    "tags": [
+      "dessert",
+      "baking",
+      "sweet"
+    ],
     "imageUrl": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e",
     "rating": 4.9,
     "author": "Chef Sarah"

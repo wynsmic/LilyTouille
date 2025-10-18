@@ -101,12 +101,6 @@ export class ProgressGateway
 
         // Broadcast to all connected clients
         try {
-          const clientIds: string[] = Array.from(
-            this.server.sockets.sockets.keys()
-          );
-          this.logger.log(
-            `Emitting progress-update to ${clientIds.length} clients: [${clientIds.join(', ')}]`
-          );
           this.server.emit('progress-update', update);
           this.logger.debug(
             `Broadcasted progress-update to clients: ${update.url} - ${update.stage}`

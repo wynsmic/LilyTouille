@@ -44,11 +44,6 @@ async function scrapeUrl(url: string): Promise<string> {
 async function runDirect(url: string): Promise<void> {
   const redis = new RedisService();
   try {
-    // Idempotency: skip if already processed
-    if (await redis.hasProcessedScrape(url)) {
-      logger.info('scrape skipped (already processed)', { url });
-      return;
-    }
     // Claim this URL to prevent duplicate work across workers
     const claimed = await redis.markScrapeInProgress(url);
     if (!claimed) {
@@ -63,7 +58,6 @@ async function runDirect(url: string): Promise<void> {
       stage: 'scraped',
       timestamp: Date.now(),
     });
-    await redis.markScrapeProcessed(url);
     logger.info('scrape succeeded', { url });
   } finally {
     await redis.clearScrapeInProgress(url);
@@ -82,11 +76,6 @@ async function runQueue(): Promise<void> {
         if (!url) continue;
 
         try {
-          // Idempotency: skip if already processed or claimed elsewhere
-          if (await redis.hasProcessedScrape(url)) {
-            logger.info('queue skip (already processed)', { url });
-            continue;
-          }
           const claimed = await redis.markScrapeInProgress(url);
           if (!claimed) {
             logger.info('queue skip (claimed elsewhere)', { url });
@@ -100,7 +89,6 @@ async function runQueue(): Promise<void> {
             stage: 'scraped',
             timestamp: Date.now(),
           });
-          await redis.markScrapeProcessed(url);
           logger.info('scrape succeeded', { url });
         } catch (err) {
           logger.error('scrape failed', { url, error: (err as Error).message });

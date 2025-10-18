@@ -17,7 +17,7 @@ Key details:
 - Input queue: `processingQueue`
 - Output queue: `aiQueue` with payload `{ url, html }`
 - Concurrency: controlled by `SCRAPE_CONCURRENCY` (see `config.scrape.concurrency`)
-- Idempotency/coordination: uses Redis sets to avoid double-processing and to mark in-progress/processed URLs
+- Concurrency/coordination: uses Redis sets to avoid double-processing URLs across workers
 
 Error handling:
 

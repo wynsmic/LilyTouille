@@ -104,12 +104,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <Badge>{favoriteRecipeIds.length}</Badge>
                 )}
               </NavLink>
-              <NavLink
-                to="/scrape-progress"
-                $isActive={location.pathname === '/scrape-progress'}
-              >
-                Scrape Progress
-              </NavLink>
             </Nav>
             <UserProfile />
           </HeaderFlex>

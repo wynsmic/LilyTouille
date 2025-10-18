@@ -4,6 +4,7 @@ import styled from 'styled-components';
 interface ProgressBarProps {
   progress: number;
   stage: string;
+  url?: string;
 }
 
 const ProgressContainer = styled.div`
@@ -170,7 +171,7 @@ const TimelineText = styled.span<{ isActive: boolean; isCompleted: boolean }>`
     props.isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)'};
 `;
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage }) => {
+const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage, url }) => {
   const getStageDisplayName = (stage: string) => {
     switch (stage) {
       case 'queued':
@@ -207,7 +208,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage }) => {
     <ProgressContainer>
       <ProgressHeader>
         <ProgressTitle>Scraping Progress</ProgressTitle>
-        <ProgressUrl>{/* URL will be passed from parent */}</ProgressUrl>
+        {url && <ProgressUrl>{url}</ProgressUrl>}
       </ProgressHeader>
       <ProgressBody>
         <ProgressStage>

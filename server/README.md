@@ -17,7 +17,7 @@ See `WORKERS.md` for worker architecture, operations, and error handling.
   - `services/scraper.service.ts`: direct HTML fetch-to-disk
   - `workers/scrapeWorker.ts`: robust scrape (axios → puppeteer fallback)
   - `workers/aiWorker.ts`: call AI API, validate JSON, store
-  - `services/redis.service.ts`: queues, pub/sub, idempotency helpers
+  - `services/redis.service.ts`: queues, pub/sub, concurrency helpers
   - `gateways/progress.gateway.ts`: emits `progress-update` and `queue-status`
 
 ### Processing flow
@@ -27,12 +27,11 @@ See `WORKERS.md` for worker architecture, operations, and error handling.
 3. `aiWorker` pulls AI task, calls model, validates JSON, stores, publishes `ai_processed` then `stored`
 4. `progress.gateway` broadcasts updates to all clients
 
-### Concurrency & idempotency
+### Concurrency & coordination
 
 - Multiple worker processes supported (configurable counts)
-- Idempotent processing using Redis sets:
+- Concurrency coordination using Redis sets:
   - in-progress: prevents duplicate work across workers
-  - processed: skip already-completed items on retry
 
 ### Configuration (dotenv)
 

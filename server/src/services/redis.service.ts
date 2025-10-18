@@ -10,8 +10,6 @@ export class RedisService implements OnModuleDestroy {
   private readonly processingQueueKey = 'processingQueue';
   private readonly aiQueueKey = 'aiQueue';
   private readonly progressChannel = 'progressChannel';
-  private readonly processedScrapeSet = 'processed:scrape';
-  private readonly processedAiSet = 'processed:ai';
   private readonly inprogressScrapeSet = 'inprogress:scrape';
   private readonly inprogressAiSet = 'inprogress:ai';
   private readonly logger: Logger;
@@ -119,15 +117,7 @@ export class RedisService implements OnModuleDestroy {
     await this.redis.del(this.processingQueueKey, this.aiQueueKey);
   }
 
-  // Idempotency helpers
-  async hasProcessedScrape(url: string): Promise<boolean> {
-    return (await this.redis.sismember(this.processedScrapeSet, url)) === 1;
-  }
-
-  async hasProcessedAi(url: string): Promise<boolean> {
-    return (await this.redis.sismember(this.processedAiSet, url)) === 1;
-  }
-
+  // Concurrency helpers
   async markScrapeInProgress(url: string): Promise<boolean> {
     return (await this.redis.sadd(this.inprogressScrapeSet, url)) === 1;
   }
@@ -142,14 +132,6 @@ export class RedisService implements OnModuleDestroy {
 
   async clearAiInProgress(url: string): Promise<void> {
     await this.redis.srem(this.inprogressAiSet, url);
-  }
-
-  async markScrapeProcessed(url: string): Promise<void> {
-    await this.redis.sadd(this.processedScrapeSet, url);
-  }
-
-  async markAiProcessed(url: string): Promise<void> {
-    await this.redis.sadd(this.processedAiSet, url);
   }
 
   async close(): Promise<void> {
