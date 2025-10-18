@@ -29,7 +29,10 @@ function cleanHtml(html: string): string {
   return cleaned;
 }
 
-async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
+async function callAiForRecipe(
+  html: string,
+  url: string
+): Promise<{ recipe: RecipeType; aiQuery: string; aiResponse: string }> {
   const apiKey = config.ai.apiKey;
   const endpoint = config.ai.endpoint;
   if (!apiKey) {
@@ -44,21 +47,23 @@ async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
     'You are a parser that extracts structured recipe JSON. Respond with strict JSON matching the schema.';
   const user = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string). Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
+  const requestBody = {
+    model: config.ai.model,
+    temperature: 0,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: user },
+    ],
+  };
+
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: config.ai.model,
-      temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-    }),
+    body: JSON.stringify(requestBody),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -73,12 +78,20 @@ async function callAiForRecipe(html: string, url: string): Promise<RecipeType> {
 
   // Validate minimal required shape to be retry-safe and prevent corrupt writes
   validateRecipeJson(recipeCandidate);
-  return recipeCandidate as RecipeType;
+
+  return {
+    recipe: recipeCandidate as RecipeType,
+    aiQuery: JSON.stringify(requestBody, null, 2),
+    aiResponse: JSON.stringify(data, null, 2),
+  };
 }
 
-async function processRecipe(url: string, html: string): Promise<RecipeType> {
-  const recipe = await callAiForRecipe(html, url);
-  return recipe;
+async function processRecipe(
+  url: string,
+  html: string
+): Promise<{ recipe: RecipeType; aiQuery: string; aiResponse: string }> {
+  const result = await callAiForRecipe(html, url);
+  return result;
 }
 
 // Minimal runtime validation for AI JSON output
@@ -107,28 +120,51 @@ function validateRecipeJson(candidate: any): void {
   }
 }
 
-async function storeRecipe(recipe: RecipeType): Promise<void> {
+async function storeRecipe(
+  recipe: RecipeType,
+  url: string,
+  html: string,
+  aiQuery: string,
+  aiResponse: string
+): Promise<void> {
   const db = new DatabaseService();
   await db.initialize();
-  await db.saveRecipe(recipe);
+
+  // Add the scraping metadata to the recipe
+  const recipeWithMetadata = {
+    ...recipe,
+    sourceUrl: url,
+    scrapedHtml: html,
+    aiQuery: aiQuery,
+    aiResponse: aiResponse,
+    scrapedAt: new Date().toISOString(),
+  };
+
+  await db.saveRecipe(recipeWithMetadata);
 }
 
 async function runDirect(url: string, html: string): Promise<void> {
   const redis = new RedisService();
   try {
-    const recipe = await processRecipe(url, html);
-    await storeRecipe(recipe);
+    const result = await processRecipe(url, html);
+    await storeRecipe(
+      result.recipe,
+      url,
+      html,
+      result.aiQuery,
+      result.aiResponse
+    );
     await redis.publishProgress({
       url,
       stage: 'ai_processed',
       timestamp: Date.now(),
-      recipeId: recipe.id,
+      recipeId: result.recipe.id,
     });
     await redis.publishProgress({
       url,
       stage: 'stored',
       timestamp: Date.now(),
-      recipeId: recipe.id,
+      recipeId: result.recipe.id,
     });
     logger.info('ai processing + store succeeded', { url });
   } catch (err) {
@@ -155,19 +191,25 @@ async function runQueue(): Promise<void> {
         if (!task) continue;
 
         try {
-          const recipe = await processRecipe(task.url, task.html);
-          await storeRecipe(recipe);
+          const result = await processRecipe(task.url, task.html);
+          await storeRecipe(
+            result.recipe,
+            task.url,
+            task.html,
+            result.aiQuery,
+            result.aiResponse
+          );
           await redis.publishProgress({
             url: task.url,
             stage: 'ai_processed',
             timestamp: Date.now(),
-            recipeId: recipe.id,
+            recipeId: result.recipe.id,
           });
           await redis.publishProgress({
             url: task.url,
             stage: 'stored',
             timestamp: Date.now(),
-            recipeId: recipe.id,
+            recipeId: result.recipe.id,
           });
           logger.info('ai processing + store succeeded', { url: task.url });
         } catch (err) {

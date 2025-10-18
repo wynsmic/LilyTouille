@@ -74,6 +74,27 @@ export class RecipeDto {
 
   @IsString()
   author: string;
+
+  // Scraping metadata (optional)
+  @IsOptional()
+  @IsString()
+  sourceUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  scrapedHtml?: string;
+
+  @IsOptional()
+  @IsString()
+  aiQuery?: string;
+
+  @IsOptional()
+  @IsString()
+  aiResponse?: string;
+
+  @IsOptional()
+  @IsString()
+  scrapedAt?: string;
 }
 
 export class CreateRecipeDto {
@@ -120,6 +141,27 @@ export class CreateRecipeDto {
 
   @IsString()
   author: string;
+
+  // Scraping metadata (optional)
+  @IsOptional()
+  @IsString()
+  sourceUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  scrapedHtml?: string;
+
+  @IsOptional()
+  @IsString()
+  aiQuery?: string;
+
+  @IsOptional()
+  @IsString()
+  aiResponse?: string;
+
+  @IsOptional()
+  @IsString()
+  scrapedAt?: string;
 }
 
 export class RecipeFiltersDto {

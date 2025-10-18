@@ -19,6 +19,12 @@ export interface Recipe {
   imageUrl: string;
   rating: number;
   author: string;
+  // Scraping metadata
+  sourceUrl?: string;
+  scrapedHtml?: string;
+  aiQuery?: string;
+  aiResponse?: string;
+  scrapedAt?: string;
 }
 
 export interface RecipeFilters {
