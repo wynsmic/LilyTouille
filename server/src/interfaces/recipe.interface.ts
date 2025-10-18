@@ -4,6 +4,15 @@ export interface RecipeStep {
   imageUrl?: string;
 }
 
+export interface RecipePart {
+  title: string;
+  description?: string;
+  ingredients: string[];
+  recipeSteps: RecipeStep[];
+  prepTime?: number;
+  cookTime?: number;
+}
+
 export interface Recipe {
   id: number;
   title: string;
@@ -19,6 +28,9 @@ export interface Recipe {
   imageUrl: string;
   rating: number;
   author: string;
+  // Chunked recipe support
+  parts?: RecipePart[];
+  isChunked?: boolean;
   // Scraping metadata
   sourceUrl?: string;
   scrapedHtml?: string;

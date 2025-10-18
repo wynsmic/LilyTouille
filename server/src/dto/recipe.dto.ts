@@ -27,6 +27,32 @@ export class RecipeStepDto {
   imageUrl?: string;
 }
 
+export class RecipePartDto {
+  @IsString()
+  title: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  ingredients: string[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipeStepDto)
+  recipeSteps: RecipeStepDto[];
+
+  @IsOptional()
+  @IsNumber()
+  prepTime?: number;
+
+  @IsOptional()
+  @IsNumber()
+  cookTime?: number;
+}
+
 export class RecipeDto {
   @IsNumber()
   id: number;
@@ -74,6 +100,17 @@ export class RecipeDto {
 
   @IsString()
   author: string;
+
+  // Chunked recipe support
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipePartDto)
+  parts?: RecipePartDto[];
+
+  @IsOptional()
+  @IsIn([true, false])
+  isChunked?: boolean;
 
   // Scraping metadata (optional)
   @IsOptional()
@@ -141,6 +178,17 @@ export class CreateRecipeDto {
 
   @IsString()
   author: string;
+
+  // Chunked recipe support
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RecipePartDto)
+  parts?: RecipePartDto[];
+
+  @IsOptional()
+  @IsIn([true, false])
+  isChunked?: boolean;
 
   // Scraping metadata (optional)
   @IsOptional()

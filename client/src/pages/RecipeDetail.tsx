@@ -338,11 +338,141 @@ const RecipeStepImage = styled.img`
   box-shadow: var(--shadow-md);
 `;
 
-const RecipeStepImageCaption = styled.p`
-  color: var(--color-gray-600);
+const SourceUrlButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-700);
+  text-decoration: none;
+  border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  margin-bottom: var(--space-4);
+
+  &:hover {
+    background-color: var(--color-primary-200);
+    color: var(--color-primary-800);
+    text-decoration: none;
+  }
+`;
+
+const SourceUrlIcon = styled.svg`
+  width: 1rem;
+  height: 1rem;
+  margin-right: var(--space-2);
+`;
+
+const RecipePartSection = styled.div`
+  margin-bottom: var(--space-8);
+`;
+
+const PartTitle = styled.h3`
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-primary-200);
+`;
+
+const PartDescription = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-4);
+`;
+
+const PartIngredientsList = styled.div`
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+`;
+
+const PartIngredientsUl = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const PartIngredientItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--space-2);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const PartIngredientBullet = styled.span`
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--color-primary-500);
+  border-radius: var(--radius-full);
+  margin-top: 0.5rem;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+`;
+
+const PartIngredientText = styled.span`
+  color: var(--color-gray-700);
+  font-size: var(--font-size-sm);
+`;
+
+const PartStepsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+`;
+
+const PartStepItem = styled.div<{ $type: 'text' | 'image' }>`
+  ${props =>
+    props.$type === 'text' &&
+    `
+    padding: var(--space-3);
+    background-color: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    color: var(--color-gray-700);
+    line-height: 1.625;
+    font-size: var(--font-size-sm);
+  `}
+
+  ${props =>
+    props.$type === 'image' &&
+    `
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  `}
+`;
+
+const PartStepImage = styled.img`
+  width: 100%;
+  max-width: 24rem;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+`;
+
+const PartStepImageCaption = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-xs);
   text-align: center;
   font-style: italic;
+`;
+
+const IngredientsNote = styled.div`
+  background-color: var(--color-blue-50);
+  border: 1px solid var(--color-blue-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-blue-800);
+  text-align: center;
 `;
 
 const FloatingButton = styled.div`
@@ -500,6 +630,22 @@ const RecipeDetail: React.FC = () => {
   const recipe = recipes.find((r: Recipe) => r.id === parseInt(id || '0'));
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
+  // Helper function to get all ingredients from main recipe and parts
+  const getAllIngredients = (recipe: Recipe): string[] => {
+    const allIngredients = [...recipe.ingredients];
+
+    if (recipe.isChunked && recipe.parts) {
+      recipe.parts.forEach(part => {
+        allIngredients.push(...part.ingredients);
+      });
+    }
+
+    // Remove duplicates while preserving order
+    return Array.from(new Set(allIngredients));
+  };
+
+  const allIngredients = recipe ? getAllIngredients(recipe) : [];
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 200);
@@ -610,6 +756,27 @@ const RecipeDetail: React.FC = () => {
                 >
                   <RecipeTitle>{recipe.title}</RecipeTitle>
                   <RecipeDescription>{recipe.description}</RecipeDescription>
+                  {recipe.sourceUrl && (
+                    <SourceUrlButton
+                      href={recipe.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <SourceUrlIcon
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </SourceUrlIcon>
+                      View Original Recipe
+                    </SourceUrlButton>
+                  )}
                 </motion.div>
               </TitleSection>
 
@@ -641,9 +808,16 @@ const RecipeDetail: React.FC = () => {
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   <SectionTitle>Ingredients</SectionTitle>
+                  {recipe.isChunked &&
+                    recipe.parts &&
+                    recipe.parts.length > 0 && (
+                      <IngredientsNote>
+                        📋 Combined ingredients from all recipe parts
+                      </IngredientsNote>
+                    )}
                   <IngredientsList>
                     <IngredientsUl>
-                      {recipe.ingredients.map((ingredient, index) => (
+                      {allIngredients.map((ingredient, index) => (
                         <motion.div
                           key={index}
                           initial={{ opacity: 0, x: -20 }}
@@ -739,6 +913,74 @@ const RecipeDetail: React.FC = () => {
                   </RecipeStepsContainer>
                 </motion.div>
               </RecipeStepsSection>
+
+              {/* Chunked Recipe Parts */}
+              {recipe.isChunked && recipe.parts && recipe.parts.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0, duration: 0.6 }}
+                >
+                  <SectionTitle>Recipe Parts</SectionTitle>
+                  {recipe.parts.map((part, partIndex) => (
+                    <motion.div
+                      key={partIndex}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 1.1 + partIndex * 0.1,
+                        duration: 0.4,
+                      }}
+                    >
+                      <RecipePartSection>
+                        <PartTitle>{part.title}</PartTitle>
+                        {part.description && (
+                          <PartDescription>{part.description}</PartDescription>
+                        )}
+
+                        {part.ingredients && part.ingredients.length > 0 && (
+                          <PartIngredientsList>
+                            <PartIngredientsUl>
+                              {part.ingredients.map(
+                                (ingredient, ingredientIndex) => (
+                                  <PartIngredientItem key={ingredientIndex}>
+                                    <PartIngredientBullet />
+                                    <PartIngredientText>
+                                      {ingredient}
+                                    </PartIngredientText>
+                                  </PartIngredientItem>
+                                )
+                              )}
+                            </PartIngredientsUl>
+                          </PartIngredientsList>
+                        )}
+
+                        {part.recipeSteps && part.recipeSteps.length > 0 && (
+                          <PartStepsContainer>
+                            {part.recipeSteps.map((step, stepIndex) => (
+                              <PartStepItem key={stepIndex} $type={step.type}>
+                                {step.type === 'text' ? (
+                                  <span>{step.content}</span>
+                                ) : (
+                                  <>
+                                    <PartStepImage
+                                      src={step.imageUrl}
+                                      alt={step.content}
+                                    />
+                                    <PartStepImageCaption>
+                                      {step.content}
+                                    </PartStepImageCaption>
+                                  </>
+                                )}
+                              </PartStepItem>
+                            ))}
+                          </PartStepsContainer>
+                        )}
+                      </RecipePartSection>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
             </ContentContainer>
           </RecipeCard>
         </motion.div>
@@ -815,8 +1057,15 @@ const RecipeDetail: React.FC = () => {
 
                     <ModalIngredients>
                       <ModalIngredientsTitle>Ingredients</ModalIngredientsTitle>
+                      {recipe.isChunked &&
+                        recipe.parts &&
+                        recipe.parts.length > 0 && (
+                          <IngredientsNote>
+                            📋 Combined ingredients from all recipe parts
+                          </IngredientsNote>
+                        )}
                       <ModalIngredientsList>
-                        {recipe.ingredients.map((ingredient, index) => (
+                        {allIngredients.map((ingredient, index) => (
                           <ModalIngredientItem key={index}>
                             <ModalIngredientBullet />
                             <ModalIngredientText>

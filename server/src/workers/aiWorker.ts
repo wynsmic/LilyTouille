@@ -180,7 +180,11 @@ async function callAiForRecipe(
   // Minimal schema-constrained call using JSON mode if supported
   const system =
     'You are a parser that extracts structured recipe JSON. Respond with strict JSON matching the schema.';
-  const userContent = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string). Source URL: ${url}. HTML:\n${cleanedHtml}`;
+  const userContent = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), parts?({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime?(number), cookTime?(number)}[]), isChunked?(boolean). 
+
+If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), set isChunked to true and populate the parts array with each part. Each part should have its own ingredients and recipeSteps. The main ingredients and recipeSteps should contain the overall recipe summary.
+
+Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
   // Limit the payload size to control costs (approximately 128k characters)
   const limitedUserContent = limitPayloadSize(userContent, 128000);
@@ -253,6 +257,28 @@ function validateRecipeJson(candidate: any): void {
   if (typeof candidate.difficulty !== 'string') {
     errors.push('difficulty must be a string');
   }
+
+  // Validate chunked recipe structure if present
+  if (candidate.isChunked === true) {
+    if (!Array.isArray(candidate.parts)) {
+      errors.push('parts must be an array when isChunked is true');
+    } else {
+      candidate.parts.forEach((part: any, index: number) => {
+        if (typeof part.title !== 'string' || part.title.length === 0) {
+          errors.push(`parts[${index}].title must be non-empty string`);
+        }
+        if (!Array.isArray(part.ingredients)) {
+          errors.push(
+            `parts[${index}].ingredients must be an array of strings`
+          );
+        }
+        if (!Array.isArray(part.recipeSteps)) {
+          errors.push(`parts[${index}].recipeSteps must be an array`);
+        }
+      });
+    }
+  }
+
   if (errors.length > 0) {
     throw new Error(`AI JSON validation failed: ${errors.join(', ')}`);
   }
