@@ -36,6 +36,7 @@ export interface Recipe {
   scrapedHtml?: string;
   aiQuery?: string;
   aiResponse?: string;
+  urlMappings?: { [shortCode: string]: string };
   scrapedAt?: string;
 }
 

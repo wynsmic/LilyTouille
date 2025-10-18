@@ -3,7 +3,62 @@ import {
   limitPayloadSize,
   removeCommentSections,
   estimateTokenCount,
+  preserveRecipeImages,
+  replaceUrlsWithCodes,
+  restoreUrlsFromCodes,
+  resetUrlCounter,
 } from '../workers/aiWorker';
+
+// Mock the services to prevent Redis connections during tests
+jest.mock('../services/redis.service', () => ({
+  RedisService: jest.fn().mockImplementation(() => ({
+    publishProgress: jest.fn(),
+    close: jest.fn(),
+  })),
+}));
+
+jest.mock('../services/database.service', () => ({
+  DatabaseService: jest.fn().mockImplementation(() => ({
+    initialize: jest.fn(),
+    saveRecipe: jest.fn(),
+  })),
+}));
+
+// Mock the config to prevent environment issues
+jest.mock('../config', () => ({
+  config: {
+    ai: {
+      apiKey: 'test-key',
+      endpoint: 'https://api.openai.com/v1/chat/completions',
+      model: 'gpt-4',
+      concurrency: 1,
+    },
+    redis: {
+      url: 'redis://localhost:6379',
+    },
+  },
+}));
+
+// Mock the logger to prevent console output during tests
+jest.mock('../logger', () => ({
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
+// Global teardown to ensure Jest exits cleanly
+afterAll(async () => {
+  // Force close any remaining handles
+  if (global.gc) {
+    global.gc();
+  }
+
+  // Give a small delay to allow cleanup
+  await new Promise(resolve => setTimeout(resolve, 100));
+});
 
 describe('AI Worker Functions', () => {
   describe('cleanHtml', () => {
@@ -225,6 +280,257 @@ describe('AI Worker Functions', () => {
     });
   });
 
+  describe('preserveRecipeImages', () => {
+    it('should fix img tags with unquoted src attributes', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src=image.jpg alt="Recipe image">
+          <img src=another-image.png class="step-image">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('src="image.jpg"');
+      expect(result).toContain('src="another-image.png"');
+    });
+
+    it('should preserve properly quoted img tags', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="image.jpg" alt="Recipe image">
+          <img src='another-image.png' class="step-image">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('src="image.jpg"');
+      expect(result).toContain('src="another-image.png"');
+    });
+
+    it('should preserve absolute URLs', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="https://example.com/image.jpg" alt="Recipe image">
+          <img src="http://another-site.com/image.png" alt="Another image">
+          <img src="//cdn.example.com/image.gif" alt="CDN image">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('src="https://example.com/image.jpg"');
+      expect(result).toContain('src="http://another-site.com/image.png"');
+      expect(result).toContain('src="//cdn.example.com/image.gif"');
+    });
+
+    it('should handle relative URLs without modification', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="/images/recipe.jpg" alt="Recipe image">
+          <img src="../assets/step1.png" alt="Step image">
+          <img src="images/local.jpg" alt="Local image">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('src="/images/recipe.jpg"');
+      expect(result).toContain('src="../assets/step1.png"');
+      expect(result).toContain('src="images/local.jpg"');
+    });
+
+    it('should preserve other img attributes', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="image.jpg" alt="Recipe image" class="main-image" width="300" height="200">
+          <img src="step.jpg" alt="Step" data-step="1" loading="lazy">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('alt="Recipe image"');
+      expect(result).toContain('class="main-image"');
+      expect(result).toContain('width="300"');
+      expect(result).toContain('height="200"');
+      expect(result).toContain('data-step="1"');
+      expect(result).toContain('loading="lazy"');
+    });
+
+    it('should handle complex img tag structures', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <figure>
+            <img src="main-image.jpg" alt="Main recipe image" class="featured">
+            <figcaption>Beautiful recipe presentation</figcaption>
+          </figure>
+          <div class="steps">
+            <img src="step1.jpg" alt="Step 1">
+            <img src="step2.jpg" alt="Step 2">
+          </div>
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain('src="main-image.jpg"');
+      expect(result).toContain('src="step1.jpg"');
+      expect(result).toContain('src="step2.jpg"');
+      expect(result).toContain('class="featured"');
+      expect(result).toContain('Beautiful recipe presentation');
+    });
+
+    it('should add data-image-url attributes for AI visibility', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="https://example.com/recipe.jpg" alt="Recipe image">
+          <img src="step-image.png" alt="Step image">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      expect(result).toContain(
+        'data-image-url="https://example.com/recipe.jpg"'
+      );
+      expect(result).toContain('data-image-url="step-image.png"');
+      expect(result).toContain('src="https://example.com/recipe.jpg"');
+      expect(result).toContain('src="step-image.png"');
+    });
+
+    it('should not duplicate data-image-url attributes', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="https://example.com/recipe.jpg" alt="Recipe image" data-image-url="https://example.com/recipe.jpg">
+        </div>
+      `;
+
+      const result = preserveRecipeImages(html);
+      // Should not add duplicate data-image-url
+      const matches = result.match(
+        /data-image-url="https:\/\/example\.com\/recipe\.jpg"/g
+      );
+      expect(matches).toHaveLength(1);
+    });
+  });
+
+  describe('replaceUrlsWithCodes', () => {
+    beforeEach(() => {
+      // Reset URL counter for each test
+      resetUrlCounter();
+    });
+
+    it('should replace image URLs with short codes', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <img src="https://example.com/image1.jpg" alt="Image 1">
+          <img src="https://example.com/image2.png" alt="Image 2">
+        </div>
+      `;
+
+      const result = replaceUrlsWithCodes(html);
+
+      // Check that URLs were replaced with codes
+      expect(result.cleanedHtml).toMatch(/src="URL_\d+"/);
+      expect(result.cleanedHtml).toMatch(/src="URL_\d+"/);
+
+      // Check that mappings contain the original URLs
+      const mappingValues = Object.values(result.urlMappings);
+      expect(mappingValues).toContain('https://example.com/image1.jpg');
+      expect(mappingValues).toContain('https://example.com/image2.png');
+    });
+
+    it('should replace data-image-url attributes', () => {
+      const html = `
+        <div class="recipe">
+          <img src="image.jpg" data-image-url="https://example.com/data-image.jpg" alt="Image">
+        </div>
+      `;
+
+      const result = replaceUrlsWithCodes(html);
+
+      expect(result.cleanedHtml).toMatch(/data-image-url="URL_\d+"/);
+      const mappingValues = Object.values(result.urlMappings);
+      expect(mappingValues).toContain('https://example.com/data-image.jpg');
+    });
+
+    it('should replace href and other URL attributes', () => {
+      const html = `
+        <div class="recipe">
+          <a href="https://example.com/link">Link</a>
+          <link src="https://example.com/resource.css">
+        </div>
+      `;
+
+      const result = replaceUrlsWithCodes(html);
+
+      expect(result.cleanedHtml).toMatch(/href="URL_\d+"/);
+      expect(result.cleanedHtml).toMatch(/src="URL_\d+"/);
+      const mappingValues = Object.values(result.urlMappings);
+      expect(mappingValues).toContain('https://example.com/link');
+      expect(mappingValues).toContain('https://example.com/resource.css');
+    });
+
+    it('should not replace non-URL values', () => {
+      const html = `
+        <div class="recipe">
+          <img src="placeholder" alt="Image">
+          <a href="javascript:void(0)">Link</a>
+        </div>
+      `;
+
+      const result = replaceUrlsWithCodes(html);
+
+      // These should not be replaced because they don't look like URLs
+      expect(result.cleanedHtml).toContain('src="placeholder"');
+      expect(result.cleanedHtml).toContain('href="javascript:void(0)"');
+      expect(Object.keys(result.urlMappings)).toHaveLength(0);
+    });
+  });
+
+  describe('restoreUrlsFromCodes', () => {
+    it('should restore URLs from short codes', () => {
+      const content = '{"imageUrl": "URL_1", "content": "Test"}';
+      const mappings = {
+        URL_1: 'https://example.com/image.jpg',
+        URL_2: 'https://example.com/image2.jpg',
+      };
+
+      const result = restoreUrlsFromCodes(content, mappings);
+
+      expect(result).toContain('"https://example.com/image.jpg"');
+      expect(result).not.toContain('URL_1');
+    });
+
+    it('should handle multiple URL replacements', () => {
+      const content = '{"url1": "URL_1", "url2": "URL_2"}';
+      const mappings = {
+        URL_1: 'https://example.com/image1.jpg',
+        URL_2: 'https://example.com/image2.jpg',
+      };
+
+      const result = restoreUrlsFromCodes(content, mappings);
+
+      expect(result).toContain('"https://example.com/image1.jpg"');
+      expect(result).toContain('"https://example.com/image2.jpg"');
+    });
+
+    it('should not affect content without URL codes', () => {
+      const content = '{"text": "Hello world", "number": 123}';
+      const mappings = {
+        URL_1: 'https://example.com/image.jpg',
+      };
+
+      const result = restoreUrlsFromCodes(content, mappings);
+
+      expect(result).toBe(content);
+    });
+  });
+
   describe('estimateTokenCount', () => {
     it('should estimate tokens based on character count', () => {
       const text = 'Hello world!';
@@ -350,6 +656,33 @@ describe('AI Worker Functions', () => {
       expect(result).not.toContain('<script>');
       expect(result).not.toContain('<style>');
       expect(result).not.toContain('<!--');
+      expect(result).not.toContain('commentaires');
+      expect(result).not.toContain('User comment here');
+    });
+
+    it('should clean HTML and preserve images together', () => {
+      const html = `
+        <div class="recipe">
+          <h1>Test Recipe</h1>
+          <script>console.log('test');</script>
+          <style>.recipe { color: red; }</style>
+          <img src=recipe-image.jpg alt="Recipe image">
+          <img src="step-image.png" alt="Step">
+          <p>Recipe content</p>
+        </div>
+        <section class="commentaires">
+          <h2>Commentaires</h2>
+          <p>User comment here</p>
+        </section>
+      `;
+
+      const result = cleanHtml(html);
+      expect(result).toContain('Test Recipe');
+      expect(result).toContain('Recipe content');
+      expect(result).toContain('src="recipe-image.jpg"');
+      expect(result).toContain('src="step-image.png"');
+      expect(result).not.toContain('<script>');
+      expect(result).not.toContain('<style>');
       expect(result).not.toContain('commentaires');
       expect(result).not.toContain('User comment here');
     });

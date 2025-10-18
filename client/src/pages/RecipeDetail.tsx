@@ -338,6 +338,13 @@ const RecipeStepImage = styled.img`
   box-shadow: var(--shadow-md);
 `;
 
+const RecipeStepImageCaption = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  font-style: italic;
+`;
+
 const SourceUrlButton = styled.a`
   display: inline-flex;
   align-items: center;

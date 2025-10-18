@@ -7,6 +7,145 @@ import { logger } from '../logger';
 
 const CONCURRENCY = config.ai.concurrency;
 
+// URL mapping for AI processing
+interface UrlMapping {
+  [shortCode: string]: string;
+}
+
+let urlMappings: UrlMapping = {};
+let urlCounter = 1;
+
+// Generate a short code for URL mapping
+function generateUrlCode(): string {
+  return `URL_${urlCounter++}`;
+}
+
+// Reset URL counter for testing
+export function resetUrlCounter(): void {
+  urlCounter = 1;
+}
+
+// Replace URLs with short codes for AI processing
+export function replaceUrlsWithCodes(html: string): {
+  cleanedHtml: string;
+  urlMappings: UrlMapping;
+} {
+  const mappings: UrlMapping = {};
+  let processedHtml = html;
+
+  // Replace image URLs
+  processedHtml = processedHtml.replace(
+    /<img([^>]*?)\s+src\s*=\s*["']([^"']+)["']([^>]*?)>/gi,
+    (match, before, src, after) => {
+      // Only replace if it looks like a URL (starts with http/https or is a relative path)
+      if (
+        src.startsWith('http') ||
+        src.startsWith('//') ||
+        src.startsWith('/') ||
+        src.includes('.')
+      ) {
+        const shortCode = generateUrlCode();
+        mappings[shortCode] = src;
+        return `<img${before} src="${shortCode}"${after}>`;
+      }
+      return match;
+    }
+  );
+
+  // Replace data-image-url attributes
+  processedHtml = processedHtml.replace(
+    /data-image-url\s*=\s*["']([^"']+)["']/gi,
+    (match, url) => {
+      // Only replace if it looks like a URL (starts with http/https or is a relative path)
+      if (
+        url.startsWith('http') ||
+        url.startsWith('//') ||
+        url.startsWith('/') ||
+        url.includes('.')
+      ) {
+        const shortCode = generateUrlCode();
+        mappings[shortCode] = url;
+        return `data-image-url="${shortCode}"`;
+      }
+      return match;
+    }
+  );
+
+  // Replace other common URL patterns (href, src in other tags)
+  processedHtml = processedHtml.replace(
+    /(href|src|action)\s*=\s*["']([^"']+)["']/gi,
+    (match, attr, url) => {
+      // Only replace if it looks like a URL (starts with http/https or is a relative path)
+      if (
+        url.startsWith('http') ||
+        url.startsWith('//') ||
+        url.startsWith('/') ||
+        url.includes('.')
+      ) {
+        const shortCode = generateUrlCode();
+        mappings[shortCode] = url;
+        return `${attr}="${shortCode}"`;
+      }
+      return match;
+    }
+  );
+
+  return { cleanedHtml: processedHtml, urlMappings: mappings };
+}
+
+// Restore URLs from short codes after AI processing
+export function restoreUrlsFromCodes(
+  content: string,
+  mappings: UrlMapping
+): string {
+  let restored = content;
+
+  Object.entries(mappings).forEach(([shortCode, originalUrl]) => {
+    const regex = new RegExp(`"${shortCode}"`, 'g');
+    restored = restored.replace(regex, `"${originalUrl}"`);
+  });
+
+  return restored;
+}
+
+// Restore URLs in recipe object
+function restoreUrlsInRecipe(
+  recipe: RecipeType,
+  mappings: UrlMapping
+): RecipeType {
+  const restored = { ...recipe };
+
+  // Restore main imageUrl
+  if (restored.imageUrl && mappings[restored.imageUrl]) {
+    restored.imageUrl = mappings[restored.imageUrl];
+  }
+
+  // Restore URLs in recipeSteps
+  if (restored.recipeSteps) {
+    restored.recipeSteps = restored.recipeSteps.map(step => {
+      if (step.type === 'image' && step.imageUrl && mappings[step.imageUrl]) {
+        return { ...step, imageUrl: mappings[step.imageUrl] };
+      }
+      return step;
+    });
+  }
+
+  // Restore URLs in parts
+  if (restored.parts) {
+    restored.parts = restored.parts.map(part => ({
+      ...part,
+      recipeSteps: part.recipeSteps.map(step => {
+        if (step.type === 'image' && step.imageUrl && mappings[step.imageUrl]) {
+          return { ...step, imageUrl: mappings[step.imageUrl] };
+        }
+        return step;
+      }),
+    }));
+  }
+
+  return restored;
+}
+
 export function cleanHtml(html: string): string {
   // Remove script tags and their content
   let cleaned = html.replace(
@@ -26,11 +165,48 @@ export function cleanHtml(html: string): string {
   // Remove comment sections - these are costly to process with AI and not useful for recipes
   cleaned = removeCommentSections(cleaned);
 
-  // Remove extra whitespace and normalize
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  // Preserve recipe images by ensuring img tags are properly formatted
+  cleaned = preserveRecipeImages(cleaned);
+
+  // Remove extra whitespace and normalize, but preserve line breaks for better readability
+  cleaned = cleaned
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
 
   // Limit payload size to ~128k tokens to avoid OpenAI limits and reduce costs
   cleaned = limitPayloadSize(cleaned, 128000);
+
+  return cleaned;
+}
+
+export function preserveRecipeImages(html: string): string {
+  // Ensure img tags have proper src attributes and are not broken
+  let cleaned = html;
+
+  // Fix common image issues: missing quotes, relative URLs, etc.
+  cleaned = cleaned.replace(
+    /<img([^>]*?)\s+src\s*=\s*([^>\s]+)([^>]*?)>/gi,
+    (match, before, src, after) => {
+      // Ensure src is properly quoted
+      const cleanSrc = src.replace(/^["']|["']$/g, '');
+      return `<img${before} src="${cleanSrc}"${after}>`;
+    }
+  );
+
+  // Add data attributes to make images more visible to AI
+  cleaned = cleaned.replace(
+    /<img([^>]*?)\s+src\s*=\s*["']([^"']+)["']([^>]*?)>/gi,
+    (match, before, src, after) => {
+      // Add data-image-url attribute to make the URL more explicit for AI
+      const hasDataAttr =
+        before.includes('data-image-url') || after.includes('data-image-url');
+      if (!hasDataAttr) {
+        return `<img${before} src="${src}" data-image-url="${src}"${after}>`;
+      }
+      return match;
+    }
+  );
 
   return cleaned;
 }
@@ -167,22 +343,40 @@ export function removeCommentSections(html: string): string {
 async function callAiForRecipe(
   html: string,
   url: string
-): Promise<{ recipe: RecipeType; aiQuery: string; aiResponse: string }> {
+): Promise<{
+  recipe: RecipeType;
+  aiQuery: string;
+  aiResponse: string;
+  urlMappings: UrlMapping;
+}> {
   const apiKey = config.ai.apiKey;
   const endpoint = config.ai.endpoint;
   if (!apiKey) {
     throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
   }
 
-  // Clean the HTML before sending to AI
-  const cleanedHtml = cleanHtml(html);
+  // Replace URLs with short codes to reduce token usage
+  const { cleanedHtml: htmlWithCodes, urlMappings } =
+    replaceUrlsWithCodes(html);
 
-  // Minimal schema-constrained call using JSON mode if supported
+  // Clean the HTML before sending to AI
+  const cleanedHtml = cleanHtml(htmlWithCodes);
+
+  // Enhanced prompt to preserve original recipe content while adding meaningful overview
   const system =
-    'You are a parser that extracts structured recipe JSON. Respond with strict JSON matching the schema.';
+    'You are a recipe parser that extracts structured recipe JSON while preserving the original content as faithfully as possible. Your goal is to maintain the authenticity of the original recipe while adding only a helpful overview section. Respond with strict JSON matching the schema.';
   const userContent = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), parts?({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime?(number), cookTime?(number)}[]), isChunked?(boolean). 
 
-If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), set isChunked to true and populate the parts array with each part. Each part should have its own ingredients and recipeSteps. The main ingredients and recipeSteps should contain the overall recipe summary.
+CRITICAL INSTRUCTIONS:
+1. PRESERVE ORIGINAL CONTENT: Extract ingredients, description, and recipeSteps exactly as they appear in the original recipe. Do not modify, summarize, or rewrite the original content.
+2. OVERVIEW SECTION: Add a brief overview (2-4 sentences) that provides a global presentation of the recipe and highlights important things to keep in mind (cooking techniques, key ingredients, special notes, etc.). This should be helpful context, not a summary of steps.
+3. IMAGES: Preserve all original recipe images. Extract image URLs from the HTML and include them in recipeSteps with type:"image" where they appear in the original recipe flow. IMPORTANT: URLs in the HTML have been replaced with short codes (like URL_1, URL_2, etc.) to reduce token usage. Extract these codes exactly as they appear and include them in the imageUrl field. The codes will be restored to actual URLs later.
+4. NO RECIPE STEPS GENERATION: Do not generate or create recipe steps. Only extract the exact steps as they appear in the original recipe.
+5. CHUNKED RECIPES: If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), set isChunked to true and populate the parts array with each part. Each part should have its own ingredients and recipeSteps exactly as they appear in the original.
+
+IMAGE EXTRACTION EXAMPLE:
+- If you find: <img src="URL_1" alt="Recipe step">
+- Extract as: {"type": "image", "content": "Recipe step", "imageUrl": "URL_1"}
 
 Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
@@ -225,18 +419,31 @@ Source URL: ${url}. HTML:\n${cleanedHtml}`;
     recipe: recipeCandidate as RecipeType,
     aiQuery: JSON.stringify(requestBody, null, 2),
     aiResponse: JSON.stringify(data, null, 2),
+    urlMappings,
   };
 }
 
 async function processRecipe(
   url: string,
   html: string
-): Promise<{ recipe: RecipeType; aiQuery: string; aiResponse: string }> {
+): Promise<{
+  recipe: RecipeType;
+  aiQuery: string;
+  aiResponse: string;
+  urlMappings: UrlMapping;
+}> {
   const result = await callAiForRecipe(html, url);
-  return result;
+
+  // Restore URLs in the recipe
+  const restoredRecipe = restoreUrlsInRecipe(result.recipe, result.urlMappings);
+
+  return {
+    ...result,
+    recipe: restoredRecipe,
+  };
 }
 
-// Minimal runtime validation for AI JSON output
+// Enhanced runtime validation for AI JSON output
 function validateRecipeJson(candidate: any): void {
   const errors: string[] = [];
   if (typeof candidate !== 'object' || candidate === null) {
@@ -251,11 +458,39 @@ function validateRecipeJson(candidate: any): void {
   if (!Array.isArray(candidate.recipeSteps)) {
     errors.push('recipeSteps must be an array');
   }
+  if (!Array.isArray(candidate.overview)) {
+    errors.push('overview must be an array of strings');
+  }
   if (typeof candidate.servings !== 'number') {
     errors.push('servings must be a number');
   }
   if (typeof candidate.difficulty !== 'string') {
     errors.push('difficulty must be a string');
+  }
+
+  // Validate recipeSteps structure
+  if (Array.isArray(candidate.recipeSteps)) {
+    candidate.recipeSteps.forEach((step: any, index: number) => {
+      if (typeof step !== 'object' || step === null) {
+        errors.push(`recipeSteps[${index}] must be an object`);
+        return;
+      }
+      if (step.type !== 'text' && step.type !== 'image') {
+        errors.push(`recipeSteps[${index}].type must be 'text' or 'image'`);
+      }
+      if (typeof step.content !== 'string') {
+        errors.push(`recipeSteps[${index}].content must be a string`);
+      }
+      if (
+        step.type === 'image' &&
+        step.imageUrl !== undefined &&
+        typeof step.imageUrl !== 'string'
+      ) {
+        errors.push(
+          `recipeSteps[${index}].imageUrl must be a string when provided`
+        );
+      }
+    });
   }
 
   // Validate chunked recipe structure if present
@@ -289,7 +524,8 @@ async function storeRecipe(
   url: string,
   html: string,
   aiQuery: string,
-  aiResponse: string
+  aiResponse: string,
+  urlMappings: UrlMapping
 ): Promise<void> {
   const db = new DatabaseService();
   await db.initialize();
@@ -301,6 +537,7 @@ async function storeRecipe(
     scrapedHtml: html,
     aiQuery: aiQuery,
     aiResponse: aiResponse,
+    urlMappings: urlMappings,
     scrapedAt: new Date().toISOString(),
   };
 
@@ -316,7 +553,8 @@ async function runDirect(url: string, html: string): Promise<void> {
       url,
       html,
       result.aiQuery,
-      result.aiResponse
+      result.aiResponse,
+      result.urlMappings
     );
     await redis.publishProgress({
       url,
@@ -361,7 +599,8 @@ async function runQueue(): Promise<void> {
             task.url,
             task.html,
             result.aiQuery,
-            result.aiResponse
+            result.aiResponse,
+            result.urlMappings
           );
           await redis.publishProgress({
             url: task.url,
@@ -414,7 +653,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch(err => {
-  logger.error('aiWorker fatal error', err);
-  process.exitCode = 1;
-});
+// Only run main if not in test environment
+if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
+  main().catch(err => {
+    logger.error('aiWorker fatal error', err);
+    process.exitCode = 1;
+  });
+}
