@@ -306,14 +306,14 @@ const RecipeStepsSection = styled.div`
 const RecipeStepsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-2);
 `;
 
 const RecipeStepItem = styled.div<{ $type: 'text' | 'image' }>`
   ${props =>
     props.$type === 'text' &&
     `
-    padding: var(--space-4);
+    padding: var(--space-2) var(--space-4);
     background-color: var(--color-gray-50);
     border-radius: var(--radius-lg);
     color: var(--color-gray-700);
