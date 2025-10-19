@@ -19,14 +19,14 @@ export class RecipeController {
    * GET /recipes - Get all recipes with optional filtering
    */
   @Get()
-  getAllRecipes(@Query() query: RecipeFiltersDto) {
+  async getAllRecipes(@Query() query: RecipeFiltersDto) {
     const filters: RecipeFilters = {};
     if (query.tag) filters.tag = query.tag;
     if (query.ingredient) filters.ingredient = query.ingredient;
     if (query.difficulty) filters.difficulty = query.difficulty;
     if (query.author) filters.author = query.author;
 
-    const recipes = this.recipeService.getAllRecipes(filters);
+    const recipes = await this.recipeService.getAllRecipes(filters);
 
     return {
       success: true,
@@ -40,8 +40,8 @@ export class RecipeController {
    * GET /recipes/tags - Get all available tags
    */
   @Get('tags')
-  getAllTags() {
-    const tags = this.recipeService.getAllTags();
+  async getAllTags() {
+    const tags = await this.recipeService.getAllTags();
 
     return {
       success: true,
@@ -53,8 +53,8 @@ export class RecipeController {
    * GET /recipes/ingredients - Get all available ingredients
    */
   @Get('ingredients')
-  getAllIngredients() {
-    const ingredients = this.recipeService.getAllIngredients();
+  async getAllIngredients() {
+    const ingredients = await this.recipeService.getAllIngredients();
 
     return {
       success: true,
@@ -66,8 +66,8 @@ export class RecipeController {
    * GET /recipes/authors - Get all available authors
    */
   @Get('authors')
-  getAllAuthors() {
-    const authors = this.recipeService.getAllAuthors();
+  async getAllAuthors() {
+    const authors = await this.recipeService.getAllAuthors();
 
     return {
       success: true,
@@ -79,8 +79,8 @@ export class RecipeController {
    * GET /recipes/:id - Get a single recipe by ID
    */
   @Get(':id')
-  getRecipeById(@Param('id', ParseIntPipe) id: number) {
-    const recipe = this.recipeService.getRecipeById(id);
+  async getRecipeById(@Param('id', ParseIntPipe) id: number) {
+    const recipe = await this.recipeService.getRecipeById(id);
 
     if (!recipe) {
       throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);

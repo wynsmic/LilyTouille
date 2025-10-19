@@ -1,101 +1,88 @@
 import { Injectable } from '@nestjs/common';
 import { Recipe, RecipeFilters } from '../interfaces/recipe.interface';
-import recipesData from '../data/recipes.json';
+import { DatabaseService } from './database.service';
 
 @Injectable()
 export class RecipeService {
-  private recipes: Recipe[] = recipesData as Recipe[];
+  constructor(private readonly databaseService: DatabaseService) {}
 
   /**
    * Get all recipes with optional filtering
    */
-  getAllRecipes(filters?: RecipeFilters): Recipe[] {
-    let filteredRecipes = [...this.recipes];
-
-    if (filters) {
-      if (filters.tag) {
-        filteredRecipes = filteredRecipes.filter(recipe =>
-          recipe.tags.some(tag =>
-            tag.toLowerCase().includes(filters.tag!.toLowerCase())
-          )
-        );
-      }
-
-      if (filters.ingredient) {
-        filteredRecipes = filteredRecipes.filter(recipe =>
-          recipe.ingredients.some(ingredient =>
-            ingredient.toLowerCase().includes(filters.ingredient!.toLowerCase())
-          )
-        );
-      }
-
-      if (filters.difficulty) {
-        filteredRecipes = filteredRecipes.filter(
-          recipe =>
-            recipe.difficulty.toLowerCase() ===
-            filters.difficulty!.toLowerCase()
-        );
-      }
-
-      if (filters.author) {
-        filteredRecipes = filteredRecipes.filter(recipe =>
-          recipe.author.toLowerCase().includes(filters.author!.toLowerCase())
-        );
-      }
-    }
-
-    return filteredRecipes;
+  async getAllRecipes(filters?: RecipeFilters): Promise<Recipe[]> {
+    return this.databaseService.getAllRecipesWithFilters(filters);
   }
 
   /**
    * Get a single recipe by ID
    */
-  getRecipeById(id: number): Recipe | null {
-    const recipe = this.recipes.find(recipe => recipe.id === id);
-    return recipe || null;
+  async getRecipeById(id: number): Promise<Recipe | null> {
+    return this.databaseService.getRecipeById(id);
   }
 
   /**
    * Get recipes by tag
    */
-  getRecipesByTag(tag: string): Recipe[] {
-    return this.recipes.filter(recipe =>
-      recipe.tags.some(t => t.toLowerCase().includes(tag.toLowerCase()))
-    );
+  async getRecipesByTag(tag: string): Promise<Recipe[]> {
+    const repository = this.databaseService.getRecipeRepository();
+    const entities = await repository.findByTag(tag);
+    return entities.map(entity => this.entityToRecipe(entity));
   }
 
   /**
    * Get recipes by ingredient
    */
-  getRecipesByIngredient(ingredient: string): Recipe[] {
-    return this.recipes.filter(recipe =>
-      recipe.ingredients.some(ing =>
-        ing.toLowerCase().includes(ingredient.toLowerCase())
-      )
-    );
+  async getRecipesByIngredient(ingredient: string): Promise<Recipe[]> {
+    const repository = this.databaseService.getRecipeRepository();
+    const entities = await repository.findByIngredient(ingredient);
+    return entities.map(entity => this.entityToRecipe(entity));
   }
 
   /**
    * Get all unique tags
    */
-  getAllTags(): string[] {
-    const allTags = this.recipes.flatMap(recipe => recipe.tags);
-    return [...new Set(allTags)].sort();
+  async getAllTags(): Promise<string[]> {
+    return this.databaseService.getAllTags();
   }
 
   /**
    * Get all unique ingredients
    */
-  getAllIngredients(): string[] {
-    const allIngredients = this.recipes.flatMap(recipe => recipe.ingredients);
-    return [...new Set(allIngredients)].sort();
+  async getAllIngredients(): Promise<string[]> {
+    return this.databaseService.getAllIngredients();
   }
 
   /**
    * Get all unique authors
    */
-  getAllAuthors(): string[] {
-    const allAuthors = this.recipes.map(recipe => recipe.author);
-    return [...new Set(allAuthors)].sort();
+  async getAllAuthors(): Promise<string[]> {
+    return this.databaseService.getAllAuthors();
+  }
+
+  private entityToRecipe(entity: any): Recipe {
+    return {
+      id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      ingredients: entity.ingredients,
+      overview: entity.overview,
+      recipeSteps: entity.recipeSteps,
+      prepTime: entity.prepTime,
+      cookTime: entity.cookTime,
+      servings: entity.servings,
+      difficulty: entity.difficulty,
+      tags: entity.tags,
+      imageUrl: entity.imageUrl,
+      rating: entity.rating,
+      author: entity.author,
+      parts: entity.parts,
+      isChunked: entity.isChunked,
+      sourceUrl: entity.sourceUrl,
+      scrapedHtml: entity.scrapedHtml,
+      aiQuery: entity.aiQuery,
+      aiResponse: entity.aiResponse,
+      urlMappings: entity.urlMappings,
+      scrapedAt: entity.scrapedAt,
+    };
   }
 }

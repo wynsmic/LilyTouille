@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRecipes } from '../hooks';
+import { useRecipeQuery } from '../hooks/useRecipeQueries';
 import { Recipe } from '../services/api';
 import Layout from '../components/Layout';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -630,11 +631,14 @@ const ModalMetadataLabel = styled.div`
 const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { recipes, toggleFavoriteRecipe, isFavorite } = useRecipes();
+  const { toggleFavoriteRecipe, isFavorite } = useRecipes();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const recipe = recipes.find((r: Recipe) => r.id === parseInt(id || '0'));
+  // Fetch recipe directly from API instead of using cached data
+  const recipeId = parseInt(id || '0');
+  const { data: recipe, isLoading, error } = useRecipeQuery(recipeId);
+
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
   // Helper function to get all ingredients from main recipe and parts
@@ -662,7 +666,19 @@ const RecipeDetail: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!recipe) {
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <Layout>
+        <Container>
+          <div>Loading recipe...</div>
+        </Container>
+      </Layout>
+    );
+  }
+
+  // Handle error state
+  if (error || !recipe) {
     return (
       <Layout>
         <NotFoundContainer>

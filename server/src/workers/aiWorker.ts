@@ -365,7 +365,7 @@ async function callAiForRecipe(
   // Enhanced prompt to preserve original recipe content while adding meaningful overview
   const system =
     'You are a recipe parser that extracts structured recipe JSON while preserving the original content as faithfully as possible. Your goal is to maintain the authenticity of the original recipe while adding only a helpful overview section. Respond with strict JSON matching the schema.';
-  const userContent = `Extract a recipe object with fields: id(number), title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), parts?({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime?(number), cookTime?(number)}[]), isChunked?(boolean). 
+  const userContent = `Extract a recipe object with fields: title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), parts?({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime?(number), cookTime?(number)}[]), isChunked?(boolean). 
 
 CRITICAL INSTRUCTIONS:
 1. PRESERVE ORIGINAL CONTENT: Extract ingredients, description, and recipeSteps exactly as they appear in the original recipe. Do not modify, summarize, or rewrite the original content.
@@ -373,6 +373,7 @@ CRITICAL INSTRUCTIONS:
 3. IMAGES: Preserve all original recipe images. Extract image URLs from the HTML and include them in recipeSteps with type:"image" where they appear in the original recipe flow. IMPORTANT: URLs in the HTML have been replaced with short codes (like URL_1, URL_2, etc.) to reduce token usage. Extract these codes exactly as they appear and include them in the imageUrl field. The codes will be restored to actual URLs later.
 4. NO RECIPE STEPS GENERATION: Do not generate or create recipe steps. Only extract the exact steps as they appear in the original recipe.
 5. CHUNKED RECIPES: If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), set isChunked to true and populate the parts array with each part. Each part should have its own ingredients and recipeSteps exactly as they appear in the original.
+6. DO NOT INCLUDE AN ID FIELD: The database will auto-generate the ID.
 
 IMAGE EXTRACTION EXAMPLE:
 - If you find: <img src="URL_1" alt="Recipe step">
@@ -526,7 +527,9 @@ async function storeRecipe(
   aiQuery: string,
   aiResponse: string,
   urlMappings: UrlMapping
-): Promise<void> {
+): Promise<RecipeType> {
+  // Note: In a production environment, you would inject DatabaseService
+  // For now, we'll create a new instance for the worker
   const db = new DatabaseService();
   await db.initialize();
 
@@ -541,14 +544,16 @@ async function storeRecipe(
     scrapedAt: new Date().toISOString(),
   };
 
-  await db.saveRecipe(recipeWithMetadata);
+  // Save recipe and get back the saved version with correct ID
+  const savedRecipe = await db.saveRecipe(recipeWithMetadata);
+  return savedRecipe;
 }
 
 async function runDirect(url: string, html: string): Promise<void> {
   const redis = new RedisService();
   try {
     const result = await processRecipe(url, html);
-    await storeRecipe(
+    const savedRecipe = await storeRecipe(
       result.recipe,
       url,
       html,
@@ -560,13 +565,13 @@ async function runDirect(url: string, html: string): Promise<void> {
       url,
       stage: 'ai_processed',
       timestamp: Date.now(),
-      recipeId: result.recipe.id,
+      recipeId: savedRecipe.id,
     });
     await redis.publishProgress({
       url,
       stage: 'stored',
       timestamp: Date.now(),
-      recipeId: result.recipe.id,
+      recipeId: savedRecipe.id,
     });
     logger.info('ai processing + store succeeded', { url });
   } catch (err) {
@@ -594,7 +599,7 @@ async function runQueue(): Promise<void> {
 
         try {
           const result = await processRecipe(task.url, task.html);
-          await storeRecipe(
+          const savedRecipe = await storeRecipe(
             result.recipe,
             task.url,
             task.html,
@@ -606,13 +611,13 @@ async function runQueue(): Promise<void> {
             url: task.url,
             stage: 'ai_processed',
             timestamp: Date.now(),
-            recipeId: result.recipe.id,
+            recipeId: savedRecipe.id,
           });
           await redis.publishProgress({
             url: task.url,
             stage: 'stored',
             timestamp: Date.now(),
-            recipeId: result.recipe.id,
+            recipeId: savedRecipe.id,
           });
           logger.info('ai processing + store succeeded', { url: task.url });
         } catch (err) {

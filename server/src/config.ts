@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import path from 'path';
 
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
@@ -34,7 +35,13 @@ export const config = {
   },
   db: {
     url: process.env.DATABASE_URL || '',
-    // For current JSON file persistence, we still keep path internal
+    type: 'sqlite' as const,
+    database:
+      process.env.DB_PATH ||
+      path.resolve(__dirname, '..', 'data', 'recipes.db'),
+    synchronize: process.env.NODE_ENV !== 'production',
+    logging: process.env.NODE_ENV === 'development',
+    entities: [path.resolve(__dirname, 'entities', '*.entity.ts')],
   },
 } as const;
 

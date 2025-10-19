@@ -1,8 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { webSocketService, ProgressUpdate } from '../services/websocket';
 import { useQueueScrapeMutation } from '../services/scrapeApi';
+import { recipeKeys } from './useRecipeQueries';
 import {
   addJob,
   updateJobProgress,
@@ -18,6 +20,7 @@ import { RootState } from '../store';
 export const useScrapeProgress = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const activeJobs = useSelector(selectActiveJobs);
   const completedJobs = useSelector(selectCompletedJobs);
   const failedJobs = useSelector(selectFailedJobs);
@@ -44,7 +47,10 @@ export const useScrapeProgress = () => {
             update.stage === 'stored' &&
             typeof update.recipeId === 'number'
           ) {
-            navigate(`/recipes/${update.recipeId}`);
+            // Invalidate recipes cache to refresh the list
+            queryClient.invalidateQueries({ queryKey: recipeKeys.all });
+            // Navigate to the new recipe
+            navigate(`/recipe/${update.recipeId}`);
           }
         });
 
