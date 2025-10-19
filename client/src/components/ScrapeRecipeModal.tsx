@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useScrapeProgress } from '../hooks/useScrapeProgress';
+import AnimationIcon from './AnimationIcon';
 
 const Backdrop = styled.div`
   position: fixed;
@@ -106,26 +107,31 @@ const SuccessMessage = styled.div`
 `;
 
 const ProgressSection = styled.div`
-  margin-top: var(--space-4);
+  margin-top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
 `;
 
-const SimpleProgress = styled.div`
-  padding: var(--space-3);
-  background-color: var(--color-gray-50);
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-md);
+const ProgressAnimation = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+`;
+
+const ProgressStatus = styled.div<{ $stage: string }>`
   font-size: var(--font-size-sm);
-`;
-
-const ProgressStep = styled.div<{ $stage: string }>`
+  font-weight: var(--font-weight-medium);
   color: ${props => {
     switch (props.$stage) {
       case 'queued':
-        return 'var(--color-gray-600)';
+        return 'var(--color-gray-500)';
       case 'scraping':
         return 'var(--color-blue-600)';
       case 'scraped':
-        return 'var(--color-blue-700)';
+        return 'var(--color-purple-600)';
       case 'ai_processing':
         return 'var(--color-purple-600)';
       case 'ai_processed':
@@ -135,10 +141,10 @@ const ProgressStep = styled.div<{ $stage: string }>`
       case 'failed':
         return 'var(--color-red-600)';
       default:
-        return 'var(--color-gray-600)';
+        return 'var(--color-gray-500)';
     }
   }};
-  font-weight: var(--font-weight-medium);
+  text-align: center;
 `;
 
 type Props = {
@@ -295,11 +301,22 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
           {currentProgress && (
             <ProgressSection>
-              <SimpleProgress>
-                <ProgressStep $stage={currentProgress.stage}>
-                  {getCurrentStep(currentProgress)}
-                </ProgressStep>
-              </SimpleProgress>
+              {(currentProgress.stage === 'scraping' ||
+                currentProgress.stage === 'scraped') && (
+                <ProgressAnimation>
+                  <AnimationIcon
+                    stage={
+                      currentProgress.stage === 'scraping'
+                        ? 'scraping'
+                        : 'ai_processing'
+                    }
+                    size={64}
+                  />
+                </ProgressAnimation>
+              )}
+              <ProgressStatus $stage={currentProgress.stage}>
+                {getCurrentStep(currentProgress)}
+              </ProgressStatus>
             </ProgressSection>
           )}
         </Content>
