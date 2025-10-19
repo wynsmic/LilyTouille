@@ -111,6 +111,11 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return repository.findAllAuthors();
   }
 
+  async deleteRecipe(id: number): Promise<boolean> {
+    const repository = this.getRecipeRepository();
+    return repository.delete(id);
+  }
+
   private entityToRecipe(entity: RecipeEntity): RecipeType {
     return {
       id: entity.id,

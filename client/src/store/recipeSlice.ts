@@ -87,6 +87,17 @@ const recipeSlice = createSlice({
     setFavorites: (state, action: PayloadAction<string[]>) => {
       state.favoriteRecipeIds = action.payload;
     },
+    deleteRecipe: (state, action: PayloadAction<number>) => {
+      const recipeId = action.payload;
+      state.recipes = state.recipes.filter(recipe => recipe.id !== recipeId);
+      state.filteredRecipes = state.filteredRecipes.filter(
+        recipe => recipe.id !== recipeId
+      );
+      // Also remove from favorites if it was favorited
+      state.favoriteRecipeIds = state.favoriteRecipeIds.filter(
+        id => id !== recipeId.toString()
+      );
+    },
   },
 });
 
@@ -99,6 +110,7 @@ export const {
   setError,
   toggleFavorite,
   setFavorites,
+  deleteRecipe,
 } = recipeSlice.actions;
 
 export default recipeSlice.reducer;

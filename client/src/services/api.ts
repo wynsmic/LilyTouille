@@ -140,6 +140,11 @@ export const recipeApi = {
       await apiClient.get<ApiResponse<string[]>>('/recipes/authors');
     return response.data.data;
   },
+
+  // Delete a recipe by ID
+  deleteRecipe: async (id: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(`/recipes/${id}`);
+  },
 };
 
 export default apiClient;

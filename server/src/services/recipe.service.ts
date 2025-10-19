@@ -59,6 +59,13 @@ export class RecipeService {
     return this.databaseService.getAllAuthors();
   }
 
+  /**
+   * Delete a recipe by ID
+   */
+  async deleteRecipe(id: number): Promise<boolean> {
+    return this.databaseService.deleteRecipe(id);
+  }
+
   private entityToRecipe(entity: any): Recipe {
     return {
       id: entity.id,

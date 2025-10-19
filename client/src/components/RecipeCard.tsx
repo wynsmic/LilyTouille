@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Recipe } from '../services/api';
 import { useRecipes } from '../hooks';
-import { Favorite, FavoriteBorder } from '@mui/icons-material';
+import { Favorite, FavoriteBorder, Delete } from '@mui/icons-material';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -46,6 +46,33 @@ const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   &:hover {
     color: ${(props: { $isFavorite: boolean }) =>
       props.$isFavorite ? '#dc2626' : '#ef4444'};
+  }
+`;
+
+const DeleteButton = styled.button`
+  transition:
+    color var(--transition-fast),
+    opacity var(--transition-fast);
+  z-index: 10;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  flex: 0 0 auto;
+  width: 32px;
+  margin-left: var(--space-2);
+  text-align: center;
+  cursor: pointer;
+  color: var(--color-gray-400);
+  opacity: 0;
+
+  ${Card}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: #ef4444;
   }
 `;
 
@@ -153,12 +180,28 @@ const RecipeImage = styled.img`
 `;
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
-  const { toggleFavoriteRecipe, isFavorite } = useRecipes();
+  const { toggleFavoriteRecipe, isFavorite, deleteRecipeById } = useRecipes();
   const isRecipeFavorite = isFavorite(recipe.id.toString());
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when clicking favorite button
     toggleFavoriteRecipe(recipe.id.toString());
+  };
+
+  const handleDeleteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking delete button
+
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${recipe.title}"? This action cannot be undone.`
+      )
+    ) {
+      try {
+        await deleteRecipeById(recipe.id);
+      } catch (error) {
+        alert('Failed to delete recipe. Please try again.');
+      }
+    }
   };
 
   return (
@@ -205,6 +248,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
       <ImageContainer>
         <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
       </ImageContainer>
+
+      <DeleteButton onClick={handleDeleteClick} aria-label="Delete recipe">
+        <Delete style={{ width: '16px', height: '16px' }} />
+      </DeleteButton>
     </Card>
   );
 };

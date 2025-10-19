@@ -10,8 +10,10 @@ import {
   filterRecipes,
   setSearchQuery,
   setSelectedTags,
+  deleteRecipe,
 } from '../store/recipeSlice';
 import { useRecipesQuery } from './useRecipeQueries';
+import { recipeApi } from '../services/api';
 
 export const useRecipes = () => {
   const dispatch = useDispatch();
@@ -96,6 +98,20 @@ export const useRecipes = () => {
     [state.favoriteRecipeIds]
   );
 
+  // Delete a recipe
+  const deleteRecipeById = useCallback(
+    async (recipeId: number) => {
+      try {
+        await recipeApi.deleteRecipe(recipeId);
+        dispatch(deleteRecipe(recipeId));
+      } catch (error) {
+        console.error('Failed to delete recipe:', error);
+        throw error;
+      }
+    },
+    [dispatch]
+  );
+
   return {
     // State
     recipes: state.recipes,
@@ -114,5 +130,6 @@ export const useRecipes = () => {
     applyFilters,
     clearFilters,
     isFavorite,
+    deleteRecipeById,
   };
 };

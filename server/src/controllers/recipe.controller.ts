@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Delete,
   Param,
   Query,
   ParseIntPipe,
@@ -89,6 +90,23 @@ export class RecipeController {
     return {
       success: true,
       data: recipe,
+    };
+  }
+
+  /**
+   * DELETE /recipes/:id - Delete a recipe by ID
+   */
+  @Delete(':id')
+  async deleteRecipe(@Param('id', ParseIntPipe) id: number) {
+    const deleted = await this.recipeService.deleteRecipe(id);
+
+    if (!deleted) {
+      throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      success: true,
+      message: 'Recipe deleted successfully',
     };
   }
 }
