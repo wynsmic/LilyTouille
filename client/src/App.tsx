@@ -5,6 +5,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { store } from './store';
 import { useRecipes } from './hooks';
 import AuthProvider from './auth/AuthProvider';
+import { WebSocketProvider } from './providers/WebSocketProvider';
 import { LoginPanel } from './components';
 import { HomePage, RecipeDetail, FavoritesPage } from './pages';
 
@@ -58,7 +59,9 @@ function App() {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <AuthenticatedApp />
+        <WebSocketProvider autoConnect={true}>
+          <AuthenticatedApp />
+        </WebSocketProvider>
       </AuthProvider>
     </Provider>
   );

@@ -1,14 +1,13 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
-import { webSocketService, ProgressUpdate } from '../services/websocket';
+import { webSocketManager, ProgressUpdate } from '../services/websocketManager';
 import { useQueueScrapeMutation } from '../services/scrapeApi';
 import { recipeKeys } from './useRecipeQueries';
 import {
   addJob,
   updateJobProgress,
-  setConnectionStatus,
   selectActiveJobs,
   selectCompletedJobs,
   selectFailedJobs,
@@ -28,66 +27,38 @@ export const useScrapeProgress = () => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const [queueScrape, { isLoading: isQueueing }] = useQueueScrapeMutation();
+  const progressUpdateHandler = useRef<
+    ((update: ProgressUpdate) => void) | null
+  >(null);
 
-  // Initialize WebSocket connection
+  // Set up progress update listener
   useEffect(() => {
-    const initializeWebSocket = async () => {
-      try {
-        await webSocketService.connect();
-        dispatch(setConnectionStatus({ connected: true }));
+    // Create the handler function
+    progressUpdateHandler.current = (update: ProgressUpdate) => {
+      console.log('[useScrapeProgress] ← progress-update', update);
+      dispatch(updateJobProgress(update));
 
-        // Join progress room
-        webSocketService.joinProgressRoom('client-' + Date.now());
-
-        // Set up event listeners
-        webSocketService.on('progress-update', (update: ProgressUpdate) => {
-          console.log('[Hook] ← progress-update', update);
-          dispatch(updateJobProgress(update));
-          if (
-            update.stage === 'stored' &&
-            typeof update.recipeId === 'number'
-          ) {
-            // Invalidate recipes cache to refresh the list
-            queryClient.invalidateQueries({ queryKey: recipeKeys.all });
-            // Navigate to the new recipe
-            navigate(`/recipe/${update.recipeId}`);
-          }
-        });
-
-        webSocketService.on('connect', () => {
-          console.log('[Hook] socket connect');
-          dispatch(setConnectionStatus({ connected: true }));
-        });
-
-        webSocketService.on('disconnect', () => {
-          console.log('[Hook] socket disconnect');
-          dispatch(setConnectionStatus({ connected: false }));
-        });
-
-        webSocketService.on('connect_error', error => {
-          console.error('[Hook] socket connect_error', error);
-          dispatch(
-            setConnectionStatus({ connected: false, error: error.message })
-          );
-        });
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
-        dispatch(
-          setConnectionStatus({
-            connected: false,
-            error: error instanceof Error ? error.message : 'Connection failed',
-          })
-        );
+      if (update.stage === 'stored' && typeof update.recipeId === 'number') {
+        // Invalidate recipes cache to refresh the list
+        queryClient.invalidateQueries({ queryKey: recipeKeys.all });
+        // Navigate to the new recipe
+        navigate(`/recipe/${update.recipeId}`);
       }
     };
 
-    initializeWebSocket();
+    // Add the listener
+    if (progressUpdateHandler.current) {
+      webSocketManager.on('progress-update', progressUpdateHandler.current);
+    }
 
-    // Cleanup on unmount
+    // Cleanup
     return () => {
-      webSocketService.disconnect();
+      if (progressUpdateHandler.current) {
+        webSocketManager.off('progress-update', progressUpdateHandler.current);
+        progressUpdateHandler.current = null;
+      }
     };
-  }, [dispatch]);
+  }, [dispatch, navigate, queryClient]);
 
   // Trigger a new scrape
   const triggerScrape = useCallback(
@@ -118,7 +89,7 @@ export const useScrapeProgress = () => {
 
   // Request queue status
   const requestQueueStatus = useCallback(() => {
-    webSocketService.requestQueueStatus();
+    webSocketManager.requestQueueStatus();
   }, []);
 
   return {
@@ -135,7 +106,7 @@ export const useScrapeProgress = () => {
     isQueueing,
 
     // WebSocket status
-    isConnected: webSocketService.isConnected(),
+    isConnected: webSocketManager.isConnected(),
   };
 };
 

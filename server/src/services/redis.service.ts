@@ -104,6 +104,10 @@ export class RedisService implements OnModuleDestroy {
         }
       }
     });
+
+    // Store the subscriber reference to prevent it from being garbage collected
+    // and to allow proper cleanup
+    (this as any).progressSubscriber = subscriber;
   }
 
   // Utility methods
@@ -135,6 +139,10 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async close(): Promise<void> {
+    // Close the progress subscriber if it exists
+    if ((this as any).progressSubscriber) {
+      await (this as any).progressSubscriber.quit();
+    }
     await this.redis.quit();
   }
 

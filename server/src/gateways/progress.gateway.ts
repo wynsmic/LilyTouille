@@ -48,12 +48,17 @@ export class ProgressGateway
   async handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
     try {
-      const clientIds: string[] = Array.from(
-        this.server.sockets.sockets.keys()
-      );
-      this.logger.log(
-        `Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`
-      );
+      // Safely check if server and sockets are available
+      if (this.server && this.server.sockets && this.server.sockets.sockets) {
+        const clientIds: string[] = Array.from(
+          this.server.sockets.sockets.keys()
+        );
+        this.logger.log(
+          `Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`
+        );
+      } else {
+        this.logger.warn('Server sockets not available during connection');
+      }
     } catch (e) {
       this.logger.error('Error listing connected clients on connect', e as any);
     }
@@ -93,24 +98,56 @@ export class ProgressGateway
   }
 
   private async subscribeToProgressUpdates() {
+    if (this.isSubscribed) {
+      this.logger.log('Already subscribed to progress updates, skipping');
+      return;
+    }
+
     try {
       this.isSubscribed = true;
 
       await this.redisService.subscribeToProgress((update: ProgressUpdate) => {
-        this.logger.log(`Progress update: ${update.url} - ${update.stage}`);
+        this.logger.log(
+          `Progress update received: ${update.url} - ${update.stage}`
+        );
+
+        // Check if server is available and has connected clients
+        if (!this.server) {
+          this.logger.warn('WebSocket server not available for broadcasting');
+          return;
+        }
+
+        // Safely get connected clients count
+        let connectedClients = 0;
+        try {
+          if (this.server.sockets && this.server.sockets.sockets) {
+            connectedClients = this.server.sockets.sockets.size;
+          } else if (this.server.engine && this.server.engine.clientsCount) {
+            connectedClients = this.server.engine.clientsCount;
+          }
+        } catch (e) {
+          this.logger.warn(
+            'Could not determine connected clients count',
+            e as any
+          );
+        }
+
+        this.logger.log(
+          `Broadcasting to ${connectedClients} connected clients`
+        );
 
         // Broadcast to all connected clients
         try {
           this.server.emit('progress-update', update);
-          this.logger.debug(
-            `Broadcasted progress-update to clients: ${update.url} - ${update.stage}`
+          this.logger.log(
+            `✅ Successfully broadcasted progress-update: ${update.url} - ${update.stage} to ${connectedClients} clients`
           );
         } catch (e) {
           this.logger.error('Failed to broadcast progress-update', e as any);
         }
       });
 
-      this.logger.log('Subscribed to Redis progress channel');
+      this.logger.log('✅ Successfully subscribed to Redis progress channel');
     } catch (error) {
       this.logger.error('Failed to subscribe to progress updates:', error);
       this.isSubscribed = false;
