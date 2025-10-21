@@ -1,5 +1,8 @@
 # Ignore scraped HTML artifacts
 server/src/data/scrapes/
+
+# Database files
+server/data/recipes.db
 # Dependencies
 node_modules/
 npm-debug.log*

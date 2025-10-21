@@ -369,8 +369,25 @@ CRITICAL INSTRUCTIONS:
 2. OVERVIEW SECTION: Add a brief overview (2-4 sentences) that provides a global presentation of the recipe and highlights important things to keep in mind (cooking techniques, key ingredients, special notes, etc.). This should be helpful context, not a summary of steps.
 3. IMAGES: Preserve all original recipe images. Extract image URLs from the HTML and include them in recipeSteps with type:"image" where they appear in the original recipe flow. IMPORTANT: URLs in the HTML have been replaced with short codes (like URL_1, URL_2, etc.) to reduce token usage. Extract these codes exactly as they appear and include them in the imageUrl field. The codes will be restored to actual URLs later.
 4. NO RECIPE STEPS GENERATION: Do not generate or create recipe steps. Only extract the exact steps as they appear in the original recipe.
-5. CHUNKS STRUCTURE: ALL recipes must have a chunks array. If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), create multiple chunks with orderIndex starting from 0. If the recipe is not split into parts, create a single chunk with orderIndex 0 containing the recipe's ingredients and recipeSteps.
-6. CHUNK METADATA: Each chunk should inherit metadata (servings, difficulty, tags, rating) from the main recipe unless the chunk has specific different values.
+5. CHUNKS STRUCTURE: ALL recipes must have a chunks array. Analyze the recipe structure carefully to determine if it should be split into multiple chunks. Create multiple chunks when you detect ANY of these patterns:
+
+MULTI-CHUNK INDICATORS (create separate chunks for each):
+- Explicit part divisions: "Part 1:", "Part 2:", "Step 1:", "Step 2:", "Phase 1:", "Phase 2:", etc.
+- Separate component recipes: "Dough:", "Filling:", "Sauce:", "Garnish:", "Topping:", "Base:", "Crust:", "Frosting:", etc.
+- Different preparation methods: "For the cake:", "For the frosting:", "For the filling:", "For the glaze:", etc.
+- Sequential preparation stages: "First, prepare...", "Then, make...", "Finally, assemble...", etc.
+- Different cooking techniques: "Steamed portion:", "Fried portion:", "Baked portion:", etc.
+- Separate ingredient lists with distinct purposes: ingredients for dough vs filling, base vs topping, etc.
+- Different timing requirements: "Prepare 2 hours ahead:", "Make the day before:", "Last minute preparation:", etc.
+- Assembly instructions: "To assemble:", "To serve:", "Final presentation:", etc.
+
+SINGLE-CHUNK RECIPES (create one chunk with orderIndex 0):
+- Simple, linear recipes with one ingredient list and sequential steps
+- Recipes where all ingredients are used together in the same preparation
+- Recipes without distinct component separation
+
+CHUNK NAMING: Use descriptive titles that reflect the component's purpose (e.g., "Dough", "Filling", "Sauce", "Assembly", "Garnish"). If no clear component name exists, use "Part 1", "Part 2", etc.
+6. CHUNK METADATA: Each chunk MUST include all required fields: title, ingredients, recipeSteps, prepTime, cookTime, servings, difficulty, tags, rating, orderIndex. Each chunk should inherit metadata (servings, difficulty, tags, rating) from the main recipe unless the chunk has specific different values. If no specific rating is mentioned for a chunk, use the main recipe's rating.
 7. TIME CALCULATION: totalPrepTime and totalCookTime should be the sum of all chunks' prepTime and cookTime respectively.
 8. DO NOT INCLUDE AN ID FIELD: The database will auto-generate the ID.
 
@@ -378,9 +395,11 @@ IMAGE EXTRACTION EXAMPLE:
 - If you find: <img src="URL_1" alt="Recipe step">
 - Extract as: {"type": "image", "content": "Recipe step", "imageUrl": "URL_1"}
 
-CHUNK EXAMPLE:
-- Single recipe: chunks: [{"title": "Main Recipe", "ingredients": [...], "recipeSteps": [...], "prepTime": 30, "cookTime": 45, "orderIndex": 0, ...}]
-- Multi-part recipe: chunks: [{"title": "Dough", "ingredients": [...], "recipeSteps": [...], "prepTime": 20, "cookTime": 0, "orderIndex": 0, ...}, {"title": "Filling", "ingredients": [...], "recipeSteps": [...], "prepTime": 10, "cookTime": 30, "orderIndex": 1, ...}]
+CHUNK EXAMPLES:
+- Single recipe: chunks: [{"title": "Main Recipe", "ingredients": [...], "recipeSteps": [...], "prepTime": 30, "cookTime": 45, "servings": 4, "difficulty": "medium", "tags": [...], "rating": 4.5, "orderIndex": 0, ...}]
+- Multi-part recipe: chunks: [{"title": "Dough", "ingredients": [...], "recipeSteps": [...], "prepTime": 20, "cookTime": 0, "servings": 4, "difficulty": "medium", "tags": [...], "rating": 4.5, "orderIndex": 0, ...}, {"title": "Filling", "ingredients": [...], "recipeSteps": [...], "prepTime": 10, "cookTime": 30, "servings": 4, "difficulty": "medium", "tags": [...], "rating": 4.5, "orderIndex": 1, ...}]
+- Cake with frosting: chunks: [{"title": "Cake", "ingredients": [...], "recipeSteps": [...], "prepTime": 25, "cookTime": 35, "servings": 8, "difficulty": "medium", "tags": [...], "rating": 4.8, "orderIndex": 0, ...}, {"title": "Frosting", "ingredients": [...], "recipeSteps": [...], "prepTime": 15, "cookTime": 0, "servings": 8, "difficulty": "easy", "tags": [...], "rating": 4.8, "orderIndex": 1, ...}, {"title": "Assembly", "ingredients": [], "recipeSteps": [...], "prepTime": 10, "cookTime": 0, "servings": 8, "difficulty": "easy", "tags": [...], "rating": 4.8, "orderIndex": 2, ...}]
+- Pizza recipe: chunks: [{"title": "Dough", "ingredients": [...], "recipeSteps": [...], "prepTime": 15, "cookTime": 0, "servings": 4, "difficulty": "medium", "tags": [...], "rating": 4.2, "orderIndex": 0, ...}, {"title": "Sauce", "ingredients": [...], "recipeSteps": [...], "prepTime": 10, "cookTime": 20, "servings": 4, "difficulty": "easy", "tags": [...], "rating": 4.2, "orderIndex": 1, ...}, {"title": "Assembly & Baking", "ingredients": [...], "recipeSteps": [...], "prepTime": 5, "cookTime": 15, "servings": 4, "difficulty": "easy", "tags": [...], "rating": 4.2, "orderIndex": 2, ...}]
 
 Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
