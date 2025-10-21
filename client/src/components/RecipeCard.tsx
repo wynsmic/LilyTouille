@@ -240,7 +240,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
         </TagsContainer>
 
         <MetaInfo>
-          <span>{recipe.prepTime + recipe.cookTime} min</span>
+          <span>{recipe.totalPrepTime + recipe.totalCookTime} min</span>
           <span>{recipe.servings} servings</span>
         </MetaInfo>
       </ContentSection>

@@ -641,21 +641,21 @@ const RecipeDetail: React.FC = () => {
 
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
-  // Helper function to get all ingredients from main recipe and parts
-  const getAllIngredients = (recipe: Recipe): string[] => {
-    const allIngredients = [...recipe.ingredients];
-
-    if (recipe.isChunked && recipe.parts) {
-      recipe.parts.forEach(part => {
-        allIngredients.push(...part.ingredients);
-      });
+  // Helper function to get ingredients grouped by chunk
+  const getIngredientsByChunk = (
+    recipe: Recipe
+  ): { chunkTitle?: string; ingredients: string[] }[] => {
+    if (!recipe.chunks || recipe.chunks.length === 0) {
+      return [];
     }
 
-    // Remove duplicates while preserving order
-    return Array.from(new Set(allIngredients));
+    return recipe.chunks.map(chunk => ({
+      chunkTitle: recipe.chunks.length > 1 ? chunk.title : undefined,
+      ingredients: chunk.ingredients,
+    }));
   };
 
-  const allIngredients = recipe ? getAllIngredients(recipe) : [];
+  const ingredientsByChunk = recipe ? getIngredientsByChunk(recipe) : [];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -693,7 +693,7 @@ const RecipeDetail: React.FC = () => {
     );
   }
 
-  const totalTime = recipe.prepTime + recipe.cookTime;
+  const totalTime = recipe.totalPrepTime + recipe.totalCookTime;
 
   return (
     <Layout>
@@ -831,33 +831,56 @@ const RecipeDetail: React.FC = () => {
                   transition={{ delay: 0.4, duration: 0.6 }}
                 >
                   <SectionTitle>Ingredients</SectionTitle>
-                  {recipe.isChunked &&
-                    recipe.parts &&
-                    recipe.parts.length > 0 && (
-                      <IngredientsNote>
-                        📋 Combined ingredients from all recipe parts
-                      </IngredientsNote>
-                    )}
-                  <IngredientsList>
-                    <IngredientsUl>
-                      {allIngredients.map((ingredient, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            delay: 0.5 + index * 0.1,
-                            duration: 0.4,
+                  {ingredientsByChunk.map((chunkGroup, chunkIndex) => (
+                    <motion.div
+                      key={chunkIndex}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 0.5 + chunkIndex * 0.1,
+                        duration: 0.4,
+                      }}
+                    >
+                      {chunkGroup.chunkTitle && (
+                        <h3
+                          style={{
+                            fontSize: 'var(--font-size-lg)',
+                            fontWeight: 'var(--font-weight-semibold)',
+                            color: 'var(--color-gray-900)',
+                            marginBottom: 'var(--space-3)',
+                            marginTop: chunkIndex > 0 ? 'var(--space-6)' : '0',
                           }}
                         >
-                          <IngredientItem>
-                            <IngredientBullet />
-                            <IngredientText>{ingredient}</IngredientText>
-                          </IngredientItem>
-                        </motion.div>
-                      ))}
-                    </IngredientsUl>
-                  </IngredientsList>
+                          {chunkGroup.chunkTitle}
+                        </h3>
+                      )}
+                      <IngredientsList>
+                        <IngredientsUl>
+                          {chunkGroup.ingredients.map(
+                            (ingredient, ingredientIndex) => (
+                              <motion.div
+                                key={ingredientIndex}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{
+                                  delay:
+                                    0.6 +
+                                    chunkIndex * 0.1 +
+                                    ingredientIndex * 0.05,
+                                  duration: 0.4,
+                                }}
+                              >
+                                <IngredientItem>
+                                  <IngredientBullet />
+                                  <IngredientText>{ingredient}</IngredientText>
+                                </IngredientItem>
+                              </motion.div>
+                            )
+                          )}
+                        </IngredientsUl>
+                      </IngredientsList>
+                    </motion.div>
+                  ))}
 
                   <MetadataGrid>
                     <MetadataCard>
@@ -901,86 +924,32 @@ const RecipeDetail: React.FC = () => {
                 </motion.div>
               </InstructionsSection>
 
-              <RecipeStepsSection>
+              {/* Recipe Chunks */}
+              {recipe.chunks && recipe.chunks.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8, duration: 0.6 }}
                 >
-                  <SectionTitle>Recipe Steps</SectionTitle>
-                  <RecipeStepsContainer>
-                    {recipe.recipeSteps.map((step, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
-                      >
-                        <RecipeStepItem $type={step.type}>
-                          {step.type === 'text' ? (
-                            <span>{step.content}</span>
-                          ) : (
-                            <>
-                              <RecipeStepImage
-                                src={step.imageUrl}
-                                alt={step.content}
-                              />
-                              <RecipeStepImageCaption>
-                                {step.content}
-                              </RecipeStepImageCaption>
-                            </>
-                          )}
-                        </RecipeStepItem>
-                      </motion.div>
-                    ))}
-                  </RecipeStepsContainer>
-                </motion.div>
-              </RecipeStepsSection>
-
-              {/* Chunked Recipe Parts */}
-              {recipe.isChunked && recipe.parts && recipe.parts.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0, duration: 0.6 }}
-                >
-                  <SectionTitle>Recipe Parts</SectionTitle>
-                  {recipe.parts.map((part, partIndex) => (
+                  {recipe.chunks.map((chunk, chunkIndex) => (
                     <motion.div
-                      key={partIndex}
+                      key={chunkIndex}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{
-                        delay: 1.1 + partIndex * 0.1,
+                        delay: 0.9 + chunkIndex * 0.1,
                         duration: 0.4,
                       }}
                     >
                       <RecipePartSection>
-                        <PartTitle>{part.title}</PartTitle>
-                        {part.description && (
-                          <PartDescription>{part.description}</PartDescription>
+                        <PartTitle>{chunk.title}</PartTitle>
+                        {chunk.description && (
+                          <PartDescription>{chunk.description}</PartDescription>
                         )}
 
-                        {part.ingredients && part.ingredients.length > 0 && (
-                          <PartIngredientsList>
-                            <PartIngredientsUl>
-                              {part.ingredients.map(
-                                (ingredient, ingredientIndex) => (
-                                  <PartIngredientItem key={ingredientIndex}>
-                                    <PartIngredientBullet />
-                                    <PartIngredientText>
-                                      {ingredient}
-                                    </PartIngredientText>
-                                  </PartIngredientItem>
-                                )
-                              )}
-                            </PartIngredientsUl>
-                          </PartIngredientsList>
-                        )}
-
-                        {part.recipeSteps && part.recipeSteps.length > 0 && (
+                        {chunk.recipeSteps && chunk.recipeSteps.length > 0 && (
                           <PartStepsContainer>
-                            {part.recipeSteps.map((step, stepIndex) => (
+                            {chunk.recipeSteps.map((step, stepIndex) => (
                               <PartStepItem key={stepIndex} $type={step.type}>
                                 {step.type === 'text' ? (
                                   <span>{step.content}</span>
@@ -1032,7 +1001,7 @@ const RecipeDetail: React.FC = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                       />
                     </FloatingIcon>
                   </FloatingButtonElement>
@@ -1080,23 +1049,36 @@ const RecipeDetail: React.FC = () => {
 
                     <ModalIngredients>
                       <ModalIngredientsTitle>Ingredients</ModalIngredientsTitle>
-                      {recipe.isChunked &&
-                        recipe.parts &&
-                        recipe.parts.length > 0 && (
-                          <IngredientsNote>
-                            📋 Combined ingredients from all recipe parts
-                          </IngredientsNote>
-                        )}
-                      <ModalIngredientsList>
-                        {allIngredients.map((ingredient, index) => (
-                          <ModalIngredientItem key={index}>
-                            <ModalIngredientBullet />
-                            <ModalIngredientText>
-                              {ingredient}
-                            </ModalIngredientText>
-                          </ModalIngredientItem>
-                        ))}
-                      </ModalIngredientsList>
+                      {ingredientsByChunk.map((chunkGroup, chunkIndex) => (
+                        <div key={chunkIndex}>
+                          {chunkGroup.chunkTitle && (
+                            <h4
+                              style={{
+                                fontSize: 'var(--font-size-base)',
+                                fontWeight: 'var(--font-weight-semibold)',
+                                color: 'var(--color-gray-900)',
+                                marginBottom: 'var(--space-2)',
+                                marginTop:
+                                  chunkIndex > 0 ? 'var(--space-4)' : '0',
+                              }}
+                            >
+                              {chunkGroup.chunkTitle}
+                            </h4>
+                          )}
+                          <ModalIngredientsList>
+                            {chunkGroup.ingredients.map(
+                              (ingredient, ingredientIndex) => (
+                                <ModalIngredientItem key={ingredientIndex}>
+                                  <ModalIngredientBullet />
+                                  <ModalIngredientText>
+                                    {ingredient}
+                                  </ModalIngredientText>
+                                </ModalIngredientItem>
+                              )
+                            )}
+                          </ModalIngredientsList>
+                        </div>
+                      ))}
                     </ModalIngredients>
 
                     <ModalMetadataGrid>
