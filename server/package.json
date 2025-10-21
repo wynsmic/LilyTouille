@@ -16,7 +16,8 @@
     "worker:scrape": "ts-node src/workers/scrapeWorker.ts",
     "worker:ai": "ts-node src/workers/aiWorker.ts",
     "demo:queue": "ts-node src/scripts/demo-queue.ts",
-    "migrate:json": "ts-node src/scripts/migrate-json-to-db.ts"
+    "migrate:json": "ts-node src/scripts/migrate-json-to-db.ts",
+    "migrate:chunks": "ts-node src/scripts/migrate-to-chunks.ts"
   },
   "dependencies": {
     "@nestjs/cli": "^11.0.10",

@@ -21,6 +21,9 @@ jest.mock('../services/database.service', () => ({
   DatabaseService: jest.fn().mockImplementation(() => ({
     initialize: jest.fn(),
     saveRecipe: jest.fn(),
+    getChunkRepository: jest.fn().mockReturnValue({
+      save: jest.fn(),
+    }),
   })),
 }));
 

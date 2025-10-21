@@ -12,6 +12,46 @@ export interface RecipeStep {
   imageUrl?: string;
 }
 
+export interface Chunk {
+  id: number;
+  title: string;
+  description?: string;
+  ingredients: string[];
+  recipeSteps: RecipeStep[];
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  imageUrl?: string;
+  rating: number;
+  orderIndex: number;
+  recipeId: number;
+}
+
+export interface Recipe {
+  id: number;
+  title: string;
+  description: string;
+  overview: string[];
+  totalPrepTime: number;
+  totalCookTime: number;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  imageUrl: string;
+  rating: number;
+  author: string;
+  chunks: Chunk[];
+  // Scraping metadata
+  sourceUrl?: string;
+  scrapedHtml?: string;
+  aiQuery?: string;
+  aiResponse?: string;
+  scrapedAt?: string;
+}
+
+// Legacy interface for backward compatibility
 export interface RecipePart {
   title: string;
   description?: string;
@@ -19,30 +59,4 @@ export interface RecipePart {
   recipeSteps: RecipeStep[];
   prepTime?: number;
   cookTime?: number;
-}
-
-export interface Recipe {
-  id: number;
-  title: string;
-  description: string;
-  ingredients: string[];
-  overview: string[];
-  recipeSteps: RecipeStep[];
-  prepTime: number;
-  cookTime: number;
-  servings: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  tags: string[];
-  imageUrl: string;
-  rating: number;
-  author: string;
-  // Chunked recipe support
-  parts?: RecipePart[];
-  isChunked?: boolean;
-  // Scraping metadata
-  sourceUrl?: string;
-  scrapedHtml?: string;
-  aiQuery?: string;
-  aiResponse?: string;
-  scrapedAt?: string;
 }

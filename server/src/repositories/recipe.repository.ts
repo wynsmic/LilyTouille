@@ -13,7 +13,10 @@ export class RecipeRepository implements IRecipeRepository {
   }
 
   async findAll(filters?: RecipeFilters): Promise<RecipeEntity[]> {
-    const queryBuilder = this.repository.createQueryBuilder('recipe');
+    const queryBuilder = this.repository
+      .createQueryBuilder('recipe')
+      .leftJoinAndSelect('recipe.chunks', 'chunks')
+      .orderBy('chunks.orderIndex', 'ASC');
 
     if (filters) {
       if (filters.tag) {
@@ -24,7 +27,7 @@ export class RecipeRepository implements IRecipeRepository {
 
       if (filters.ingredient) {
         queryBuilder.andWhere(
-          'JSON_EXTRACT(recipe.ingredients, "$") LIKE :ingredient',
+          'JSON_EXTRACT(chunks.ingredients, "$") LIKE :ingredient',
           {
             ingredient: `%${filters.ingredient}%`,
           }
@@ -48,7 +51,11 @@ export class RecipeRepository implements IRecipeRepository {
   }
 
   async findById(id: number): Promise<RecipeEntity | null> {
-    return this.repository.findOne({ where: { id } });
+    return this.repository.findOne({
+      where: { id },
+      relations: ['chunks'],
+      order: { chunks: { orderIndex: 'ASC' } },
+    });
   }
 
   async findBySourceUrl(sourceUrl: string): Promise<RecipeEntity | null> {
@@ -84,10 +91,12 @@ export class RecipeRepository implements IRecipeRepository {
 
   async findAllIngredients(): Promise<string[]> {
     const recipes = await this.repository.find({
-      select: ['ingredients'],
+      relations: ['chunks'],
     });
 
-    const allIngredients = recipes.flatMap(recipe => recipe.ingredients);
+    const allIngredients = recipes.flatMap(recipe =>
+      recipe.chunks.flatMap(chunk => chunk.ingredients)
+    );
     return [...new Set(allIngredients)].sort();
   }
 
@@ -110,9 +119,11 @@ export class RecipeRepository implements IRecipeRepository {
   async findByIngredient(ingredient: string): Promise<RecipeEntity[]> {
     return this.repository
       .createQueryBuilder('recipe')
-      .where('JSON_EXTRACT(recipe.ingredients, "$") LIKE :ingredient', {
+      .leftJoinAndSelect('recipe.chunks', 'chunks')
+      .where('JSON_EXTRACT(chunks.ingredients, "$") LIKE :ingredient', {
         ingredient: `%${ingredient}%`,
       })
+      .orderBy('chunks.orderIndex', 'ASC')
       .getMany();
   }
 

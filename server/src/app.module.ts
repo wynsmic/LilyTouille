@@ -7,6 +7,7 @@ import { HealthController } from './controllers/health.controller';
 import { ProgressGateway } from './gateways/progress.gateway';
 import { config } from './config';
 import { RecipeEntity } from './entities/recipe.entity';
+import { ChunkEntity } from './entities/chunk.entity';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { RecipeEntity } from './entities/recipe.entity';
       database: config.db.database,
       synchronize: config.db.synchronize,
       logging: config.db.logging,
-      entities: [RecipeEntity],
+      entities: [RecipeEntity, ChunkEntity],
     }),
     RecipeModule,
     ScraperModule,

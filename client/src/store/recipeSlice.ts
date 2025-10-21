@@ -48,9 +48,10 @@ const recipeSlice = createSlice({
           recipe =>
             recipe.title.toLowerCase().includes(query) ||
             recipe.description.toLowerCase().includes(query) ||
-            recipe.ingredients.some(ingredient =>
-              ingredient.toLowerCase().includes(query)
-            )
+            recipe.chunks
+              .map(chunk => chunk.ingredients)
+              .flat()
+              .some(ingredient => ingredient.toLowerCase().includes(query))
         );
       }
 

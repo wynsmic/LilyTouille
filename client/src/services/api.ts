@@ -48,6 +48,46 @@ export interface RecipeStep {
   imageUrl?: string;
 }
 
+export interface Chunk {
+  id: number;
+  title: string;
+  description?: string;
+  ingredients: string[];
+  recipeSteps: RecipeStep[];
+  prepTime: number;
+  cookTime: number;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  imageUrl?: string;
+  rating: number;
+  orderIndex: number;
+  recipeId: number;
+}
+
+export interface Recipe {
+  id: number;
+  title: string;
+  description: string;
+  overview: string[];
+  totalPrepTime: number;
+  totalCookTime: number;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  imageUrl: string;
+  rating: number;
+  author: string;
+  chunks: Chunk[];
+  // Scraping metadata
+  sourceUrl?: string;
+  scrapedHtml?: string;
+  aiQuery?: string;
+  aiResponse?: string;
+  scrapedAt?: string;
+}
+
+// Legacy interface for backward compatibility
 export interface RecipePart {
   title: string;
   description?: string;
@@ -55,32 +95,6 @@ export interface RecipePart {
   recipeSteps: RecipeStep[];
   prepTime?: number;
   cookTime?: number;
-}
-
-export interface Recipe {
-  id: number;
-  title: string;
-  description: string;
-  ingredients: string[];
-  overview: string[];
-  recipeSteps: RecipeStep[];
-  prepTime: number;
-  cookTime: number;
-  servings: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  tags: string[];
-  imageUrl: string;
-  rating: number;
-  author: string;
-  // Chunked recipe support
-  parts?: RecipePart[];
-  isChunked?: boolean;
-  // Scraping metadata
-  sourceUrl?: string;
-  scrapedHtml?: string;
-  aiQuery?: string;
-  aiResponse?: string;
-  scrapedAt?: string;
 }
 
 export interface RecipeFilters {
@@ -144,6 +158,55 @@ export const recipeApi = {
   // Delete a recipe by ID
   deleteRecipe: async (id: number): Promise<void> => {
     await apiClient.delete<ApiResponse<void>>(`/recipes/${id}`);
+  },
+
+  // Create a new recipe with chunks
+  createRecipe: async (recipe: Omit<Recipe, 'id'>): Promise<Recipe> => {
+    const response = await apiClient.post<ApiResponse<Recipe>>(
+      '/recipes',
+      recipe
+    );
+    return response.data.data;
+  },
+
+  // Get chunks for a specific recipe
+  getRecipeChunks: async (recipeId: number): Promise<Chunk[]> => {
+    const response = await apiClient.get<ApiResponse<Chunk[]>>(
+      `/recipes/${recipeId}/chunks`
+    );
+    return response.data.data;
+  },
+
+  // Create a new chunk for a recipe
+  createChunk: async (
+    recipeId: number,
+    chunk: Omit<Chunk, 'id' | 'recipeId'>
+  ): Promise<Chunk> => {
+    const response = await apiClient.post<ApiResponse<Chunk>>(
+      `/recipes/${recipeId}/chunks`,
+      chunk
+    );
+    return response.data.data;
+  },
+
+  // Update a chunk
+  updateChunk: async (
+    recipeId: number,
+    chunkId: number,
+    chunk: Partial<Chunk>
+  ): Promise<Chunk> => {
+    const response = await apiClient.put<ApiResponse<Chunk>>(
+      `/recipes/${recipeId}/chunks/${chunkId}`,
+      chunk
+    );
+    return response.data.data;
+  },
+
+  // Delete a chunk
+  deleteChunk: async (recipeId: number, chunkId: number): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(
+      `/recipes/${recipeId}/chunks/${chunkId}`
+    );
   },
 };
 

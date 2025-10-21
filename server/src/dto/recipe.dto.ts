@@ -27,7 +27,10 @@ export class RecipeStepDto {
   imageUrl?: string;
 }
 
-export class RecipePartDto {
+export class ChunkDto {
+  @IsNumber()
+  id: number;
+
   @IsString()
   title: string;
 
@@ -38,38 +41,6 @@ export class RecipePartDto {
   @IsArray()
   @IsString({ each: true })
   ingredients: string[];
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => RecipeStepDto)
-  recipeSteps: RecipeStepDto[];
-
-  @IsOptional()
-  @IsNumber()
-  prepTime?: number;
-
-  @IsOptional()
-  @IsNumber()
-  cookTime?: number;
-}
-
-export class RecipeDto {
-  @IsNumber()
-  id: number;
-
-  @IsString()
-  title: string;
-
-  @IsString()
-  description: string;
-
-  @IsArray()
-  @IsString({ each: true })
-  ingredients: string[];
-
-  @IsArray()
-  @IsString({ each: true })
-  overview: string[];
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -92,6 +63,50 @@ export class RecipeDto {
   @IsString({ each: true })
   tags: string[];
 
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsNumber()
+  rating: number;
+
+  @IsNumber()
+  orderIndex: number;
+
+  @IsNumber()
+  recipeId: number;
+}
+
+export class RecipeDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  title: string;
+
+  @IsString()
+  description: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  overview: string[];
+
+  @IsNumber()
+  totalPrepTime: number;
+
+  @IsNumber()
+  totalCookTime: number;
+
+  @IsNumber()
+  servings: number;
+
+  @IsEnum(Difficulty)
+  difficulty: Difficulty;
+
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
+
   @IsString()
   imageUrl: string;
 
@@ -101,16 +116,10 @@ export class RecipeDto {
   @IsString()
   author: string;
 
-  // Chunked recipe support
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => RecipePartDto)
-  parts?: RecipePartDto[];
-
-  @IsOptional()
-  @IsIn([true, false])
-  isChunked?: boolean;
+  @Type(() => ChunkDto)
+  chunks: ChunkDto[];
 
   // Scraping metadata (optional)
   @IsOptional()
@@ -134,20 +143,17 @@ export class RecipeDto {
   scrapedAt?: string;
 }
 
-export class CreateRecipeDto {
+export class CreateChunkDto {
   @IsString()
   title: string;
 
+  @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
   @IsArray()
   @IsString({ each: true })
   ingredients: string[];
-
-  @IsArray()
-  @IsString({ each: true })
-  overview: string[];
 
   @IsArray()
   @ValidateNested({ each: true })
@@ -170,6 +176,47 @@ export class CreateRecipeDto {
   @IsString({ each: true })
   tags: string[];
 
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsNumber()
+  rating: number;
+
+  @IsNumber()
+  orderIndex: number;
+
+  @IsNumber()
+  recipeId: number;
+}
+
+export class CreateRecipeDto {
+  @IsString()
+  title: string;
+
+  @IsString()
+  description: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  overview: string[];
+
+  @IsNumber()
+  totalPrepTime: number;
+
+  @IsNumber()
+  totalCookTime: number;
+
+  @IsNumber()
+  servings: number;
+
+  @IsEnum(Difficulty)
+  difficulty: Difficulty;
+
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
+
   @IsString()
   imageUrl: string;
 
@@ -179,16 +226,10 @@ export class CreateRecipeDto {
   @IsString()
   author: string;
 
-  // Chunked recipe support
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => RecipePartDto)
-  parts?: RecipePartDto[];
-
-  @IsOptional()
-  @IsIn([true, false])
-  isChunked?: boolean;
+  @Type(() => CreateChunkDto)
+  chunks: CreateChunkDto[];
 
   // Scraping metadata (optional)
   @IsOptional()

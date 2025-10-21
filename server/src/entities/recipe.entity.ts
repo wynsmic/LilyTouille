@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { ChunkEntity } from './chunk.entity';
 
 @Entity('recipes')
 export class RecipeEntity {
@@ -18,23 +20,13 @@ export class RecipeEntity {
   description: string;
 
   @Column({ type: 'json' })
-  ingredients: string[];
-
-  @Column({ type: 'json' })
   overview: string[];
 
-  @Column({ type: 'json' })
-  recipeSteps: Array<{
-    type: 'text' | 'image';
-    content: string;
-    imageUrl?: string;
-  }>;
+  @Column({ type: 'int', default: 0 })
+  totalPrepTime: number;
 
   @Column({ type: 'int', default: 0 })
-  prepTime: number;
-
-  @Column({ type: 'int', default: 0 })
-  cookTime: number;
+  totalCookTime: number;
 
   @Column({ type: 'int', default: 1 })
   servings: number;
@@ -54,23 +46,9 @@ export class RecipeEntity {
   @Column({ type: 'varchar', length: 255 })
   author: string;
 
-  // Chunked recipe support
-  @Column({ type: 'json', nullable: true })
-  parts?: Array<{
-    title: string;
-    description?: string;
-    ingredients: string[];
-    recipeSteps: Array<{
-      type: 'text' | 'image';
-      content: string;
-      imageUrl?: string;
-    }>;
-    prepTime?: number;
-    cookTime?: number;
-  }>;
-
-  @Column({ type: 'boolean', default: false })
-  isChunked: boolean;
+  // Relationship to chunks
+  @OneToMany(() => ChunkEntity, chunk => chunk.recipe, { cascade: true })
+  chunks: ChunkEntity[];
 
   // Scraping metadata
   @Column({ type: 'varchar', length: 1000, nullable: true })

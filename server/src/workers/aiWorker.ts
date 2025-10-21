@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { RedisService } from '../services/redis.service';
 import { DatabaseService } from '../services/database.service';
 import { RecipeType } from './types';
+import { Recipe } from '../interfaces/recipe.interface';
 import { config } from '../config';
 import { logger } from '../logger';
 
@@ -120,21 +121,17 @@ function restoreUrlsInRecipe(
     restored.imageUrl = mappings[restored.imageUrl];
   }
 
-  // Restore URLs in recipeSteps
-  if (restored.recipeSteps) {
-    restored.recipeSteps = restored.recipeSteps.map(step => {
-      if (step.type === 'image' && step.imageUrl && mappings[step.imageUrl]) {
-        return { ...step, imageUrl: mappings[step.imageUrl] };
-      }
-      return step;
-    });
-  }
-
-  // Restore URLs in parts
-  if (restored.parts) {
-    restored.parts = restored.parts.map(part => ({
-      ...part,
-      recipeSteps: part.recipeSteps.map(step => {
+  // Restore URLs in chunks
+  if ((restored as any).chunks) {
+    (restored as any).chunks = (restored as any).chunks.map((chunk: any) => ({
+      ...chunk,
+      // Restore chunk imageUrl if present
+      imageUrl:
+        chunk.imageUrl && mappings[chunk.imageUrl]
+          ? mappings[chunk.imageUrl]
+          : chunk.imageUrl,
+      // Restore URLs in recipeSteps
+      recipeSteps: chunk.recipeSteps.map((step: any) => {
         if (step.type === 'image' && step.imageUrl && mappings[step.imageUrl]) {
           return { ...step, imageUrl: mappings[step.imageUrl] };
         }
@@ -365,19 +362,25 @@ async function callAiForRecipe(
   // Enhanced prompt to preserve original recipe content while adding meaningful overview
   const system =
     'You are a recipe parser that extracts structured recipe JSON while preserving the original content as faithfully as possible. Your goal is to maintain the authenticity of the original recipe while adding only a helpful overview section. Respond with strict JSON matching the schema.';
-  const userContent = `Extract a recipe object with fields: title(string), description(string), ingredients(string[]), overview(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), parts?({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime?(number), cookTime?(number)}[]), isChunked?(boolean). 
+  const userContent = `Extract a recipe object with fields: title(string), description(string), overview(string[]), totalPrepTime(number), totalCookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl(string), rating(number), author(string), chunks({title(string), description?(string), ingredients(string[]), recipeSteps({type:"text"|"image",content,imageUrl?}[]), prepTime(number), cookTime(number), servings(number), difficulty("easy"|"medium"|"hard"), tags(string[]), imageUrl?(string), rating(number), orderIndex(number)}[]). 
 
 CRITICAL INSTRUCTIONS:
 1. PRESERVE ORIGINAL CONTENT: Extract ingredients, description, and recipeSteps exactly as they appear in the original recipe. Do not modify, summarize, or rewrite the original content.
 2. OVERVIEW SECTION: Add a brief overview (2-4 sentences) that provides a global presentation of the recipe and highlights important things to keep in mind (cooking techniques, key ingredients, special notes, etc.). This should be helpful context, not a summary of steps.
 3. IMAGES: Preserve all original recipe images. Extract image URLs from the HTML and include them in recipeSteps with type:"image" where they appear in the original recipe flow. IMPORTANT: URLs in the HTML have been replaced with short codes (like URL_1, URL_2, etc.) to reduce token usage. Extract these codes exactly as they appear and include them in the imageUrl field. The codes will be restored to actual URLs later.
 4. NO RECIPE STEPS GENERATION: Do not generate or create recipe steps. Only extract the exact steps as they appear in the original recipe.
-5. CHUNKED RECIPES: If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), set isChunked to true and populate the parts array with each part. Each part should have its own ingredients and recipeSteps exactly as they appear in the original.
-6. DO NOT INCLUDE AN ID FIELD: The database will auto-generate the ID.
+5. CHUNKS STRUCTURE: ALL recipes must have a chunks array. If the recipe is split into multiple parts (like "Part 1: Dough", "Part 2: Filling", etc.), create multiple chunks with orderIndex starting from 0. If the recipe is not split into parts, create a single chunk with orderIndex 0 containing the recipe's ingredients and recipeSteps.
+6. CHUNK METADATA: Each chunk should inherit metadata (servings, difficulty, tags, rating) from the main recipe unless the chunk has specific different values.
+7. TIME CALCULATION: totalPrepTime and totalCookTime should be the sum of all chunks' prepTime and cookTime respectively.
+8. DO NOT INCLUDE AN ID FIELD: The database will auto-generate the ID.
 
 IMAGE EXTRACTION EXAMPLE:
 - If you find: <img src="URL_1" alt="Recipe step">
 - Extract as: {"type": "image", "content": "Recipe step", "imageUrl": "URL_1"}
+
+CHUNK EXAMPLE:
+- Single recipe: chunks: [{"title": "Main Recipe", "ingredients": [...], "recipeSteps": [...], "prepTime": 30, "cookTime": 45, "orderIndex": 0, ...}]
+- Multi-part recipe: chunks: [{"title": "Dough", "ingredients": [...], "recipeSteps": [...], "prepTime": 20, "cookTime": 0, "orderIndex": 0, ...}, {"title": "Filling", "ingredients": [...], "recipeSteps": [...], "prepTime": 10, "cookTime": 30, "orderIndex": 1, ...}]
 
 Source URL: ${url}. HTML:\n${cleanedHtml}`;
 
@@ -453,11 +456,8 @@ function validateRecipeJson(candidate: any): void {
   if (typeof candidate.title !== 'string' || candidate.title.length === 0) {
     errors.push('title must be non-empty string');
   }
-  if (!Array.isArray(candidate.ingredients)) {
-    errors.push('ingredients must be an array of strings');
-  }
-  if (!Array.isArray(candidate.recipeSteps)) {
-    errors.push('recipeSteps must be an array');
+  if (!Array.isArray(candidate.chunks)) {
+    errors.push('chunks must be an array');
   }
   if (!Array.isArray(candidate.overview)) {
     errors.push('overview must be an array of strings');
@@ -468,51 +468,78 @@ function validateRecipeJson(candidate: any): void {
   if (typeof candidate.difficulty !== 'string') {
     errors.push('difficulty must be a string');
   }
-
-  // Validate recipeSteps structure
-  if (Array.isArray(candidate.recipeSteps)) {
-    candidate.recipeSteps.forEach((step: any, index: number) => {
-      if (typeof step !== 'object' || step === null) {
-        errors.push(`recipeSteps[${index}] must be an object`);
-        return;
-      }
-      if (step.type !== 'text' && step.type !== 'image') {
-        errors.push(`recipeSteps[${index}].type must be 'text' or 'image'`);
-      }
-      if (typeof step.content !== 'string') {
-        errors.push(`recipeSteps[${index}].content must be a string`);
-      }
-      if (
-        step.type === 'image' &&
-        step.imageUrl !== undefined &&
-        typeof step.imageUrl !== 'string'
-      ) {
-        errors.push(
-          `recipeSteps[${index}].imageUrl must be a string when provided`
-        );
-      }
-    });
+  if (typeof candidate.totalPrepTime !== 'number') {
+    errors.push('totalPrepTime must be a number');
+  }
+  if (typeof candidate.totalCookTime !== 'number') {
+    errors.push('totalCookTime must be a number');
   }
 
-  // Validate chunked recipe structure if present
-  if (candidate.isChunked === true) {
-    if (!Array.isArray(candidate.parts)) {
-      errors.push('parts must be an array when isChunked is true');
-    } else {
-      candidate.parts.forEach((part: any, index: number) => {
-        if (typeof part.title !== 'string' || part.title.length === 0) {
-          errors.push(`parts[${index}].title must be non-empty string`);
-        }
-        if (!Array.isArray(part.ingredients)) {
-          errors.push(
-            `parts[${index}].ingredients must be an array of strings`
-          );
-        }
-        if (!Array.isArray(part.recipeSteps)) {
-          errors.push(`parts[${index}].recipeSteps must be an array`);
-        }
-      });
-    }
+  // Validate chunks structure (all recipes must have chunks)
+  if (Array.isArray(candidate.chunks)) {
+    candidate.chunks.forEach((chunk: any, index: number) => {
+      if (typeof chunk.title !== 'string' || chunk.title.length === 0) {
+        errors.push(`chunks[${index}].title must be non-empty string`);
+      }
+      if (!Array.isArray(chunk.ingredients)) {
+        errors.push(`chunks[${index}].ingredients must be an array of strings`);
+      }
+      if (!Array.isArray(chunk.recipeSteps)) {
+        errors.push(`chunks[${index}].recipeSteps must be an array`);
+      }
+      if (typeof chunk.prepTime !== 'number') {
+        errors.push(`chunks[${index}].prepTime must be a number`);
+      }
+      if (typeof chunk.cookTime !== 'number') {
+        errors.push(`chunks[${index}].cookTime must be a number`);
+      }
+      if (typeof chunk.orderIndex !== 'number') {
+        errors.push(`chunks[${index}].orderIndex must be a number`);
+      }
+      if (typeof chunk.servings !== 'number') {
+        errors.push(`chunks[${index}].servings must be a number`);
+      }
+      if (typeof chunk.difficulty !== 'string') {
+        errors.push(`chunks[${index}].difficulty must be a string`);
+      }
+      if (!Array.isArray(chunk.tags)) {
+        errors.push(`chunks[${index}].tags must be an array of strings`);
+      }
+      if (typeof chunk.rating !== 'number') {
+        errors.push(`chunks[${index}].rating must be a number`);
+      }
+
+      // Validate recipeSteps structure within chunks
+      if (Array.isArray(chunk.recipeSteps)) {
+        chunk.recipeSteps.forEach((step: any, stepIndex: number) => {
+          if (typeof step !== 'object' || step === null) {
+            errors.push(
+              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`
+            );
+            return;
+          }
+          if (step.type !== 'text' && step.type !== 'image') {
+            errors.push(
+              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`
+            );
+          }
+          if (typeof step.content !== 'string') {
+            errors.push(
+              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`
+            );
+          }
+          if (
+            step.type === 'image' &&
+            step.imageUrl !== undefined &&
+            typeof step.imageUrl !== 'string'
+          ) {
+            errors.push(
+              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`
+            );
+          }
+        });
+      }
+    });
   }
 
   if (errors.length > 0) {
@@ -527,14 +554,14 @@ async function storeRecipe(
   aiQuery: string,
   aiResponse: string,
   urlMappings: UrlMapping
-): Promise<RecipeType> {
+): Promise<Recipe> {
   // Note: In a production environment, you would inject DatabaseService
   // For now, we'll create a new instance for the worker
   const db = new DatabaseService();
   await db.initialize();
 
-  // Add the scraping metadata to the recipe
-  const recipeWithMetadata = {
+  // Prepare recipe data for the new chunk-based structure
+  const recipeForDatabase: RecipeType = {
     ...recipe,
     sourceUrl: url,
     scrapedHtml: html,
@@ -544,8 +571,9 @@ async function storeRecipe(
     scrapedAt: new Date().toISOString(),
   };
 
-  // Save recipe and get back the saved version with correct ID
-  const savedRecipe = await db.saveRecipe(recipeWithMetadata);
+  // Save recipe with chunks - the database service handles chunk creation automatically
+  const savedRecipe = await db.saveRecipe(recipeForDatabase);
+
   return savedRecipe;
 }
 

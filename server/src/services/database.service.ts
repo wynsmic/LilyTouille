@@ -2,8 +2,11 @@ import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { config } from '../config';
 import { RecipeEntity } from '../entities/recipe.entity';
+import { ChunkEntity } from '../entities/chunk.entity';
 import { RecipeRepository } from '../repositories/recipe.repository';
+import { ChunkRepository } from '../repositories/chunk.repository';
 import { IRecipeRepository } from '../repositories/recipe.repository.interface';
+import { IChunkRepository } from '../repositories/chunk.repository';
 import { RecipeType } from '../workers/types';
 import { Recipe } from '../interfaces/recipe.interface';
 
@@ -11,6 +14,7 @@ import { Recipe } from '../interfaces/recipe.interface';
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private dataSource: DataSource;
   private recipeRepository: IRecipeRepository;
+  private chunkRepository: IChunkRepository;
 
   async onModuleInit() {
     await this.initialize();
@@ -28,11 +32,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       database: config.db.database,
       synchronize: config.db.synchronize,
       logging: config.db.logging,
-      entities: [RecipeEntity],
+      entities: [RecipeEntity, ChunkEntity],
     });
 
     await this.dataSource.initialize();
     this.recipeRepository = new RecipeRepository(this.dataSource);
+    this.chunkRepository = new ChunkRepository(
+      this.dataSource.getRepository(ChunkEntity)
+    );
 
     console.log('Database initialized successfully');
   }
@@ -44,19 +51,30 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return this.recipeRepository;
   }
 
-  // Legacy methods for backward compatibility
-  async saveRecipe(recipe: RecipeType): Promise<RecipeType> {
-    const repository = this.getRecipeRepository();
+  getChunkRepository(): IChunkRepository {
+    if (!this.chunkRepository) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+    return this.chunkRepository;
+  }
+
+  // Save recipe with chunks
+  async saveRecipe(recipe: RecipeType): Promise<Recipe> {
+    const recipeRepository = this.getRecipeRepository();
+    const chunkRepository = this.getChunkRepository();
+
+    // Extract chunks from recipe data
+    const { chunks, ...recipeData } = recipe as any;
 
     // Remove ID from recipe to ensure auto-generation
-    const { id, ...recipeWithoutId } = recipe as any;
+    const { id, ...recipeWithoutId } = recipeData;
 
     // Check if recipe already exists by sourceUrl only
     let existingRecipe: RecipeEntity | null = null;
 
-    if ((recipe as any).sourceUrl) {
-      existingRecipe = await repository.findBySourceUrl(
-        (recipe as any).sourceUrl
+    if (recipeWithoutId.sourceUrl) {
+      existingRecipe = await recipeRepository.findBySourceUrl(
+        recipeWithoutId.sourceUrl
       );
     }
 
@@ -64,33 +82,58 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     if (existingRecipe) {
       // Update existing recipe
-      savedRecipe = (await repository.update(
+      savedRecipe = (await recipeRepository.update(
         existingRecipe.id,
         recipeWithoutId
       )) as RecipeEntity;
+
+      // Delete existing chunks and recreate them
+      await chunkRepository.deleteByRecipeId(existingRecipe.id);
     } else {
       // Add new recipe (database will auto-generate ID)
-      savedRecipe = await repository.save(recipeWithoutId);
+      savedRecipe = await recipeRepository.save(recipeWithoutId);
     }
 
-    // Return the saved recipe with the correct ID
-    return this.entityToRecipe(savedRecipe);
+    // Create chunks for the recipe
+    if (chunks && chunks.length > 0) {
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        await chunkRepository.save({
+          title: chunk.title,
+          description: chunk.description,
+          ingredients: chunk.ingredients || [],
+          recipeSteps: chunk.recipeSteps || [],
+          prepTime: chunk.prepTime || 0,
+          cookTime: chunk.cookTime || 0,
+          servings: chunk.servings || savedRecipe.servings,
+          difficulty: chunk.difficulty || savedRecipe.difficulty,
+          tags: chunk.tags || savedRecipe.tags,
+          imageUrl: chunk.imageUrl || savedRecipe.imageUrl,
+          rating: chunk.rating || savedRecipe.rating,
+          orderIndex: chunk.orderIndex || i,
+          recipeId: savedRecipe.id,
+        });
+      }
+    }
+
+    // Return the saved recipe with chunks loaded
+    return this.getRecipeById(savedRecipe.id) as Promise<Recipe>;
   }
 
-  async getAllRecipes(): Promise<RecipeType[]> {
+  async getAllRecipes(): Promise<Recipe[]> {
     const repository = this.getRecipeRepository();
     const entities = await repository.findAll();
     return entities.map(entity => this.entityToRecipe(entity));
   }
 
-  async getRecipeById(id: number): Promise<RecipeType | null> {
+  async getRecipeById(id: number): Promise<Recipe | null> {
     const repository = this.getRecipeRepository();
     const entity = await repository.findById(id);
     return entity ? this.entityToRecipe(entity) : null;
   }
 
   // New methods for enhanced functionality
-  async getAllRecipesWithFilters(filters?: any): Promise<RecipeType[]> {
+  async getAllRecipesWithFilters(filters?: any): Promise<Recipe[]> {
     const repository = this.getRecipeRepository();
     const entities = await repository.findAll(filters);
     return entities.map(entity => this.entityToRecipe(entity));
@@ -116,24 +159,21 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     return repository.delete(id);
   }
 
-  private entityToRecipe(entity: RecipeEntity): RecipeType {
+  private entityToRecipe(entity: RecipeEntity): Recipe {
     return {
       id: entity.id,
       title: entity.title,
       description: entity.description,
-      ingredients: entity.ingredients,
       overview: entity.overview,
-      recipeSteps: entity.recipeSteps,
-      prepTime: entity.prepTime,
-      cookTime: entity.cookTime,
+      totalPrepTime: entity.totalPrepTime,
+      totalCookTime: entity.totalCookTime,
       servings: entity.servings,
       difficulty: entity.difficulty,
       tags: entity.tags,
       imageUrl: entity.imageUrl,
       rating: entity.rating,
       author: entity.author,
-      parts: entity.parts,
-      isChunked: entity.isChunked,
+      chunks: entity.chunks || [],
       sourceUrl: entity.sourceUrl,
       scrapedHtml: entity.scrapedHtml,
       aiQuery: entity.aiQuery,
@@ -142,7 +182,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       scrapedAt: entity.scrapedAt
         ? new Date(entity.scrapedAt).toISOString()
         : undefined,
-    } as RecipeType;
+    } as Recipe;
   }
 
   // Migration method to import existing JSON data
