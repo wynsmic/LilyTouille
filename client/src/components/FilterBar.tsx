@@ -11,6 +11,10 @@ const FilterContainer = styled.div`
   border: 1px solid var(--color-gray-100);
   margin-bottom: var(--space-8);
   position: relative;
+
+  @media (max-width: 768px) {
+    padding: var(--space-4);
+  }
 `;
 
 const FilterContent = styled.div`
@@ -20,7 +24,8 @@ const FilterContent = styled.div`
   padding-right: 12rem; /* Make space for AI buttons */
 
   @media (max-width: 768px) {
-    padding-right: 10rem; /* Smaller space on mobile */
+    padding-right: 0; /* Remove padding on mobile */
+    gap: var(--space-4);
   }
 `;
 
@@ -126,6 +131,15 @@ const AIButtonsContainer = styled.div`
   flex-direction: column;
   gap: var(--space-2);
   z-index: 10;
+
+  @media (max-width: 768px) {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: var(--space-4);
+    gap: var(--space-3);
+  }
 `;
 
 const AIButton = styled.button<{ $variant: 'scrape' | 'invent' }>`
@@ -141,6 +155,13 @@ const AIButton = styled.button<{ $variant: 'scrape' | 'invent' }>`
   transition: all var(--transition-normal);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(10px);
+
+  @media (max-width: 768px) {
+    flex: 1;
+    justify-content: center;
+    padding: var(--space-3);
+    font-size: var(--font-size-xs);
+  }
 
   ${props =>
     props.$variant === 'scrape' &&
@@ -286,7 +307,10 @@ const FilterBar: React.FC = () => {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
             </svg>
           </AIIcon>
-          <ButtonText>Scrape Recipe</ButtonText>
+          <ButtonText>
+            <span className="desktop-text">Scrape Recipe</span>
+            <span className="mobile-text">Scrape</span>
+          </ButtonText>
         </AIButton>
 
         <AIButton $variant="invent" onClick={handleInventRecipe}>
@@ -295,7 +319,10 @@ const FilterBar: React.FC = () => {
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
             </svg>
           </AIIcon>
-          <ButtonText>Invent Recipe</ButtonText>
+          <ButtonText>
+            <span className="desktop-text">Invent Recipe</span>
+            <span className="mobile-text">Invent</span>
+          </ButtonText>
         </AIButton>
       </AIButtonsContainer>
 

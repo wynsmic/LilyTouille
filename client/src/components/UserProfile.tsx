@@ -50,6 +50,10 @@ const UserName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const DropdownMenu = styled.div<{ $isOpen: boolean }>`

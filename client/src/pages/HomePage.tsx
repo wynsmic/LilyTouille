@@ -28,6 +28,10 @@ const Title = styled.h1`
 const Subtitle = styled.p`
   color: var(--color-gray-600);
   font-size: var(--font-size-lg);
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const HomePage: React.FC = () => {
@@ -41,9 +45,7 @@ const HomePage: React.FC = () => {
     <Layout>
       <Container>
         <Header>
-          <Title>
-            Discover Amazing Recipes
-          </Title>
+          <Title>Discover Amazing Recipes</Title>
           <Subtitle>
             Find your next favorite dish from around the world
           </Subtitle>

@@ -476,6 +476,25 @@ body {
   background-color: var(--color-primary-50);
 }
 
+/* Mobile/Desktop text visibility */
+.desktop-text {
+  display: inline;
+}
+
+.mobile-text {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-text {
+    display: none;
+  }
+
+  .mobile-text {
+    display: inline;
+  }
+}
+
 .hover\:bg-gray-100:hover {
   background-color: var(--color-gray-100);
 }

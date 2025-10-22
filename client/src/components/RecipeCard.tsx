@@ -70,6 +70,10 @@ const DeleteButton = styled(ActionButton)`
   ${Card}:hover & {
     opacity: 1;
   }
+
+  @media (max-width: 768px) {
+    opacity: 1;
+  }
 `;
 
 const ContentSection = styled.div`
@@ -81,7 +85,7 @@ const ContentSection = styled.div`
 `;
 
 const ImageSection = styled.div`
-  width: 160px;
+  width: 120px;
   height: 100%;
   flex-shrink: 0;
   overflow: hidden;
