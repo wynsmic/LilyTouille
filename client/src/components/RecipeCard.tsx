@@ -16,88 +16,160 @@ const Card = styled.div`
   overflow: hidden;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
   position: relative;
-  transition: box-shadow var(--transition-normal);
+  transition: all var(--transition-normal);
+  height: 120px;
 
   &:hover {
     box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
   }
 `;
 
-const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
-  transition: color var(--transition-fast);
-  z-index: 10;
-  background: none;
+const ButtonsContainer = styled.div`
+  width: 40px;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  background: rgba(0, 0, 0, 0.02);
+`;
+
+const ActionButton = styled.button<{ $isFavorite?: boolean }>`
+  transition: all var(--transition-fast);
+  background: rgba(255, 255, 255, 0.8);
   border: none;
-  padding: 0;
+  padding: var(--space-1);
   margin: 0;
   outline: none;
-  flex: 0 0 auto;
   width: 32px;
-  margin-right: var(--space-2);
+  height: 32px;
+  border-radius: 50%;
   text-align: center;
   cursor: pointer;
-  color: ${(props: { $isFavorite: boolean }) =>
-    props.$isFavorite ? '#ef4444' : 'var(--color-gray-400)'};
+  backdrop-filter: blur(4px);
+  color: ${(props: { $isFavorite?: boolean }) =>
+    props.$isFavorite ? '#ef4444' : 'var(--color-gray-600)'};
+  box-shadow: var(--shadow-sm);
 
   &:hover {
-    color: ${(props: { $isFavorite: boolean }) =>
+    background: rgba(255, 255, 255, 1);
+    color: ${(props: { $isFavorite?: boolean }) =>
       props.$isFavorite ? '#dc2626' : '#ef4444'};
+    transform: scale(1.1);
+    box-shadow: var(--shadow-md);
   }
 `;
 
-const DeleteButton = styled.button`
-  transition:
-    color var(--transition-fast),
-    opacity var(--transition-fast);
-  z-index: 10;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  outline: none;
-  flex: 0 0 auto;
-  width: 32px;
-  margin-left: var(--space-2);
-  text-align: center;
-  cursor: pointer;
-  color: var(--color-gray-400);
+const DeleteButton = styled(ActionButton)`
   opacity: 0;
 
   ${Card}:hover & {
     opacity: 1;
   }
-
-  &:hover {
-    color: #ef4444;
-  }
 `;
 
 const ContentSection = styled.div`
-  flex: 1 1 auto;
-  padding-right: var(--space-1);
-  padding-left: var(--space-8);
+  flex: 1;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 `;
 
-const HeaderRow = styled.div`
+const ImageSection = styled.div`
+  width: 160px;
+  height: 100%;
+  flex-shrink: 0;
+  overflow: hidden;
+`;
+
+const RecipeImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+
+  ${Card}:hover & {
+    transform: scale(1.05);
+  }
+`;
+
+const HeaderSection = styled.div`
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-1);
 `;
 
 const Title = styled.h3`
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-gray-900);
-  flex: 1;
-  margin-right: var(--space-2);
+  margin: 0;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+`;
+
+const MetadataRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+`;
+
+const MetadataItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--font-weight-medium);
+`;
+
+const Description = styled.p`
+  color: var(--color-gray-600);
+  font-size: var(--font-size-xs);
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+`;
+
+const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: auto;
+  max-height: 20px;
+  overflow: hidden;
+`;
+
+const Tag = styled.span`
+  padding: 2px var(--space-1);
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-800);
+  font-size: 10px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+`;
+
+const MoreTags = styled.span`
+  padding: 2px var(--space-1);
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+  font-size: 10px;
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
 `;
 
 const DifficultyBadge = styled.span<{ $difficulty: string }>`
@@ -105,7 +177,6 @@ const DifficultyBadge = styled.span<{ $difficulty: string }>`
   border-radius: var(--radius-full);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  flex-shrink: 0;
   background-color: ${(props: { $difficulty: string }) =>
     props.$difficulty === 'easy'
       ? 'var(--color-green-100)'
@@ -118,65 +189,6 @@ const DifficultyBadge = styled.span<{ $difficulty: string }>`
       : props.$difficulty === 'medium'
         ? 'var(--color-yellow-800)'
         : 'var(--color-red-800)'};
-`;
-
-const Description = styled.p`
-  color: var(--color-gray-600);
-  font-size: var(--font-size-xs);
-  margin-bottom: var(--space-2);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-`;
-
-const TagsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-bottom: var(--space-2);
-`;
-
-const Tag = styled.span`
-  padding: var(--space-1) var(--space-2);
-  background-color: var(--color-primary-100);
-  color: var(--color-primary-800);
-  font-size: var(--font-size-xs);
-  border-radius: var(--radius-full);
-`;
-
-const MoreTags = styled.span`
-  padding: var(--space-1) var(--space-2);
-  background-color: var(--color-gray-100);
-  color: var(--color-gray-600);
-  font-size: var(--font-size-xs);
-  border-radius: var(--radius-full);
-`;
-
-const MetaInfo = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-xs);
-  color: var(--color-gray-500);
-`;
-
-const ImageContainer = styled.div`
-  width: 4rem;
-  height: 4rem;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-`;
-
-const RecipeImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  max-width: 64px;
-  max-height: 64px;
-  min-width: 64px;
-  min-height: 64px;
 `;
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
@@ -206,27 +218,43 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
 
   return (
     <Card onClick={() => onClick(recipe.id)}>
-      <FavoriteButton
-        onClick={handleFavoriteClick}
-        $isFavorite={isRecipeFavorite}
-        aria-label={
-          isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
-        }
-      >
-        {isRecipeFavorite ? (
-          <Favorite style={{ width: '16px', height: '16px' }} />
-        ) : (
-          <FavoriteBorder style={{ width: '16px', height: '16px' }} />
-        )}
-      </FavoriteButton>
+      <ButtonsContainer>
+        <ActionButton
+          onClick={handleFavoriteClick}
+          $isFavorite={isRecipeFavorite}
+          aria-label={
+            isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
+          }
+        >
+          {isRecipeFavorite ? (
+            <Favorite style={{ width: '16px', height: '16px' }} />
+          ) : (
+            <FavoriteBorder style={{ width: '16px', height: '16px' }} />
+          )}
+        </ActionButton>
+
+        <DeleteButton onClick={handleDeleteClick} aria-label="Delete recipe">
+          <Delete style={{ width: '16px', height: '16px' }} />
+        </DeleteButton>
+      </ButtonsContainer>
 
       <ContentSection>
-        <HeaderRow>
+        <HeaderSection>
           <Title>{recipe.title}</Title>
-          <DifficultyBadge $difficulty={recipe.difficulty}>
-            {recipe.difficulty}
-          </DifficultyBadge>
-        </HeaderRow>
+          <MetadataRow>
+            <MetadataItem>
+              <span>{recipe.totalPrepTime + recipe.totalCookTime} min</span>
+            </MetadataItem>
+            <MetadataItem>
+              <DifficultyBadge $difficulty={recipe.difficulty}>
+                {recipe.difficulty}
+              </DifficultyBadge>
+            </MetadataItem>
+            <MetadataItem>
+              <span>{recipe.servings} servings</span>
+            </MetadataItem>
+          </MetadataRow>
+        </HeaderSection>
 
         <Description>{recipe.description}</Description>
 
@@ -238,20 +266,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
             <MoreTags>+{recipe.tags.length - 2}</MoreTags>
           )}
         </TagsContainer>
-
-        <MetaInfo>
-          <span>{recipe.totalPrepTime + recipe.totalCookTime} min</span>
-          <span>{recipe.servings} servings</span>
-        </MetaInfo>
       </ContentSection>
 
-      <ImageContainer>
+      <ImageSection>
         <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
-      </ImageContainer>
-
-      <DeleteButton onClick={handleDeleteClick} aria-label="Delete recipe">
-        <Delete style={{ width: '16px', height: '16px' }} />
-      </DeleteButton>
+      </ImageSection>
     </Card>
   );
 };
