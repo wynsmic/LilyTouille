@@ -300,7 +300,6 @@ const InstructionText = styled.span`
   line-height: 1.625;
 `;
 
-
 const SourceUrlButton = styled.a`
   display: inline-flex;
   align-items: center;
@@ -346,44 +345,6 @@ const PartDescription = styled.p`
   margin-bottom: var(--space-4);
 `;
 
-const PartIngredientsList = styled.div`
-  background-color: var(--color-gray-50);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  margin-bottom: var(--space-4);
-`;
-
-const PartIngredientsUl = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const PartIngredientItem = styled.li`
-  display: flex;
-  align-items: flex-start;
-  margin-bottom: var(--space-2);
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const PartIngredientBullet = styled.span`
-  width: 0.5rem;
-  height: 0.5rem;
-  background-color: var(--color-primary-500);
-  border-radius: var(--radius-full);
-  margin-top: 0.5rem;
-  margin-right: var(--space-3);
-  flex-shrink: 0;
-`;
-
-const PartIngredientText = styled.span`
-  color: var(--color-gray-700);
-  font-size: var(--font-size-sm);
-`;
-
 const PartStepsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -426,7 +387,6 @@ const PartStepImageCaption = styled.p`
   text-align: center;
   font-style: italic;
 `;
-
 
 const FloatingButton = styled.div`
   position: fixed;
