@@ -18,11 +18,13 @@ async function migrateRecipesToChunks() {
 
   // Initialize database connection
   const dataSource = new DataSource({
-    type: 'sqlite',
+    type: config.db.type as any,
     database: config.db.database,
+    url: config.db.url,
     synchronize: false, // Don't auto-sync during migration
     logging: true,
     entities: [RecipeEntity, ChunkEntity],
+    ssl: config.db.ssl,
   });
 
   try {

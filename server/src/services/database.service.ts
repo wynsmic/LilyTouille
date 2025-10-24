@@ -28,11 +28,13 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
   async initialize(): Promise<void> {
     this.dataSource = new DataSource({
-      type: 'sqlite',
+      type: config.db.type as any,
       database: config.db.database,
+      url: config.db.url,
       synchronize: config.db.synchronize,
       logging: config.db.logging,
       entities: [RecipeEntity, ChunkEntity],
+      ssl: config.db.ssl,
     });
 
     await this.dataSource.initialize();
