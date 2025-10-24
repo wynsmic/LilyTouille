@@ -2,15 +2,15 @@
 
 ## Overview
 
-The application has been upgraded from JSON file storage to a proper SQLite database with TypeORM, implementing the Repository pattern for better data management and scalability.
+The application uses PostgreSQL as the primary database with TypeORM, implementing the Repository pattern for better data management and scalability.
 
 ## Architecture
 
 ### Database Layer
 
-- **Database**: SQLite (file-based, lightweight, perfect for this use case)
+- **Database**: PostgreSQL (production-ready, scalable, ACID compliant)
 - **ORM**: TypeORM with decorators
-- **Location**: `server/src/data/recipes.db`
+- **Connection**: Via `DATABASE_URL` environment variable
 
 ### Repository Pattern
 
@@ -25,11 +25,11 @@ The application has been upgraded from JSON file storage to a proper SQLite data
 
 ## Key Improvements
 
-### 1. **Proper Data Persistence**
+### 1. **Production-Ready Database**
 
-- SQLite database instead of JSON files
+- PostgreSQL database for scalability and reliability
 - ACID transactions
-- Better data integrity
+- Better data integrity and performance
 
 ### 2. **Repository Pattern**
 
@@ -66,7 +66,7 @@ npm run migrate:json
 
 Environment variables:
 
-- `DB_PATH`: Path to SQLite database file (default: `src/data/recipes.db`)
+- `DATABASE_URL`: PostgreSQL connection string (required)
 - `NODE_ENV`: Controls synchronize and logging settings
 
 ### Repository Usage
@@ -86,25 +86,28 @@ await repository.save(newRecipe);
 ```
 src/
 ├── entities/
-│   └── recipe.entity.ts          # TypeORM entity
+│   ├── recipe.entity.ts          # TypeORM entity
+│   └── chunk.entity.ts           # TypeORM entity for recipe chunks
 ├── repositories/
 │   ├── recipe.repository.interface.ts  # Repository contract
-│   └── recipe.repository.ts      # TypeORM implementation
+│   ├── recipe.repository.ts      # TypeORM implementation
+│   └── chunk.repository.ts       # Chunk repository
 ├── services/
 │   ├── database.service.ts       # Database orchestration
 │   └── recipe.service.ts         # Business logic
 └── scripts/
-    └── migrate-json-to-db.ts     # Migration script
+    ├── migrate-json-to-db.ts     # Migration script
+    └── migrate-to-chunks.ts      # Chunk migration script
 ```
 
 ## Benefits
 
-1. **Performance**: Database queries are faster than JSON parsing
-2. **Scalability**: Can handle larger datasets efficiently
+1. **Performance**: PostgreSQL provides excellent query performance and optimization
+2. **Scalability**: Can handle large datasets and concurrent users efficiently
 3. **Reliability**: ACID transactions ensure data consistency
 4. **Maintainability**: Clean architecture with separation of concerns
 5. **Testability**: Easy to mock repositories for unit tests
-6. **Future-proof**: Easy to migrate to PostgreSQL/MySQL if needed
+6. **Production-Ready**: PostgreSQL is battle-tested for production environments
 
 ## Migration Notes
 

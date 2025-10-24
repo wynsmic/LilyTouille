@@ -35,14 +35,11 @@ export const config = {
   },
   db: {
     url: process.env.DATABASE_URL || '',
-    type: process.env.DATABASE_URL ? 'postgres' : 'sqlite',
-    database: process.env.DATABASE_URL 
-      ? undefined 
-      : process.env.DB_PATH || path.resolve(__dirname, '..', 'data', 'recipes.db'),
+    type: 'postgres',
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
     entities: [path.resolve(__dirname, 'entities', '*.entity.ts')],
-    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+    ssl: { rejectUnauthorized: false },
   },
 } as const;
 

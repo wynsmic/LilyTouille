@@ -5,7 +5,7 @@ import path from 'path';
 import { RecipeType } from '../workers/types';
 
 async function migrateJsonToDatabase() {
-  console.log('Starting migration from JSON to SQLite database...');
+  console.log('Starting migration from JSON to PostgreSQL database...');
 
   try {
     // Read existing JSON data
