@@ -9,4 +9,5 @@ export {
   useInvalidateRecipes,
 } from './useRecipeQueries';
 export { useScrapeProgress, useScrapeJob } from './useScrapeProgress';
+export { useInventProgress, useInventJob } from './useInventProgress';
 export { useWebSocket } from './useWebSocket';

@@ -6,7 +6,6 @@ import {
   QueueStatus,
 } from '../services/websocketManager';
 import {
-  addJob,
   updateJobProgress,
   setConnectionStatus,
   selectActiveJobs,
@@ -61,7 +60,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         dispatch(
           setConnectionStatus({
             connected: true,
-            error: null,
+            error: undefined,
           })
         );
 
@@ -88,7 +87,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         // Connection state listeners
         webSocketManager.on('connect', () => {
           console.log('[useWebSocket] socket connected');
-          dispatch(setConnectionStatus({ connected: true, error: null }));
+          dispatch(setConnectionStatus({ connected: true, error: undefined }));
         });
 
         webSocketManager.on('disconnect', () => {

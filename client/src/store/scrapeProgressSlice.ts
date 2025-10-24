@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface ScrapeProgress {
-  url: string;
+export interface JobProgress {
+  url: string; // For scraping jobs, this is the URL. For invention jobs, this is the task ID.
   stage:
     | 'queued'
     | 'scraping'
@@ -16,25 +16,27 @@ export interface ScrapeProgress {
   recipeId?: number;
 }
 
-export interface ScrapeJob {
+export interface Job {
   id: string;
-  url: string;
+  url: string; // For scraping jobs, this is the URL. For invention jobs, this is the task ID.
+  type: 'scrape' | 'invent';
+  title?: string; // For invention jobs, this is the recipe title
   status: 'pending' | 'in_progress' | 'completed' | 'failed';
   createdAt: number;
   updatedAt: number;
-  progress: ScrapeProgress[];
+  progress: JobProgress[];
   recipeId?: number; // Set when stored
 }
 
-interface ScrapeProgressState {
-  activeJobs: Record<string, ScrapeJob>;
-  completedJobs: ScrapeJob[];
-  failedJobs: ScrapeJob[];
+interface JobProgressState {
+  activeJobs: Record<string, Job>;
+  completedJobs: Job[];
+  failedJobs: Job[];
   isConnected: boolean;
   connectionError: string | null;
 }
 
-const initialState: ScrapeProgressState = {
+const initialState: JobProgressState = {
   activeJobs: {},
   completedJobs: [],
   failedJobs: [],
@@ -42,8 +44,8 @@ const initialState: ScrapeProgressState = {
   connectionError: null,
 };
 
-const scrapeProgressSlice = createSlice({
-  name: 'scrapeProgress',
+const jobProgressSlice = createSlice({
+  name: 'jobProgress',
   initialState,
   reducers: {
     // WebSocket connection management
@@ -56,13 +58,23 @@ const scrapeProgressSlice = createSlice({
     },
 
     // Job management
-    addJob: (state, action: PayloadAction<{ id: string; url: string }>) => {
-      const { id, url } = action.payload;
+    addJob: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        url: string;
+        type: 'scrape' | 'invent';
+        title?: string;
+      }>
+    ) => {
+      const { id, url, type, title } = action.payload;
       const now = Date.now();
 
       state.activeJobs[id] = {
         id,
         url,
+        type,
+        title,
         status: 'pending',
         createdAt: now,
         updatedAt: now,
@@ -77,7 +89,7 @@ const scrapeProgressSlice = createSlice({
       };
     },
 
-    updateJobProgress: (state, action: PayloadAction<ScrapeProgress>) => {
+    updateJobProgress: (state, action: PayloadAction<JobProgress>) => {
       const { url, stage, timestamp, error, progress, recipeId } =
         action.payload;
 
@@ -102,6 +114,7 @@ const scrapeProgressSlice = createSlice({
         state.activeJobs[syntheticId] = {
           id: syntheticId,
           url,
+          type: 'scrape', // Default to scrape for backward compatibility
           status: 'pending',
           createdAt: now,
           updatedAt: now,
@@ -118,7 +131,7 @@ const scrapeProgressSlice = createSlice({
       }
 
       const job = state.activeJobs[jobId];
-      const progressUpdate: ScrapeProgress = {
+      const progressUpdate: JobProgress = {
         url,
         stage,
         timestamp,
@@ -212,42 +225,37 @@ export const {
   cleanupFailedJobs,
   clearAllJobs,
   retryJob,
-} = scrapeProgressSlice.actions;
+} = jobProgressSlice.actions;
 
 // Selectors
-export const selectActiveJobs = (state: {
-  scrapeProgress: ScrapeProgressState;
-}) => Object.values(state.scrapeProgress.activeJobs);
+export const selectActiveJobs = (state: { jobProgress: JobProgressState }) =>
+  Object.values(state.jobProgress.activeJobs);
 
-export const selectCompletedJobs = (state: {
-  scrapeProgress: ScrapeProgressState;
-}) => state.scrapeProgress.completedJobs;
+export const selectCompletedJobs = (state: { jobProgress: JobProgressState }) =>
+  state.jobProgress.completedJobs;
 
-export const selectFailedJobs = (state: {
-  scrapeProgress: ScrapeProgressState;
-}) => state.scrapeProgress.failedJobs;
+export const selectFailedJobs = (state: { jobProgress: JobProgressState }) =>
+  state.jobProgress.failedJobs;
 
 export const selectJobById = (
-  state: { scrapeProgress: ScrapeProgressState },
+  state: { jobProgress: JobProgressState },
   jobId: string
 ) =>
-  state.scrapeProgress.activeJobs[jobId] ||
-  state.scrapeProgress.completedJobs.find(job => job.id === jobId) ||
-  state.scrapeProgress.failedJobs.find(job => job.id === jobId);
+  state.jobProgress.activeJobs[jobId] ||
+  state.jobProgress.completedJobs.find(job => job.id === jobId) ||
+  state.jobProgress.failedJobs.find(job => job.id === jobId);
 
 export const selectConnectionStatus = (state: {
-  scrapeProgress: ScrapeProgressState;
+  jobProgress: JobProgressState;
 }) => ({
-  isConnected: state.scrapeProgress.isConnected,
-  error: state.scrapeProgress.connectionError,
+  isConnected: state.jobProgress.isConnected,
+  error: state.jobProgress.connectionError,
 });
 
-export const selectTotalJobs = (state: {
-  scrapeProgress: ScrapeProgressState;
-}) => ({
-  active: Object.keys(state.scrapeProgress.activeJobs).length,
-  completed: state.scrapeProgress.completedJobs.length,
-  failed: state.scrapeProgress.failedJobs.length,
+export const selectTotalJobs = (state: { jobProgress: JobProgressState }) => ({
+  active: Object.keys(state.jobProgress.activeJobs).length,
+  completed: state.jobProgress.completedJobs.length,
+  failed: state.jobProgress.failedJobs.length,
 });
 
-export default scrapeProgressSlice.reducer;
+export default jobProgressSlice.reducer;

@@ -1,4 +1,5 @@
 export { default as ScrapeRecipeModal } from './ScrapeRecipeModal';
+export { default as InventRecipeModal } from './InventRecipeModal';
 export { default as ProgressBar } from './ProgressBar';
 export { default as JobProgressCard } from './JobProgressCard';
 export { default as LoginPanel } from './LoginPanel';

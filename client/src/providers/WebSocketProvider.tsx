@@ -30,7 +30,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const initializeConnection = async () => {
       try {
         await webSocketManager.connect();
-        dispatch(setConnectionStatus({ connected: true, error: null }));
+        dispatch(setConnectionStatus({ connected: true, error: undefined }));
 
         // Join progress room
         webSocketManager.joinProgressRoom('app-' + Date.now());
@@ -38,7 +38,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         // Set up global connection state listeners
         webSocketManager.on('connect', () => {
           console.log('[WebSocketProvider] Connected');
-          dispatch(setConnectionStatus({ connected: true, error: null }));
+          dispatch(setConnectionStatus({ connected: true, error: undefined }));
         });
 
         webSocketManager.on('disconnect', () => {

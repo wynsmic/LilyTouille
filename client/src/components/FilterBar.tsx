@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useRecipes } from '../hooks';
-import { ScrapeRecipeModal } from '.';
+import { ScrapeRecipeModal, InventRecipeModal } from '.';
 
 const FilterContainer = styled.div`
   background-color: var(--color-white);
@@ -253,14 +253,14 @@ const FilterBar: React.FC = () => {
   };
 
   const [isScrapeOpen, setIsScrapeOpen] = useState(false);
+  const [isInventOpen, setIsInventOpen] = useState(false);
 
   const handleScrapeRecipe = () => {
     setIsScrapeOpen(true);
   };
 
   const handleInventRecipe = () => {
-    // TODO: Implement AI recipe invention functionality
-    console.log('Invent new recipe with AI');
+    setIsInventOpen(true);
   };
 
   return (
@@ -329,6 +329,10 @@ const FilterBar: React.FC = () => {
       <ScrapeRecipeModal
         open={isScrapeOpen}
         onClose={() => setIsScrapeOpen(false)}
+      />
+      <InventRecipeModal
+        open={isInventOpen}
+        onClose={() => setIsInventOpen(false)}
       />
     </FilterContainer>
   );

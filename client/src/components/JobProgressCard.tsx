@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
-import { ScrapeJob } from '../store/scrapeProgressSlice';
+import { Job } from '../store/scrapeProgressSlice';
 
 interface JobProgressCardProps {
-  job: ScrapeJob;
+  job: Job;
   onRetry?: (jobId: string) => void;
 }
 
@@ -290,7 +290,9 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
         <StatusBadge status={job.status}>
           {getStatusDisplayName(job.status)}
         </StatusBadge>
-        <UrlText>{job.url}</UrlText>
+        <UrlText>
+          {job.type === 'invent' ? job.title || 'Recipe Invention' : job.url}
+        </UrlText>
       </CardHeader>
 
       <CardBody>

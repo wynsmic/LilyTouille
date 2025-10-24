@@ -9,9 +9,11 @@ export class RedisService implements OnModuleDestroy {
   public readonly redis: Redis;
   private readonly processingQueueKey = 'processingQueue';
   private readonly aiQueueKey = 'aiQueue';
+  private readonly inventQueueKey = 'inventQueue';
   private readonly progressChannel = 'progressChannel';
   private readonly inprogressScrapeSet = 'inprogress:scrape';
   private readonly inprogressAiSet = 'inprogress:ai';
+  private readonly inprogressInventSet = 'inprogress:invent';
   private readonly logger: Logger;
 
   constructor() {
@@ -110,15 +112,52 @@ export class RedisService implements OnModuleDestroy {
     (this as any).progressSubscriber = subscriber;
   }
 
+  // Invent Queue operations (recipe invention requests)
+  async pushInventTask(task: any): Promise<void> {
+    const taskJson = JSON.stringify(task);
+    await this.redis.lpush(this.inventQueueKey, taskJson);
+  }
+
+  async popInventTask(): Promise<any | null> {
+    const result = await this.redis.rpop(this.inventQueueKey);
+    if (!result) return null;
+
+    try {
+      return JSON.parse(result);
+    } catch {
+      return null;
+    }
+  }
+
+  async blockPopInventTask(timeoutSeconds = 5): Promise<any | null> {
+    const result = await this.redis.brpop(this.inventQueueKey, timeoutSeconds);
+    if (!result) return null;
+
+    try {
+      return JSON.parse(result[1]);
+    } catch {
+      return null;
+    }
+  }
+
   // Utility methods
-  async getQueueLength(queueName: 'processing' | 'ai'): Promise<number> {
-    const key =
-      queueName === 'processing' ? this.processingQueueKey : this.aiQueueKey;
-    return await this.redis.llen(key);
+  async getQueueLength(
+    queueName: 'processing' | 'ai' | 'invent'
+  ): Promise<number> {
+    const keyMap = {
+      processing: this.processingQueueKey,
+      ai: this.aiQueueKey,
+      invent: this.inventQueueKey,
+    };
+    return await this.redis.llen(keyMap[queueName]);
   }
 
   async clearQueues(): Promise<void> {
-    await this.redis.del(this.processingQueueKey, this.aiQueueKey);
+    await this.redis.del(
+      this.processingQueueKey,
+      this.aiQueueKey,
+      this.inventQueueKey
+    );
   }
 
   // Concurrency helpers
@@ -136,6 +175,14 @@ export class RedisService implements OnModuleDestroy {
 
   async clearAiInProgress(url: string): Promise<void> {
     await this.redis.srem(this.inprogressAiSet, url);
+  }
+
+  async markInventInProgress(taskId: string): Promise<boolean> {
+    return (await this.redis.sadd(this.inprogressInventSet, taskId)) === 1;
+  }
+
+  async clearInventInProgress(taskId: string): Promise<void> {
+    await this.redis.srem(this.inprogressInventSet, taskId);
   }
 
   async close(): Promise<void> {

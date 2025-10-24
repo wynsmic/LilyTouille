@@ -48,10 +48,12 @@ export class ScraperController {
     const processingQueueLength =
       await this.redisService.getQueueLength('processing');
     const aiQueueLength = await this.redisService.getQueueLength('ai');
+    const inventQueueLength = await this.redisService.getQueueLength('invent');
 
     return {
       processing: processingQueueLength,
       ai: aiQueueLength,
+      invent: inventQueueLength,
       timestamp: Date.now(),
     };
   }

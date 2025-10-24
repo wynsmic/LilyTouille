@@ -43,6 +43,12 @@ export function startWorkers(): void {
       scriptJs: 'workers/aiWorker.js',
       count: config.workers.aiWorkers,
     },
+    {
+      name: 'inventWorker',
+      scriptTs: 'workers/inventWorker.ts',
+      scriptJs: 'workers/inventWorker.js',
+      count: config.workers.aiWorkers, // Use same count as AI workers
+    },
   ];
 
   for (const spec of workers) {

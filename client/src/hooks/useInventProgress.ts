@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
 import { webSocketManager, ProgressUpdate } from '../services/websocketManager';
-import { useQueueScrapeMutation } from '../services/scrapeApi';
+import { useInventRecipeMutation } from '../services/inventApi';
 import { recipeKeys } from './useRecipeQueries';
 import {
   addJob,
@@ -16,7 +16,7 @@ import {
 } from '../store/scrapeProgressSlice';
 import { RootState } from '../store';
 
-export const useScrapeProgress = () => {
+export const useInventProgress = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export const useScrapeProgress = () => {
   const connectionStatus = useSelector(selectConnectionStatus);
   const totalJobs = useSelector(selectTotalJobs);
 
-  const [queueScrape, { isLoading: isQueueing }] = useQueueScrapeMutation();
+  const [inventRecipe, { isLoading: isInventing }] = useInventRecipeMutation();
   const progressUpdateHandler = useRef<
     ((update: ProgressUpdate) => void) | null
   >(null);
@@ -35,7 +35,7 @@ export const useScrapeProgress = () => {
   useEffect(() => {
     // Create the handler function
     progressUpdateHandler.current = (update: ProgressUpdate) => {
-      console.log('[useScrapeProgress] ← progress-update', update);
+      console.log('[useInventProgress] ← progress-update', update);
       dispatch(updateJobProgress(update));
 
       if (update.stage === 'stored' && typeof update.recipeId === 'number') {
@@ -60,31 +60,40 @@ export const useScrapeProgress = () => {
     };
   }, [dispatch, navigate, queryClient]);
 
-  // Trigger a new scrape
-  const triggerScrape = useCallback(
-    async (url: string) => {
+  // Trigger a new recipe invention
+  const triggerInvent = useCallback(
+    async (inventData: any) => {
       try {
-        const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const jobId = `invent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
         // Add job to state
-        dispatch(addJob({ id: jobId, url, type: 'scrape' }));
+        dispatch(
+          addJob({
+            id: jobId,
+            url: jobId, // Use jobId as URL for invention jobs
+            type: 'invent',
+            title: inventData.title,
+          })
+        );
 
-        // Queue the scrape
-        console.log('[Hook] → queueScrape', { url });
-        await queueScrape({ url }).unwrap();
-        console.log('[Hook] ✓ queued', { url });
+        // Queue the invention
+        console.log('[Hook] → inventRecipe', { title: inventData.title });
+        const result = await inventRecipe(inventData).unwrap();
+        console.log('[Hook] ✓ queued', { taskId: result.taskId });
 
         return { success: true, jobId };
       } catch (error) {
-        console.error('[Hook] Failed to queue scrape:', error);
+        console.error('[Hook] Failed to queue invention:', error);
         return {
           success: false,
           error:
-            error instanceof Error ? error.message : 'Failed to queue scrape',
+            error instanceof Error
+              ? error.message
+              : 'Failed to queue invention',
         };
       }
     },
-    [dispatch, queueScrape]
+    [dispatch, inventRecipe]
   );
 
   // Request queue status
@@ -101,9 +110,9 @@ export const useScrapeProgress = () => {
     totalJobs,
 
     // Actions
-    triggerScrape,
+    triggerInvent,
     requestQueueStatus,
-    isQueueing,
+    isInventing,
 
     // WebSocket status
     isConnected: webSocketManager.isConnected(),
@@ -111,14 +120,14 @@ export const useScrapeProgress = () => {
 };
 
 // Hook for getting individual job details
-export const useScrapeJob = (jobId: string) => {
+export const useInventJob = (jobId: string) => {
   return useSelector((state: RootState) => {
     const activeJob = state.jobProgress.activeJobs[jobId];
     const completedJob = state.jobProgress.completedJobs.find(
-      (job: any) => job.id === jobId
+      job => job.id === jobId
     );
     const failedJob = state.jobProgress.failedJobs.find(
-      (job: any) => job.id === jobId
+      job => job.id === jobId
     );
 
     return activeJob || completedJob || failedJob || null;
