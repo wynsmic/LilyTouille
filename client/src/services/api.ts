@@ -4,8 +4,8 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Ensure API_BASE_URL ends with /api
-const normalizedApiUrl = API_BASE_URL.endsWith('/api') 
-  ? API_BASE_URL 
+const normalizedApiUrl = API_BASE_URL.endsWith('/api')
+  ? API_BASE_URL
   : `${API_BASE_URL}/api`;
 
 // Debug logging

@@ -36,9 +36,11 @@ export const config = {
     aiWorkers: Number(process.env.WORKERS_AI_COUNT || 1),
   },
   db: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/labonneboubouffe',
+    url:
+      process.env.DATABASE_URL ||
+      'postgresql://localhost:5432/labonneboubouffe',
     type: 'postgres',
-    synchronize: process.env.NODE_ENV !== 'production',
+    synchronize: true, // Enable automatic table creation for both dev and prod
     logging: process.env.NODE_ENV === 'development',
     entities: [path.resolve(__dirname, 'entities', '*.entity.ts')],
     ssl:
