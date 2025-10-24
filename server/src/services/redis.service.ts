@@ -19,9 +19,29 @@ export class RedisService implements OnModuleDestroy {
   constructor() {
     this.logger = new Logger(RedisService.name);
     const redisUrl = config.redis.url;
-    this.redis = new IORedis(redisUrl, {
-      lazyConnect: false,
-      maxRetriesPerRequest: null,
+
+    // Log the Redis URL being used (mask password for security)
+    const maskedUrl = redisUrl.replace(/:([^:@]+)@/, ':***@');
+    this.logger.log(`Connecting to Redis: ${maskedUrl}`);
+
+    // Railway requires IPv6 support - add family=0 to handle dual-stack lookup
+    const redisUrlWithFamily = redisUrl.includes('?')
+      ? `${redisUrl}&family=0`
+      : `${redisUrl}?family=0`;
+
+    this.redis = new IORedis(redisUrlWithFamily, {
+      lazyConnect: true,
+      maxRetriesPerRequest: 3,
+      enableReadyCheck: false,
+    });
+
+    // Add error handling for connection issues
+    this.redis.on('error', error => {
+      this.logger.error('Redis connection error:', error);
+    });
+
+    this.redis.on('connect', () => {
+      this.logger.log('Redis connected successfully');
     });
   }
 

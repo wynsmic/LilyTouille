@@ -66,7 +66,7 @@ export class RecipeEntity {
   @Column({ type: 'json', nullable: true })
   urlMappings?: { [shortCode: string]: string };
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   scrapedAt?: Date;
 
   @CreateDateColumn()
