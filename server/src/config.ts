@@ -34,12 +34,12 @@ export const config = {
     aiWorkers: Number(process.env.WORKERS_AI_COUNT || 1),
   },
   db: {
-    url: process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/labonneboubouffe',
     type: 'postgres',
     synchronize: process.env.NODE_ENV !== 'production',
     logging: process.env.NODE_ENV === 'development',
     entities: [path.resolve(__dirname, 'entities', '*.entity.ts')],
-    ssl: { rejectUnauthorized: false },
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   },
 } as const;
 
