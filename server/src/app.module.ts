@@ -14,7 +14,6 @@ import { ChunkEntity } from './entities/chunk.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: config.db.type as any,
-      database: config.db.database,
       url: config.db.url,
       synchronize: config.db.synchronize,
       logging: config.db.logging,
