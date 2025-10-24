@@ -300,51 +300,6 @@ const InstructionText = styled.span`
   line-height: 1.625;
 `;
 
-const RecipeStepsSection = styled.div`
-  margin-top: var(--space-8);
-`;
-
-const RecipeStepsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-`;
-
-const RecipeStepItem = styled.div<{ $type: 'text' | 'image' }>`
-  ${props =>
-    props.$type === 'text' &&
-    `
-    padding: var(--space-2) var(--space-4);
-    background-color: var(--color-gray-50);
-    border-radius: var(--radius-lg);
-    color: var(--color-gray-700);
-    line-height: 1.625;
-  `}
-
-  ${props =>
-    props.$type === 'image' &&
-    `
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-3);
-  `}
-`;
-
-const RecipeStepImage = styled.img`
-  width: 100%;
-  max-width: 32rem;
-  height: auto;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-`;
-
-const RecipeStepImageCaption = styled.p`
-  color: var(--color-gray-600);
-  font-size: var(--font-size-sm);
-  text-align: center;
-  font-style: italic;
-`;
 
 const SourceUrlButton = styled.a`
   display: inline-flex;
@@ -472,16 +427,6 @@ const PartStepImageCaption = styled.p`
   font-style: italic;
 `;
 
-const IngredientsNote = styled.div`
-  background-color: var(--color-blue-50);
-  border: 1px solid var(--color-blue-200);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  margin-bottom: var(--space-4);
-  font-size: var(--font-size-sm);
-  color: var(--color-blue-800);
-  text-align: center;
-`;
 
 const FloatingButton = styled.div`
   position: fixed;
