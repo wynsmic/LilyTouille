@@ -1,0 +1,43 @@
+# LaBonneBoubouffe - Clean Code Guidelines
+
+## Core Principles
+
+- **SOLID**: Single responsibility, DRY, KISS, YAGNI
+- **Type Safety**: Avoid `any`, use proper TypeScript types
+- **Small Functions**: < 20 lines, < 4 parameters, complexity < 10
+- **Meaningful Names**: Descriptive, intention-revealing names
+
+## Code Style
+
+- **Formatting**: 2 spaces, single quotes, semicolons, 80 chars max
+- **Naming**: camelCase (vars/functions), PascalCase (components/types), kebab-case (files)
+- **Imports**: Named exports, grouped imports, alphabetical order
+
+## React/TypeScript Frontend
+
+- **Components**: Small, reusable, clear props interfaces
+- **State**: Redux Toolkit (global), local state (component-specific)
+- **Performance**: React.memo, useMemo, useCallback when needed
+- **Hooks**: Custom hooks for reusable logic
+
+## NestJS/TypeScript Backend
+
+- **Architecture**: Modular, thin controllers, business logic in services
+- **Data**: DTOs for validation, TypeORM entities, proper relationships
+- **Security**: Input validation, authentication, environment variables
+
+## Quality Enforcement
+
+- **ESLint**: Type safety, complexity limits, modern JS practices
+- **Prettier**: Consistent formatting across project
+- **Pre-commit**: Automated linting and formatting
+- **Testing**: >80% coverage, unit/integration/E2E tests
+
+## Best Practices
+
+- **Error Handling**: Proper validation and error boundaries
+- **Documentation**: JSDoc for public APIs, self-documenting code
+- **Performance**: Caching, lazy loading, optimized queries
+- **Security**: Input sanitization, HTTPS, rate limiting
+
+Remember: Clean code is readable, maintainable, and extensible. Prioritize clarity over cleverness.

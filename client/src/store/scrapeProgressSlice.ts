@@ -240,22 +240,22 @@ const selectJobProgressState = (state: { jobProgress: JobProgressState }) =>
 
 const selectActiveJobsMap = createSelector(
   [selectJobProgressState],
-  (jobProgress) => jobProgress.activeJobs
+  jobProgress => jobProgress.activeJobs
 );
 
 const selectCompletedJobsArray = createSelector(
   [selectJobProgressState],
-  (jobProgress) => jobProgress.completedJobs
+  jobProgress => jobProgress.completedJobs
 );
 
 const selectFailedJobsArray = createSelector(
   [selectJobProgressState],
-  (jobProgress) => jobProgress.failedJobs
+  jobProgress => jobProgress.failedJobs
 );
 
 const selectConnectionInfo = createSelector(
   [selectJobProgressState],
-  (jobProgress) => ({
+  jobProgress => ({
     isConnected: jobProgress.isConnected,
     error: jobProgress.connectionError,
   })
@@ -264,7 +264,7 @@ const selectConnectionInfo = createSelector(
 // Memoized selectors
 export const selectActiveJobs = createSelector(
   [selectActiveJobsMap],
-  (activeJobs) => Object.values(activeJobs)
+  activeJobs => Object.values(activeJobs)
 );
 
 export const selectCompletedJobs = selectCompletedJobsArray;

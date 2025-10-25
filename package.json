@@ -19,10 +19,27 @@
     "format:server": "npm --prefix server run format",
     "format": "npm run format:client && npm run format:server",
     "migrate:json": "npm --prefix server run migrate:json",
-    "migrate:chunks": "npm --prefix server run migrate:chunks"
+    "migrate:chunks": "npm --prefix server run migrate:chunks",
+    "prepare": "husky",
+    "pre-commit": "lint-staged"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.0.0"
+  },
+  "lint-staged": {
+    "client/**/*.{ts,tsx,js,jsx}": [
+      "npm --prefix client run lint",
+      "npm --prefix client run format"
+    ],
+    "server/**/*.{ts,js}": [
+      "npm --prefix server run lint",
+      "npm --prefix server run format"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": ">=20.0.0",

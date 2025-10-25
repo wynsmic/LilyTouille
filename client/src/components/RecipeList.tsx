@@ -92,9 +92,7 @@ const RecipeList: React.FC<RecipeListProps> = ({ onRecipeClick }) => {
     return (
       <EmptyContainer>
         <EmptyMessage>No recipes found</EmptyMessage>
-        <EmptyText>
-          Try adjusting your search criteria or filters
-        </EmptyText>
+        <EmptyText>Try adjusting your search criteria or filters</EmptyText>
       </EmptyContainer>
     );
   }

@@ -66,7 +66,7 @@ export const useScrapeProgress = () => {
   const triggerScrape = useCallback(
     async (url: string) => {
       const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       try {
         // Add job to state
         dispatch(addJob({ id: jobId, url, type: 'scrape' }));
