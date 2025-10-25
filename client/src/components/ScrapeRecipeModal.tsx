@@ -99,7 +99,7 @@ const ErrorMessage = styled.div`
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -122,7 +122,7 @@ const SuccessMessage = styled.div`
   box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -321,43 +321,74 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
           {isSuccess && (
             <SuccessMessage>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginBottom: '8px',
+                }}
+              >
                 <span style={{ fontSize: '20px' }}>🎉</span>
                 <span style={{ fontWeight: '600' }}>Success!</span>
               </div>
               <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                Recipe scraped successfully!<br />
-                <span style={{ fontSize: '12px', opacity: 0.8 }}>Taking you to your new recipe...</span>
+                Recipe scraped successfully!
+                <br />
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                  Taking you to your new recipe...
+                </span>
               </div>
             </SuccessMessage>
           )}
 
           {error && (
             <ErrorMessage>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginBottom: '8px',
+                }}
+              >
                 <span style={{ fontSize: '20px' }}>😔</span>
                 <span style={{ fontWeight: '600' }}>Oops!</span>
               </div>
               <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
                 {error.includes('unavailable') ? (
                   <>
-                    Our recipe scraper is taking a quick break!<br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Try again in a few moments</span>
+                    Our recipe scraper is taking a quick break!
+                    <br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                      Try again in a few moments
+                    </span>
                   </>
                 ) : error.includes('connection') ? (
                   <>
-                    Having trouble connecting to our servers.<br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Check your internet connection</span>
+                    Having trouble connecting to our servers.
+                    <br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                      Check your internet connection
+                    </span>
                   </>
                 ) : error.includes('Server error') ? (
                   <>
-                    Something went wrong on our end.<br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>We're working on it!</span>
+                    Something went wrong on our end.
+                    <br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                      We're working on it!
+                    </span>
                   </>
                 ) : (
                   <>
-                    {error}<br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Let's try again</span>
+                    {error}
+                    <br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
+                      Let's try again
+                    </span>
                   </>
                 )}
               </div>
