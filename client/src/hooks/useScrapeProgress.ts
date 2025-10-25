@@ -13,6 +13,7 @@ import {
   selectFailedJobs,
   selectConnectionStatus,
   selectTotalJobs,
+  selectJobById,
 } from '../store/scrapeProgressSlice';
 import { RootState } from '../store';
 
@@ -112,15 +113,5 @@ export const useScrapeProgress = () => {
 
 // Hook for getting individual job details
 export const useScrapeJob = (jobId: string) => {
-  return useSelector((state: RootState) => {
-    const activeJob = state.jobProgress.activeJobs[jobId];
-    const completedJob = state.jobProgress.completedJobs.find(
-      (job: any) => job.id === jobId
-    );
-    const failedJob = state.jobProgress.failedJobs.find(
-      (job: any) => job.id === jobId
-    );
-
-    return activeJob || completedJob || failedJob || null;
-  });
+  return useSelector((state: RootState) => selectJobById(state)(jobId));
 };

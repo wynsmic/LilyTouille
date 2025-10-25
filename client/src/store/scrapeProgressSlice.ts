@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 
 export interface JobProgress {
   url: string; // For scraping jobs, this is the URL. For invention jobs, this is the task ID.
@@ -227,35 +227,60 @@ export const {
   retryJob,
 } = jobProgressSlice.actions;
 
-// Selectors
-export const selectActiveJobs = (state: { jobProgress: JobProgressState }) =>
-  Object.values(state.jobProgress.activeJobs);
+// Base selectors
+const selectJobProgressState = (state: { jobProgress: JobProgressState }) =>
+  state.jobProgress;
 
-export const selectCompletedJobs = (state: { jobProgress: JobProgressState }) =>
-  state.jobProgress.completedJobs;
+const selectActiveJobsMap = createSelector(
+  [selectJobProgressState],
+  (jobProgress) => jobProgress.activeJobs
+);
 
-export const selectFailedJobs = (state: { jobProgress: JobProgressState }) =>
-  state.jobProgress.failedJobs;
+const selectCompletedJobsArray = createSelector(
+  [selectJobProgressState],
+  (jobProgress) => jobProgress.completedJobs
+);
 
-export const selectJobById = (
-  state: { jobProgress: JobProgressState },
-  jobId: string
-) =>
-  state.jobProgress.activeJobs[jobId] ||
-  state.jobProgress.completedJobs.find(job => job.id === jobId) ||
-  state.jobProgress.failedJobs.find(job => job.id === jobId);
+const selectFailedJobsArray = createSelector(
+  [selectJobProgressState],
+  (jobProgress) => jobProgress.failedJobs
+);
 
-export const selectConnectionStatus = (state: {
-  jobProgress: JobProgressState;
-}) => ({
-  isConnected: state.jobProgress.isConnected,
-  error: state.jobProgress.connectionError,
-});
+const selectConnectionInfo = createSelector(
+  [selectJobProgressState],
+  (jobProgress) => ({
+    isConnected: jobProgress.isConnected,
+    error: jobProgress.connectionError,
+  })
+);
 
-export const selectTotalJobs = (state: { jobProgress: JobProgressState }) => ({
-  active: Object.keys(state.jobProgress.activeJobs).length,
-  completed: state.jobProgress.completedJobs.length,
-  failed: state.jobProgress.failedJobs.length,
-});
+// Memoized selectors
+export const selectActiveJobs = createSelector(
+  [selectActiveJobsMap],
+  (activeJobs) => Object.values(activeJobs)
+);
+
+export const selectCompletedJobs = selectCompletedJobsArray;
+
+export const selectFailedJobs = selectFailedJobsArray;
+
+export const selectJobById = createSelector(
+  [selectActiveJobsMap, selectCompletedJobsArray, selectFailedJobsArray],
+  (activeJobs, completedJobs, failedJobs) => (jobId: string) =>
+    activeJobs[jobId] ||
+    completedJobs.find(job => job.id === jobId) ||
+    failedJobs.find(job => job.id === jobId)
+);
+
+export const selectConnectionStatus = selectConnectionInfo;
+
+export const selectTotalJobs = createSelector(
+  [selectActiveJobsMap, selectCompletedJobsArray, selectFailedJobsArray],
+  (activeJobs, completedJobs, failedJobs) => ({
+    active: Object.keys(activeJobs).length,
+    completed: completedJobs.length,
+    failed: failedJobs.length,
+  })
+);
 
 export default jobProgressSlice.reducer;
