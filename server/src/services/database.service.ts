@@ -3,10 +3,16 @@ import { DataSource } from 'typeorm';
 import { config } from '../config';
 import { RecipeEntity } from '../entities/recipe.entity';
 import { ChunkEntity } from '../entities/chunk.entity';
+import { UserEntity } from '../entities/user.entity';
+import { UserFavoriteEntity } from '../entities/user-favorite.entity';
 import { RecipeRepository } from '../repositories/recipe.repository';
 import { ChunkRepository } from '../repositories/chunk.repository';
+import { UserRepository } from '../repositories/user.repository';
+import { UserFavoriteRepository } from '../repositories/user-favorite.repository';
 import { IRecipeRepository } from '../repositories/recipe.repository.interface';
 import { IChunkRepository } from '../repositories/chunk.repository';
+import { IUserRepository } from '../repositories/user.repository.interface';
+import { IUserFavoriteRepository } from '../repositories/user-favorite.repository';
 import { RecipeType } from '../workers/types';
 import { Recipe } from '../interfaces/recipe.interface';
 
@@ -15,6 +21,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private dataSource: DataSource;
   private recipeRepository: IRecipeRepository;
   private chunkRepository: IChunkRepository;
+  private userRepository: IUserRepository;
+  private userFavoriteRepository: IUserFavoriteRepository;
 
   async onModuleInit() {
     await this.initialize();
@@ -32,7 +40,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       url: config.db.url,
       synchronize: config.db.synchronize,
       logging: config.db.logging,
-      entities: [RecipeEntity, ChunkEntity],
+      entities: [RecipeEntity, ChunkEntity, UserEntity, UserFavoriteEntity],
       ssl: config.db.ssl,
     });
 
@@ -41,6 +49,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     this.chunkRepository = new ChunkRepository(
       this.dataSource.getRepository(ChunkEntity)
     );
+    this.userRepository = new UserRepository(this.dataSource);
+    this.userFavoriteRepository = new UserFavoriteRepository(this.dataSource);
 
     console.log('Database initialized successfully');
   }
@@ -57,6 +67,20 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error('Database not initialized. Call initialize() first.');
     }
     return this.chunkRepository;
+  }
+
+  getUserRepository(): IUserRepository {
+    if (!this.userRepository) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+    return this.userRepository;
+  }
+
+  getUserFavoriteRepository(): IUserFavoriteRepository {
+    if (!this.userFavoriteRepository) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+    return this.userFavoriteRepository;
   }
 
   // Save recipe with chunks

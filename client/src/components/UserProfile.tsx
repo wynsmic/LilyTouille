@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 const ProfileContainer = styled.div`
   position: relative;
@@ -85,6 +87,9 @@ const DropdownItem = styled.button`
   cursor: pointer;
   transition: background-color var(--transition-fast);
   border-bottom: 1px solid var(--color-gray-100);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 
   &:last-child {
     border-bottom: none;
@@ -101,10 +106,24 @@ const DropdownItem = styled.button`
       background-color: var(--color-red-100);
     }
   }
+
+  &.separator {
+    border-top: 2px solid var(--color-gray-200);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+  }
+`;
+
+const DropdownIcon = styled.span`
+  font-size: var(--font-size-base);
+  width: 16px;
+  text-align: center;
 `;
 
 const UserProfile: React.FC = () => {
   const { user, logout, isLoading } = useAuth0();
+  const { favorites } = useUser();
+  const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -126,6 +145,16 @@ const UserProfile: React.FC = () => {
 
   const handleLogout = () => {
     logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
+  const handleNavigateToFavorites = () => {
+    setIsDropdownOpen(false);
+    navigate('/favorites');
+  };
+
+  const handleNavigateToSettings = () => {
+    setIsDropdownOpen(false);
+    navigate('/settings');
   };
 
   const getUserInitials = (name: string) => {
@@ -163,7 +192,18 @@ const UserProfile: React.FC = () => {
       </ProfileButton>
 
       <DropdownMenu $isOpen={isDropdownOpen}>
-        <DropdownItem onClick={handleLogout} className="danger">
+        <DropdownItem onClick={handleNavigateToFavorites}>
+          <DropdownIcon>⭐</DropdownIcon>
+          My Favorites ({favorites.length})
+        </DropdownItem>
+
+        <DropdownItem onClick={handleNavigateToSettings}>
+          <DropdownIcon>⚙️</DropdownIcon>
+          Settings
+        </DropdownItem>
+
+        <DropdownItem className="separator" onClick={handleLogout}>
+          <DropdownIcon>🚪</DropdownIcon>
           Sign Out
         </DropdownItem>
       </DropdownMenu>

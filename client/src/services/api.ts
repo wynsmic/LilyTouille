@@ -220,4 +220,69 @@ export const recipeApi = {
   },
 };
 
+// User API service functions
+export const userApi = {
+  // Get current user
+  getCurrentUser: async (token: string) => {
+    const response = await apiClient.get('/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Create or update user
+  createOrUpdateUser: async (token: string, userData: any) => {
+    const response = await apiClient.post('/users/me', userData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Update user preferences
+  updatePreferences: async (token: string, preferences: any) => {
+    const response = await apiClient.put('/users/me/preferences', preferences, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Get user favorites
+  getFavorites: async (token: string) => {
+    const response = await apiClient.get('/users/me/favorites', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Add favorite
+  addFavorite: async (token: string, recipeId: number) => {
+    const response = await apiClient.post(
+      `/users/me/favorites/${recipeId}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  },
+
+  // Remove favorite
+  removeFavorite: async (token: string, recipeId: number) => {
+    await apiClient.delete(`/users/me/favorites/${recipeId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Check if recipe is favorite
+  getFavoriteStatus: async (token: string, recipeId: number) => {
+    const response = await apiClient.get(
+      `/users/me/favorites/${recipeId}/status`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  },
+};
+
 export default apiClient;

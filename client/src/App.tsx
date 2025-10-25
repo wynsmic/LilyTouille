@@ -6,8 +6,10 @@ import { store } from './store';
 import { useRecipes } from './hooks';
 import AuthProvider from './auth/AuthProvider';
 import { WebSocketProvider } from './providers/WebSocketProvider';
+import { UserProvider } from './contexts/UserContext';
 import { LoginPanel } from './components';
 import { HomePage, RecipeDetail, FavoritesPage } from './pages';
+import SettingsPage from './pages/SettingsPage';
 
 const AppContent: React.FC = () => {
   const { fetchRecipes } = useRecipes();
@@ -23,6 +25,7 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/recipe/:id" element={<RecipeDetail />} />
         <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </Router>
   );
@@ -59,9 +62,11 @@ function App() {
   return (
     <Provider store={store}>
       <AuthProvider>
-        <WebSocketProvider autoConnect={true}>
-          <AuthenticatedApp />
-        </WebSocketProvider>
+        <UserProvider>
+          <WebSocketProvider autoConnect={true}>
+            <AuthenticatedApp />
+          </WebSocketProvider>
+        </UserProvider>
       </AuthProvider>
     </Provider>
   );

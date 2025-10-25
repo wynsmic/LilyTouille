@@ -1,12 +1,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Recipe } from '../services/api';
-import { useRecipes } from '../hooks';
+import { useUserFavorites } from '../hooks/useUserFavorites';
 import { Favorite, FavoriteBorder, Delete } from '@mui/icons-material';
 
 interface RecipeCardProps {
   recipe: Recipe;
-  onClick: (recipeId: number) => void;
+  onClick?: (recipeId: number) => void;
+  showFavoriteButton?: boolean;
+  showDeleteButton?: boolean;
+  onDelete?: (recipeId: number) => void;
 }
 
 const Card = styled.div`
@@ -195,13 +198,19 @@ const DifficultyBadge = styled.span<{ $difficulty: string }>`
         : 'var(--color-red-800)'};
 `;
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
-  const { toggleFavoriteRecipe, isFavorite, deleteRecipeById } = useRecipes();
-  const isRecipeFavorite = isFavorite(recipe.id.toString());
+const RecipeCard: React.FC<RecipeCardProps> = ({
+  recipe,
+  onClick,
+  showFavoriteButton = true,
+  showDeleteButton = false,
+  onDelete,
+}) => {
+  const { toggleFavorite, isFavorite } = useUserFavorites();
+  const isRecipeFavorite = isFavorite(recipe.id);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when clicking favorite button
-    toggleFavoriteRecipe(recipe.id.toString());
+    toggleFavorite(recipe.id);
   };
 
   const handleDeleteClick = async (e: React.MouseEvent) => {
@@ -212,34 +221,38 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, onClick }) => {
         `Are you sure you want to delete "${recipe.title}"? This action cannot be undone.`
       )
     ) {
-      try {
-        await deleteRecipeById(recipe.id);
-      } catch (error) {
-        alert('Failed to delete recipe. Please try again.');
-      }
+      onDelete?.(recipe.id);
     }
   };
 
-  return (
-    <Card onClick={() => onClick(recipe.id)}>
-      <ButtonsContainer>
-        <ActionButton
-          onClick={handleFavoriteClick}
-          $isFavorite={isRecipeFavorite}
-          aria-label={
-            isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
-          }
-        >
-          {isRecipeFavorite ? (
-            <Favorite style={{ width: '16px', height: '16px' }} />
-          ) : (
-            <FavoriteBorder style={{ width: '16px', height: '16px' }} />
-          )}
-        </ActionButton>
+  const handleCardClick = () => {
+    onClick?.(recipe.id);
+  };
 
-        <DeleteButton onClick={handleDeleteClick} aria-label="Delete recipe">
-          <Delete style={{ width: '16px', height: '16px' }} />
-        </DeleteButton>
+  return (
+    <Card onClick={handleCardClick}>
+      <ButtonsContainer>
+        {showFavoriteButton && (
+          <ActionButton
+            onClick={handleFavoriteClick}
+            $isFavorite={isRecipeFavorite}
+            aria-label={
+              isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
+            }
+          >
+            {isRecipeFavorite ? (
+              <Favorite style={{ width: '16px', height: '16px' }} />
+            ) : (
+              <FavoriteBorder style={{ width: '16px', height: '16px' }} />
+            )}
+          </ActionButton>
+        )}
+
+        {showDeleteButton && (
+          <DeleteButton onClick={handleDeleteClick} aria-label="Delete recipe">
+            <Delete style={{ width: '16px', height: '16px' }} />
+          </DeleteButton>
+        )}
       </ButtonsContainer>
 
       <ContentSection>
