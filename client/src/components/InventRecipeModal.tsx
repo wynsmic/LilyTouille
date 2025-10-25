@@ -288,22 +288,48 @@ const Button = styled.button<{ $variant?: 'primary' | 'ghost' | 'retry' }>`
 
 const ErrorMessage = styled.div`
   padding: 16px;
-  background: #fef2f2;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   border: 1px solid #fecaca;
   border-radius: 12px;
   color: #dc2626;
   font-size: 14px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
+  }
 `;
 
 const SuccessMessage = styled.div`
   padding: 16px;
-  background: #f0fdf4;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border: 1px solid #bbf7d0;
   border-radius: 12px;
   color: #16a34a;
   font-size: 14px;
   text-align: center;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #22c55e, #16a34a, #15803d);
+  }
 `;
 
 const ProgressSection = styled.div`
@@ -699,14 +725,27 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
           {isSuccess && (
             <SuccessMessage>
-              🎉 Amazing! Your recipe is ready! Taking you to see your delicious
-              creation...
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '20px' }}>🎉</span>
+                <span style={{ fontWeight: '600' }}>Amazing!</span>
+              </div>
+              <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                Your recipe is ready!<br />
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Taking you to see your delicious creation...</span>
+              </div>
             </SuccessMessage>
           )}
 
           {error && (
             <ErrorMessage>
-              😔 Oops! Something went wrong. Let's try again!
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '20px' }}>😔</span>
+                <span style={{ fontWeight: '600' }}>Oops!</span>
+              </div>
+              <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                Something went wrong while creating your recipe.<br />
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Let's try again!</span>
+              </div>
             </ErrorMessage>
           )}
 

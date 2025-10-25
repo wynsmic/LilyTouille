@@ -89,21 +89,49 @@ const Button = styled.button<{ $variant?: 'primary' | 'ghost' | 'retry' }>`
 `;
 
 const ErrorMessage = styled.div`
-  padding: var(--space-3);
-  background-color: var(--color-red-50);
-  border: 1px solid var(--color-red-200);
-  border-radius: var(--radius-md);
-  color: var(--color-red-700);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg);
+  color: #dc2626;
   font-size: var(--font-size-sm);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
+  }
 `;
 
 const SuccessMessage = styled.div`
-  padding: var(--space-3);
-  background-color: var(--color-green-50);
-  border: 1px solid var(--color-green-200);
-  border-radius: var(--radius-md);
-  color: var(--color-green-700);
+  padding: var(--space-4);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg);
+  color: #16a34a;
   font-size: var(--font-size-sm);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #22c55e, #16a34a, #15803d);
+  }
 `;
 
 const ProgressSection = styled.div`
@@ -293,11 +321,48 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
           {isSuccess && (
             <SuccessMessage>
-              ✅ Recipe scraped successfully! Redirecting to the new recipe...
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '20px' }}>🎉</span>
+                <span style={{ fontWeight: '600' }}>Success!</span>
+              </div>
+              <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                Recipe scraped successfully!<br />
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Taking you to your new recipe...</span>
+              </div>
             </SuccessMessage>
           )}
 
-          {error && <ErrorMessage>❌ {error}</ErrorMessage>}
+          {error && (
+            <ErrorMessage>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '20px' }}>😔</span>
+                <span style={{ fontWeight: '600' }}>Oops!</span>
+              </div>
+              <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                {error.includes('unavailable') ? (
+                  <>
+                    Our recipe scraper is taking a quick break!<br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Try again in a few moments</span>
+                  </>
+                ) : error.includes('connection') ? (
+                  <>
+                    Having trouble connecting to our servers.<br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Check your internet connection</span>
+                  </>
+                ) : error.includes('Server error') ? (
+                  <>
+                    Something went wrong on our end.<br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>We're working on it!</span>
+                  </>
+                ) : (
+                  <>
+                    {error}<br />
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Let's try again</span>
+                  </>
+                )}
+              </div>
+            </ErrorMessage>
+          )}
 
           {currentProgress && (
             <ProgressSection>
