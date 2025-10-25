@@ -23,6 +23,7 @@ interface InventTask {
   cookingMethods?: string[];
   specialInstructions?: string;
   timestamp: number;
+  userId?: string;
 }
 
 async function callAiForRecipeInvention(task: InventTask): Promise<{
@@ -267,6 +268,7 @@ async function runDirect(task: InventTask): Promise<void> {
       stage: 'ai_processed',
       timestamp: Date.now(),
       recipeId: savedRecipe.id,
+      userId: task.userId,
     });
 
     await redis.publishProgress({
@@ -274,6 +276,7 @@ async function runDirect(task: InventTask): Promise<void> {
       stage: 'stored',
       timestamp: Date.now(),
       recipeId: savedRecipe.id,
+      userId: task.userId,
     });
 
     logger.info('recipe invention + store succeeded', {
@@ -287,6 +290,7 @@ async function runDirect(task: InventTask): Promise<void> {
       stage: 'failed',
       timestamp: Date.now(),
       error: message,
+      userId: task.userId,
     });
     logger.error('recipe invention failed', {
       taskId: task.id,
@@ -326,6 +330,7 @@ async function runQueue(): Promise<void> {
             stage: 'ai_processed',
             timestamp: Date.now(),
             recipeId: savedRecipe.id,
+            userId: task.userId,
           });
 
           await redis.publishProgress({
@@ -333,6 +338,7 @@ async function runQueue(): Promise<void> {
             stage: 'stored',
             timestamp: Date.now(),
             recipeId: savedRecipe.id,
+            userId: task.userId,
           });
 
           logger.info('recipe invention + store succeeded', {
@@ -350,6 +356,7 @@ async function runQueue(): Promise<void> {
             stage: 'failed',
             timestamp: Date.now(),
             error: message,
+            userId: task.userId,
           });
         } finally {
           await redis.clearInventInProgress(task.id);

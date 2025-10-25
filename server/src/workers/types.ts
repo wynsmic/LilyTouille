@@ -32,6 +32,8 @@ export interface ProgressUpdate {
   recipeId?: number;
   // Present when stage === 'failed'
   error?: string;
+  // User ID for targeted broadcasting
+  userId?: string;
 }
 
 // AI Worker Recipe Chunk - represents a recipe chunk during AI processing

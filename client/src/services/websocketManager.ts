@@ -120,7 +120,7 @@ class WebSocketManager {
     });
   }
 
-  async connect(): Promise<void> {
+  async connect(token?: string): Promise<void> {
     if (
       this.connectionState === 'connected' ||
       this.connectionState === 'connecting'
@@ -152,6 +152,9 @@ class WebSocketManager {
           forceNew: true,
           reconnection: false, // We handle reconnection manually
           autoConnect: true,
+          auth: {
+            token: token,
+          },
         });
 
         this.setupSocketEventListeners(resolve, reject);
@@ -227,6 +230,20 @@ class WebSocketManager {
         // Network issues, attempt reconnection
         this.handleReconnection();
       }
+    });
+
+    // Set up authentication event listeners
+    this.socket.on(
+      'authenticated',
+      (data: { userId: string; message: string }) => {
+        this.logger.log('✅ Authenticated:', data);
+        this.emit('authenticated', data);
+      }
+    );
+
+    this.socket.on('auth-error', (error: { message: string }) => {
+      this.logger.error('❌ Authentication error:', error);
+      this.emit('auth-error', error);
     });
 
     // Set up application-specific event listeners

@@ -8,6 +8,8 @@ interface AuthProviderProps {
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const domain = import.meta.env.VITE_AUTH0_DOMAIN;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+  const audience =
+    import.meta.env.VITE_AUTH0_AUDIENCE || 'https://lilitouille.fr';
   const redirectUri = window.location.origin;
 
   if (!domain || !clientId) {
@@ -23,6 +25,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       clientId={clientId}
       authorizationParams={{
         redirect_uri: redirectUri,
+        audience: audience,
       }}
     >
       {children}

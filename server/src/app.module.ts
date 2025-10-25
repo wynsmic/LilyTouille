@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { RecipeModule } from './modules/recipe.module';
 import { ScraperModule } from './modules/scraper.module';
 import { RedisModule } from './modules/redis.module';
@@ -13,11 +15,23 @@ import { RecipeEntity } from './entities/recipe.entity';
 import { ChunkEntity } from './entities/chunk.entity';
 import { UserEntity } from './entities/user.entity';
 import { UserFavoriteEntity } from './entities/user-favorite.entity';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { WebSocketJwtStrategy } from './strategies/websocket-jwt.strategy';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('AUTH0_DOMAIN'),
+        audience: configService.get('AUTH0_AUDIENCE'),
+        issuer: `https://${configService.get('AUTH0_DOMAIN')}/`,
+        algorithms: ['RS256'],
+      }),
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRoot({
       type: config.db.type as any,
@@ -33,6 +47,6 @@ import { UserFavoriteEntity } from './entities/user-favorite.entity';
     UserModule,
   ],
   controllers: [HealthController, InventController],
-  providers: [ProgressGateway],
+  providers: [ProgressGateway, JwtStrategy, WebSocketJwtStrategy],
 })
 export class AppModule {}

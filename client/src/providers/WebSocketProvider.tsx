@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
+import { useAuth0 } from '@auth0/auth0-react';
 import { webSocketManager } from '../services/websocketManager';
 import { setConnectionStatus } from '../store/scrapeProgressSlice';
 
@@ -23,13 +24,16 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   autoConnect = true,
 }) => {
   const dispatch = useDispatch();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
-    if (!autoConnect) return;
+    if (!autoConnect || !isAuthenticated) return;
 
     const initializeConnection = async () => {
       try {
-        await webSocketManager.connect();
+        // Get Auth0 token for WebSocket authentication
+        const token = await getAccessTokenSilently();
+        await webSocketManager.connect(token);
         dispatch(setConnectionStatus({ connected: true, error: undefined }));
 
         // Join progress room
@@ -39,6 +43,23 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         webSocketManager.on('connect', () => {
           console.log('[WebSocketProvider] Connected');
           dispatch(setConnectionStatus({ connected: true, error: undefined }));
+        });
+
+        webSocketManager.on(
+          'authenticated',
+          (data: { userId: string; message: string }) => {
+            console.log('[WebSocketProvider] Authenticated:', data);
+          }
+        );
+
+        webSocketManager.on('auth-error', (error: { message: string }) => {
+          console.error('[WebSocketProvider] Authentication error:', error);
+          dispatch(
+            setConnectionStatus({
+              connected: false,
+              error: `Authentication failed: ${error.message}`,
+            })
+          );
         });
 
         webSocketManager.on('disconnect', () => {
@@ -74,18 +95,25 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     // Cleanup on unmount
     return () => {
       webSocketManager.off('connect');
+      webSocketManager.off('authenticated');
+      webSocketManager.off('auth-error');
       webSocketManager.off('disconnect');
       webSocketManager.off('connect_error');
       // Note: We don't disconnect here as the connection should persist
       // until the page is closed or explicitly disconnected
     };
-  }, [autoConnect, dispatch]);
+  }, [autoConnect, isAuthenticated, getAccessTokenSilently, dispatch]);
 
   const contextValue: WebSocketContextType = {
     isConnected: webSocketManager.isConnected(),
     connectionState: webSocketManager.getConnectionState(),
     connect: async () => {
-      await webSocketManager.connect();
+      if (isAuthenticated) {
+        const token = await getAccessTokenSilently();
+        await webSocketManager.connect(token);
+      } else {
+        await webSocketManager.connect();
+      }
     },
     disconnect: () => {
       webSocketManager.disconnect();
