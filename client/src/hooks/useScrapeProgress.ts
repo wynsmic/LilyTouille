@@ -8,6 +8,7 @@ import { recipeKeys } from './useRecipeQueries';
 import {
   addJob,
   updateJobProgress,
+  removeJob,
   selectActiveJobs,
   selectCompletedJobs,
   selectFailedJobs,
@@ -76,12 +77,30 @@ export const useScrapeProgress = () => {
         console.log('[Hook] ✓ queued', { url });
 
         return { success: true, jobId };
-      } catch (error) {
+      } catch (error: any) {
         console.error('[Hook] Failed to queue scrape:', error);
+        
+        // Remove the job from state since it failed
+        dispatch(removeJob(jobId));
+        
+        let errorMessage = 'Failed to queue scrape';
+        
+        if (error?.status === 404) {
+          errorMessage = 'Scraping service is currently unavailable. Please try again later.';
+        } else if (error?.status === 500) {
+          errorMessage = 'Server error occurred. Please try again later.';
+        } else if (error?.status === 0) {
+          errorMessage = 'Unable to connect to the server. Please check your connection.';
+        } else if (error?.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+        
         return {
           success: false,
-          error:
-            error instanceof Error ? error.message : 'Failed to queue scrape',
+          error: errorMessage,
+          status: error?.status,
         };
       }
     },

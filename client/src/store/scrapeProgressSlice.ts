@@ -214,6 +214,12 @@ const jobProgressSlice = createSlice({
         };
       }
     },
+
+    // Remove job from active jobs (for cleanup on failure)
+    removeJob: (state, action: PayloadAction<string>) => {
+      const jobId = action.payload;
+      delete state.activeJobs[jobId];
+    },
   },
 });
 
@@ -225,6 +231,7 @@ export const {
   cleanupFailedJobs,
   clearAllJobs,
   retryJob,
+  removeJob,
 } = jobProgressSlice.actions;
 
 // Base selectors
