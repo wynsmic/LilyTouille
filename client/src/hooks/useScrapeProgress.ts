@@ -65,9 +65,9 @@ export const useScrapeProgress = () => {
   // Trigger a new scrape
   const triggerScrape = useCallback(
     async (url: string) => {
+      const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
       try {
-        const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
         // Add job to state
         dispatch(addJob({ id: jobId, url, type: 'scrape' }));
 
@@ -79,24 +79,26 @@ export const useScrapeProgress = () => {
         return { success: true, jobId };
       } catch (error: any) {
         console.error('[Hook] Failed to queue scrape:', error);
-        
+
         // Remove the job from state since it failed
         dispatch(removeJob(jobId));
-        
+
         let errorMessage = 'Failed to queue scrape';
-        
+
         if (error?.status === 404) {
-          errorMessage = 'Scraping service is currently unavailable. Please try again later.';
+          errorMessage =
+            'Scraping service is currently unavailable. Please try again later.';
         } else if (error?.status === 500) {
           errorMessage = 'Server error occurred. Please try again later.';
         } else if (error?.status === 0) {
-          errorMessage = 'Unable to connect to the server. Please check your connection.';
+          errorMessage =
+            'Unable to connect to the server. Please check your connection.';
         } else if (error?.data?.message) {
           errorMessage = error.data.message;
         } else if (error?.message) {
           errorMessage = error.message;
         }
-        
+
         return {
           success: false,
           error: errorMessage,
