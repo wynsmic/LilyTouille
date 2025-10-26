@@ -1,0 +1,98 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "search": "Cerca",
+    "filter": "Filtra",
+    "apply": "Applica",
+    "reset": "Reimposta"
+  },
+  "nav": {
+    "allRecipes": "Tutte le Ricette",
+    "favorites": "Preferiti"
+  },
+  "recipe": {
+    "title": "Titolo",
+    "description": "Descrizione",
+    "prepTime": "Tempo di Preparazione",
+    "cookTime": "Tempo di Cottura",
+    "totalTime": "Tempo Totale",
+    "servings": "Porzioni",
+    "difficulty": "Difficoltà",
+    "rating": "Valutazione",
+    "tags": "Tag",
+    "ingredients": "Ingredienti",
+    "instructions": "Istruzioni",
+    "author": "Autore",
+    "minutes": "min",
+    "hours": "ore",
+    "easy": "Facile",
+    "medium": "Medio",
+    "hard": "Difficile"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "subtitle": "Personalizza la tua esperienza culinaria",
+    "preferences": "Preferenze",
+    "language": "Lingua",
+    "languageDescription": "Scegli la tua lingua preferita per l'interfaccia",
+    "theme": "Tema",
+    "themeDescription": "Scegli il tuo tema di colore preferito",
+    "auto": "Auto (segui il sistema)",
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "notifications": "Notifiche",
+    "notificationsDescription": "Ricevi notifiche su aggiornamenti di ricette e nuove funzionalità",
+    "enableNotifications": "Abilita notifiche",
+    "cookingSkill": "Livello di Abilità Culinaria",
+    "cookingSkillDescription": "Aiutaci a consigliare ricette che corrispondono al tuo livello",
+    "beginner": "Principiante",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzato",
+    "saveSettings": "Salva Impostazioni",
+    "saving": "Salvataggio...",
+    "settingsSaved": "Impostazioni salvate con successo!",
+    "saveError": "Errore nel salvare le impostazioni. Per favore, riprova.",
+    "selectLanguage": "Seleziona Lingua",
+    "english": "English",
+    "french": "Français",
+    "spanish": "Español",
+    "german": "Deutsch",
+    "italian": "Italiano"
+  },
+  "profile": {
+    "login": "Accedi",
+    "logout": "Esci",
+    "profile": "Profilo",
+    "settings": "Impostazioni"
+  },
+  "favorites": {
+    "title": "I Miei Preferiti",
+    "empty": "Nessun preferito ancora",
+    "emptyDescription": "Inizia ad aggiungere ricette ai tuoi preferiti per vederle qui"
+  },
+  "recipeDetail": {
+    "backToRecipes": "Torna alle Ricette",
+    "overview": "Panoramica",
+    "ingredients": "Ingredienti",
+    "steps": "Passaggi"
+  },
+  "modals": {
+    "close": "Chiudi",
+    "scrapeRecipe": "Estrai Ricetta",
+    "url": "URL",
+    "enterRecipeUrl": "Inserisci l'URL della ricetta che vuoi estrarre",
+    "scraping": "Estrazione della ricetta...",
+    "inventRecipe": "Crea Ricetta",
+    "title": "Titolo",
+    "description": "Descrizione",
+    "ingredients": "Ingredienti (uno per riga)",
+    "inventing": "Creazione della tua ricetta personalizzata..."
+  }
+}

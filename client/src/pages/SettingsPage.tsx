@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import Layout from '../components/Layout';
+import i18n from '../i18n/config';
 
 const SettingsContainer = styled.div`
   padding: var(--space-6);
@@ -139,6 +141,7 @@ const ErrorMessage = styled.div`
 `;
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user, updatePreferences } = useUser();
   const [language, setLanguage] = useState(user?.language || 'en');
   const [theme, setTheme] = useState(user?.preferences?.theme || 'auto');
@@ -154,11 +157,26 @@ const SettingsPage: React.FC = () => {
     text: string;
   } | null>(null);
 
+  // Sync local state with user data
+  useEffect(() => {
+    if (user) {
+      setLanguage(user.language || 'en');
+      setTheme(user.preferences?.theme || 'auto');
+      setNotifications(user.preferences?.notifications ?? true);
+      setCookingSkill(user.preferences?.cookingSkill || 'beginner');
+    }
+  }, [user]);
+
   const handleSave = async () => {
     setIsSaving(true);
     setMessage(null);
 
     try {
+      // Update i18n language immediately before saving if it changed
+      if (language !== user?.language) {
+        await i18n.changeLanguage(language);
+      }
+
       await updatePreferences({
         language,
         preferences: {
@@ -167,11 +185,16 @@ const SettingsPage: React.FC = () => {
           cookingSkill,
         },
       });
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+
+      // Get the success message in the new language
+      const successMessage = i18n.getFixedT(language)('settings.settingsSaved');
+      setMessage({ type: 'success', text: successMessage });
     } catch (error) {
+      // Get the error message in the current/new language
+      const errorMessage = i18n.getFixedT(i18n.language)('settings.saveError');
       setMessage({
         type: 'error',
-        text: 'Failed to save settings. Please try again.',
+        text: errorMessage,
       });
     } finally {
       setIsSaving(false);
@@ -188,8 +211,8 @@ const SettingsPage: React.FC = () => {
     <Layout>
       <SettingsContainer>
         <PageHeader>
-          <PageTitle>Settings</PageTitle>
-          <PageSubtitle>Customize your cooking experience</PageSubtitle>
+          <PageTitle>{t('settings.title')}</PageTitle>
+          <PageSubtitle>{t('settings.subtitle')}</PageSubtitle>
         </PageHeader>
 
         {message &&
@@ -200,30 +223,32 @@ const SettingsPage: React.FC = () => {
           ))}
 
         <SettingsSection>
-          <SectionTitle>Preferences</SectionTitle>
+          <SectionTitle>{t('settings.preferences')}</SectionTitle>
 
           <SettingItem>
-            <SettingLabel htmlFor="language">Language</SettingLabel>
+            <SettingLabel htmlFor="language">
+              {t('settings.language')}
+            </SettingLabel>
             <SettingDescription>
-              Choose your preferred language for the interface
+              {t('settings.languageDescription')}
             </SettingDescription>
             <Select
               id="language"
               value={language}
               onChange={e => setLanguage(e.target.value)}
             >
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="es">Español</option>
-              <option value="de">Deutsch</option>
-              <option value="it">Italiano</option>
+              <option value="en">{t('settings.english')}</option>
+              <option value="fr">{t('settings.french')}</option>
+              <option value="es">{t('settings.spanish')}</option>
+              <option value="de">{t('settings.german')}</option>
+              <option value="it">{t('settings.italian')}</option>
             </Select>
           </SettingItem>
 
           <SettingItem>
-            <SettingLabel htmlFor="theme">Theme</SettingLabel>
+            <SettingLabel htmlFor="theme">{t('settings.theme')}</SettingLabel>
             <SettingDescription>
-              Choose your preferred color theme
+              {t('settings.themeDescription')}
             </SettingDescription>
             <Select
               id="theme"
@@ -232,16 +257,18 @@ const SettingsPage: React.FC = () => {
                 setTheme(e.target.value as 'light' | 'dark' | 'auto')
               }
             >
-              <option value="auto">Auto (follow system)</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
+              <option value="auto">{t('settings.auto')}</option>
+              <option value="light">{t('settings.light')}</option>
+              <option value="dark">{t('settings.dark')}</option>
             </Select>
           </SettingItem>
 
           <SettingItem>
-            <SettingLabel htmlFor="notifications">Notifications</SettingLabel>
+            <SettingLabel htmlFor="notifications">
+              {t('settings.notifications')}
+            </SettingLabel>
             <SettingDescription>
-              Receive notifications about recipe updates and new features
+              {t('settings.notificationsDescription')}
             </SettingDescription>
             <CheckboxContainer>
               <Checkbox
@@ -251,17 +278,17 @@ const SettingsPage: React.FC = () => {
                 onChange={e => setNotifications(e.target.checked)}
               />
               <CheckboxLabel htmlFor="notifications">
-                Enable notifications
+                {t('settings.enableNotifications')}
               </CheckboxLabel>
             </CheckboxContainer>
           </SettingItem>
 
           <SettingItem>
             <SettingLabel htmlFor="cookingSkill">
-              Cooking Skill Level
+              {t('settings.cookingSkill')}
             </SettingLabel>
             <SettingDescription>
-              Help us recommend recipes that match your skill level
+              {t('settings.cookingSkillDescription')}
             </SettingDescription>
             <Select
               id="cookingSkill"
@@ -272,14 +299,14 @@ const SettingsPage: React.FC = () => {
                 )
               }
             >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
+              <option value="beginner">{t('settings.beginner')}</option>
+              <option value="intermediate">{t('settings.intermediate')}</option>
+              <option value="advanced">{t('settings.advanced')}</option>
             </Select>
           </SettingItem>
 
           <SaveButton onClick={handleSave} disabled={!hasChanges || isSaving}>
-            {isSaving ? 'Saving...' : 'Save Settings'}
+            {isSaving ? t('settings.saving') : t('settings.saveSettings')}
           </SaveButton>
         </SettingsSection>
       </SettingsContainer>

@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { Recipe } from '../services/api';
 
@@ -16,7 +17,7 @@ export interface User {
   email?: string;
   name?: string;
   picture?: string;
-  language: string;
+  language: 'en' | 'fr' | 'es' | 'de' | 'it';
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     notifications?: boolean;
@@ -35,7 +36,7 @@ export interface UserFavorite {
 }
 
 export interface UpdateUserPreferencesRequest {
-  language?: string;
+  language?: 'en' | 'fr' | 'es' | 'de' | 'it';
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     notifications?: boolean;
@@ -79,6 +80,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     isAuthenticated,
     getAccessTokenSilently,
   } = useAuth0();
+  const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
 
@@ -165,8 +167,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
       return response.data;
     },
-    onSuccess: data => {
+    onSuccess: async data => {
       if (user) {
+        // Update i18n language if it changed - await to ensure it completes
+        if (data.language && data.language !== user.language) {
+          await i18n.changeLanguage(data.language);
+        }
+
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
         queryClient.setQueryData(['user', auth0User?.sub], {
@@ -215,6 +222,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       createUserMutation.mutate();
     }
   }, [userData, isAuthenticated, auth0User, userLoading]);
+
+  // Update i18n language when user language changes
+  useEffect(() => {
+    if (user?.language) {
+      i18n.changeLanguage(user.language);
+    }
+  }, [user?.language, i18n]);
 
   const updatePreferences = async (
     preferences: UpdateUserPreferencesRequest

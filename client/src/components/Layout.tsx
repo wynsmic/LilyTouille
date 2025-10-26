@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { useRecipes } from '../hooks';
 import { UserProfile } from './index';
 
@@ -84,6 +85,7 @@ const Badge = styled.span`
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { favoriteRecipeIds } = useRecipes();
+  const { t } = useTranslation();
 
   return (
     <Container>
@@ -93,13 +95,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Logo to="/">LilyTouille</Logo>
             <Nav>
               <NavLink to="/" $isActive={location.pathname === '/'}>
-                All Recipes
+                {t('nav.allRecipes')}
               </NavLink>
               <NavLink
                 to="/favorites"
                 $isActive={location.pathname === '/favorites'}
               >
-                Favorites
+                {t('nav.favorites')}
                 {favoriteRecipeIds.length > 0 && (
                   <Badge>{favoriteRecipeIds.length}</Badge>
                 )}

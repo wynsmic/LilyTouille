@@ -14,7 +14,7 @@ export interface CreateUserDto {
   email?: string;
   name?: string;
   picture?: string;
-  language?: string;
+  language?: 'en' | 'fr' | 'es' | 'de' | 'it';
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     notifications?: boolean;
@@ -24,7 +24,7 @@ export interface CreateUserDto {
 }
 
 export interface UpdateUserPreferencesDto {
-  language?: string;
+  language?: 'en' | 'fr' | 'es' | 'de' | 'it';
   preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     notifications?: boolean;
@@ -32,6 +32,9 @@ export interface UpdateUserPreferencesDto {
     cookingSkill?: 'beginner' | 'intermediate' | 'advanced';
   };
 }
+
+// Valid language codes
+const VALID_LANGUAGES = ['en', 'fr', 'es', 'de', 'it'];
 
 @Injectable()
 export class UserService {
@@ -90,8 +93,20 @@ export class UserService {
   ): Promise<UserEntity> {
     const user = await this.getUserById(userId);
 
+    // Validate language if provided
+    let newLanguage = user.language;
+    if (preferences.language !== undefined) {
+      if (VALID_LANGUAGES.includes(preferences.language)) {
+        newLanguage = preferences.language;
+      } else {
+        throw new ConflictException(
+          `Invalid language code. Supported languages: ${VALID_LANGUAGES.join(', ')}`
+        );
+      }
+    }
+
     await this.userRepository.update(userId, {
-      language: preferences.language || user.language,
+      language: newLanguage,
       preferences: {
         ...user.preferences,
         ...preferences.preferences,

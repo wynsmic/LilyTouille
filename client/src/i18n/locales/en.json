@@ -1,0 +1,98 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "nav": {
+    "allRecipes": "All Recipes",
+    "favorites": "Favorites"
+  },
+  "recipe": {
+    "title": "Title",
+    "description": "Description",
+    "prepTime": "Prep Time",
+    "cookTime": "Cook Time",
+    "totalTime": "Total Time",
+    "servings": "Servings",
+    "difficulty": "Difficulty",
+    "rating": "Rating",
+    "tags": "Tags",
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "author": "Author",
+    "minutes": "min",
+    "hours": "hr",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your cooking experience",
+    "preferences": "Preferences",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language for the interface",
+    "theme": "Theme",
+    "themeDescription": "Choose your preferred color theme",
+    "auto": "Auto (follow system)",
+    "light": "Light",
+    "dark": "Dark",
+    "notifications": "Notifications",
+    "notificationsDescription": "Receive notifications about recipe updates and new features",
+    "enableNotifications": "Enable notifications",
+    "cookingSkill": "Cooking Skill Level",
+    "cookingSkillDescription": "Help us recommend recipes that match your skill level",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "saveSettings": "Save Settings",
+    "saving": "Saving...",
+    "settingsSaved": "Settings saved successfully!",
+    "saveError": "Failed to save settings. Please try again.",
+    "selectLanguage": "Select Language",
+    "english": "English",
+    "french": "Français",
+    "spanish": "Español",
+    "german": "Deutsch",
+    "italian": "Italiano"
+  },
+  "profile": {
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "favorites": {
+    "title": "My Favorites",
+    "empty": "No favorites yet",
+    "emptyDescription": "Start adding recipes to your favorites to see them here"
+  },
+  "recipeDetail": {
+    "backToRecipes": "Back to Recipes",
+    "overview": "Overview",
+    "ingredients": "Ingredients",
+    "steps": "Steps"
+  },
+  "modals": {
+    "close": "Close",
+    "scrapeRecipe": "Scrape Recipe",
+    "url": "URL",
+    "enterRecipeUrl": "Enter the URL of the recipe you want to scrape",
+    "scraping": "Scraping recipe...",
+    "inventRecipe": "Invent Recipe",
+    "title": "Title",
+    "description": "Description",
+    "ingredients": "Ingredients (one per line)",
+    "inventing": "Creating your custom recipe..."
+  }
+}

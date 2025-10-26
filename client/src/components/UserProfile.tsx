@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 
 const ProfileContainer = styled.div`
@@ -124,6 +125,7 @@ const UserProfile: React.FC = () => {
   const { user, logout, isLoading } = useAuth0();
   const { favorites } = useUser();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -194,17 +196,17 @@ const UserProfile: React.FC = () => {
       <DropdownMenu $isOpen={isDropdownOpen}>
         <DropdownItem onClick={handleNavigateToFavorites}>
           <DropdownIcon>⭐</DropdownIcon>
-          My Favorites ({favorites.length})
+          {t('favorites.title')} ({favorites.length})
         </DropdownItem>
 
         <DropdownItem onClick={handleNavigateToSettings}>
           <DropdownIcon>⚙️</DropdownIcon>
-          Settings
+          {t('profile.settings')}
         </DropdownItem>
 
         <DropdownItem className="separator" onClick={handleLogout}>
           <DropdownIcon>🚪</DropdownIcon>
-          Sign Out
+          {t('profile.logout')}
         </DropdownItem>
       </DropdownMenu>
     </ProfileContainer>

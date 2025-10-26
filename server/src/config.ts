@@ -16,7 +16,6 @@ export const config = {
   auth0: {
     domain: process.env.AUTH0_DOMAIN || '',
     audience: process.env.AUTH0_AUDIENCE || '',
-    publicKey: process.env.AUTH0_PUBLIC_KEY || '',
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',

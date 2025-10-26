@@ -28,7 +28,7 @@ export class UserEntity {
   picture?: string;
 
   @Column({ type: 'varchar', length: 10, default: 'en' })
-  language: string;
+  language: 'en' | 'fr' | 'es' | 'de' | 'it';
 
   @Column({ type: 'json', nullable: true })
   preferences?: {
