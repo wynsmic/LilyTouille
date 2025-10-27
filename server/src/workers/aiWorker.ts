@@ -49,7 +49,7 @@ export function replaceUrlsWithCodes(html: string): {
         return `<img${before} src="${shortCode}"${after}>`;
       }
       return match;
-    }
+    },
   );
 
   // Replace data-image-url attributes
@@ -68,7 +68,7 @@ export function replaceUrlsWithCodes(html: string): {
         return `data-image-url="${shortCode}"`;
       }
       return match;
-    }
+    },
   );
 
   // Replace other common URL patterns (href, src in other tags)
@@ -87,7 +87,7 @@ export function replaceUrlsWithCodes(html: string): {
         return `${attr}="${shortCode}"`;
       }
       return match;
-    }
+    },
   );
 
   return { cleanedHtml: processedHtml, urlMappings: mappings };
@@ -96,7 +96,7 @@ export function replaceUrlsWithCodes(html: string): {
 // Restore URLs from short codes after AI processing
 export function restoreUrlsFromCodes(
   content: string,
-  mappings: UrlMapping
+  mappings: UrlMapping,
 ): string {
   let restored = content;
 
@@ -111,7 +111,7 @@ export function restoreUrlsFromCodes(
 // Restore URLs in recipe object
 function restoreUrlsInRecipe(
   recipe: RecipeType,
-  mappings: UrlMapping
+  mappings: UrlMapping,
 ): RecipeType {
   const restored = { ...recipe };
 
@@ -146,13 +146,13 @@ export function cleanHtml(html: string): string {
   // Remove script tags and their content
   let cleaned = html.replace(
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    ''
+    '',
   );
 
   // Remove style tags and their content
   cleaned = cleaned.replace(
     /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
-    ''
+    '',
   );
 
   // Remove HTML comments
@@ -187,7 +187,7 @@ export function preserveRecipeImages(html: string): string {
       // Ensure src is properly quoted
       const cleanSrc = src.replace(/^["']|["']$/g, '');
       return `<img${before} src="${cleanSrc}"${after}>`;
-    }
+    },
   );
 
   // Add data attributes to make images more visible to AI
@@ -201,7 +201,7 @@ export function preserveRecipeImages(html: string): string {
         return `<img${before} src="${src}" data-image-url="${src}"${after}>`;
       }
       return match;
-    }
+    },
   );
 
   return cleaned;
@@ -209,7 +209,7 @@ export function preserveRecipeImages(html: string): string {
 
 export function limitPayloadSize(
   html: string,
-  maxTokens: number = 128000
+  maxTokens: number = 128000,
 ): string {
   const estimatedTokens = estimateTokenCount(html);
 
@@ -229,7 +229,7 @@ export function limitPayloadSize(
     const lastSentenceEnd = Math.max(
       truncated.lastIndexOf('.'),
       truncated.lastIndexOf('!'),
-      truncated.lastIndexOf('?')
+      truncated.lastIndexOf('?'),
     );
 
     // Use the better breaking point, but don't go too far back
@@ -395,7 +395,7 @@ HTML:\n${html}`;
 
 async function callAiForRecipe(
   html: string,
-  url: string
+  url: string,
 ): Promise<{
   recipe: RecipeType;
   aiQuery: string;
@@ -501,7 +501,7 @@ Source URL: ${url}. HTML:\n${htmlWithCodes}`;
 
 async function processRecipe(
   url: string,
-  html: string
+  html: string,
 ): Promise<{
   recipe: RecipeType;
   aiQuery: string;
@@ -595,18 +595,18 @@ function validateRecipeJson(candidate: any): void {
         chunk.recipeSteps.forEach((step: any, stepIndex: number) => {
           if (typeof step !== 'object' || step === null) {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`
+              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`,
             );
             return;
           }
           if (step.type !== 'text' && step.type !== 'image') {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`
+              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`,
             );
           }
           if (typeof step.content !== 'string') {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`
+              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`,
             );
           }
           if (
@@ -615,7 +615,7 @@ function validateRecipeJson(candidate: any): void {
             typeof step.imageUrl !== 'string'
           ) {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`
+              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`,
             );
           }
         });
@@ -635,7 +635,7 @@ async function storeRecipe(
   advancedCleanedHtml: string | undefined,
   aiQuery: string,
   aiResponse: string,
-  urlMappings: UrlMapping
+  urlMappings: UrlMapping,
 ): Promise<Recipe> {
   // Note: In a production environment, you would inject DatabaseService
   // For now, we'll create a new instance for the worker
@@ -671,7 +671,7 @@ async function runDirect(url: string, html: string): Promise<void> {
       result.advancedCleanedHtml,
       result.aiQuery,
       result.aiResponse,
-      result.urlMappings
+      result.urlMappings,
     );
     await redis.publishProgress({
       url,
@@ -718,7 +718,7 @@ async function runQueue(): Promise<void> {
             result.advancedCleanedHtml,
             result.aiQuery,
             result.aiResponse,
-            result.urlMappings
+            result.urlMappings,
           );
           await redis.publishProgress({
             url: task.url,

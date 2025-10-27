@@ -11,70 +11,70 @@ import { ChunkEntity } from './chunk.entity';
 @Entity('recipes')
 export class RecipeEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+    id: number;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+    title: string;
 
   @Column({ type: 'text' })
-  description: string;
+    description: string;
 
   @Column({ type: 'json' })
-  overview: string[];
+    overview: string[];
 
   @Column({ type: 'int', default: 0 })
-  totalPrepTime: number;
+    totalPrepTime: number;
 
   @Column({ type: 'int', default: 0 })
-  totalCookTime: number;
+    totalCookTime: number;
 
   @Column({ type: 'int', default: 1 })
-  servings: number;
+    servings: number;
 
   @Column({ type: 'varchar', length: 20, default: 'easy' })
-  difficulty: 'easy' | 'medium' | 'hard';
+    difficulty: 'easy' | 'medium' | 'hard';
 
   @Column({ type: 'json' })
-  tags: string[];
+    tags: string[];
 
   @Column({ type: 'varchar', length: 500 })
-  imageUrl: string;
+    imageUrl: string;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
-  rating: number;
+    rating: number;
 
   @Column({ type: 'varchar', length: 255 })
-  author: string;
+    author: string;
 
   // Relationship to chunks
   @OneToMany(() => ChunkEntity, chunk => chunk.recipe, { cascade: true })
-  chunks: ChunkEntity[];
+    chunks: ChunkEntity[];
 
   // Scraping metadata
   @Column({ type: 'varchar', length: 1000, nullable: true })
-  sourceUrl?: string;
+    sourceUrl?: string;
 
   @Column({ type: 'text', nullable: true })
-  scrapedHtml?: string;
+    scrapedHtml?: string;
 
   @Column({ type: 'text', nullable: true })
-  advancedCleanedHtml?: string;
+    advancedCleanedHtml?: string;
 
   @Column({ type: 'text', nullable: true })
-  aiQuery?: string;
+    aiQuery?: string;
 
   @Column({ type: 'text', nullable: true })
-  aiResponse?: string;
+    aiResponse?: string;
 
   @Column({ type: 'json', nullable: true })
-  urlMappings?: { [shortCode: string]: string };
+    urlMappings?: { [shortCode: string]: string };
 
   @Column({ type: 'timestamp', nullable: true })
-  scrapedAt?: Date;
+    scrapedAt?: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+    createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+    updatedAt: Date;
 }

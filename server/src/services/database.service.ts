@@ -51,7 +51,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await this.dataSource.initialize();
     this.recipeRepository = new RecipeRepository(this.dataSource);
     this.chunkRepository = new ChunkRepository(
-      this.dataSource.getRepository(ChunkEntity)
+      this.dataSource.getRepository(ChunkEntity),
     );
     this.userRepository = new UserRepository(this.dataSource);
     this.userFavoriteRepository = new UserFavoriteRepository(this.dataSource);
@@ -104,7 +104,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     if (recipeWithoutId.sourceUrl) {
       existingRecipe = await recipeRepository.findBySourceUrl(
-        recipeWithoutId.sourceUrl
+        recipeWithoutId.sourceUrl,
       );
     }
 
@@ -114,7 +114,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Update existing recipe
       savedRecipe = (await recipeRepository.update(
         existingRecipe.id,
-        recipeWithoutId
+        recipeWithoutId,
       )) as RecipeEntity;
 
       // Delete existing chunks and recreate them
