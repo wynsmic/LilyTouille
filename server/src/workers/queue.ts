@@ -10,7 +10,7 @@ export class RedisQueue<T = unknown> {
 
   constructor(
     queueName: string,
-    redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379'
+    redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
   ) {
     this.redis = new IORedis(redisUrl, {
       lazyConnect: false,
@@ -38,12 +38,12 @@ export class RedisQueue<T = unknown> {
       concurrency?: number;
       visibilityTimeoutMs?: number;
       backoffMs?: number;
-    }
+    },
   ): Promise<void> {
     const concurrency = Math.max(1, options?.concurrency ?? 1);
     const visibilityTimeoutMs = Math.max(
       1000,
-      options?.visibilityTimeoutMs ?? 60_000
+      options?.visibilityTimeoutMs ?? 60_000,
     );
     const backoffMs = Math.max(100, options?.backoffMs ?? 500);
 
@@ -53,7 +53,7 @@ export class RedisQueue<T = unknown> {
           const res = await this.redis.brpoplpush(
             this.queueKey,
             this.processingKey,
-            5
+            5,
           );
           if (!res) {
             continue;

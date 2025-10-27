@@ -151,7 +151,7 @@ export class RecipeController {
   @Post(':id/chunks')
   async createChunk(
     @Param('id', ParseIntPipe) recipeId: number,
-    @Body() createChunkDto: Omit<CreateChunkDto, 'recipeId'>
+    @Body() createChunkDto: Omit<CreateChunkDto, 'recipeId'>,
   ) {
     const chunk = await this.recipeService.createChunk({
       ...createChunkDto,
@@ -172,7 +172,7 @@ export class RecipeController {
   async updateChunk(
     @Param('recipeId', ParseIntPipe) recipeId: number,
     @Param('chunkId', ParseIntPipe) chunkId: number,
-    @Body() updateData: Partial<CreateChunkDto>
+    @Body() updateData: Partial<CreateChunkDto>,
   ) {
     const chunk = await this.recipeService.updateChunk(chunkId, updateData);
 
@@ -193,7 +193,7 @@ export class RecipeController {
   @Delete(':recipeId/chunks/:chunkId')
   async deleteChunk(
     @Param('recipeId', ParseIntPipe) recipeId: number,
-    @Param('chunkId', ParseIntPipe) chunkId: number
+    @Param('chunkId', ParseIntPipe) chunkId: number,
   ) {
     const deleted = await this.recipeService.deleteChunk(chunkId);
 

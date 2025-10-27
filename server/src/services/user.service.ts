@@ -42,12 +42,12 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(UserFavoriteEntity)
-    private readonly userFavoriteRepository: Repository<UserFavoriteEntity>
+    private readonly userFavoriteRepository: Repository<UserFavoriteEntity>,
   ) {}
 
   async findOrCreateUser(
     auth0Id: string,
-    userData: Partial<CreateUserDto>
+    userData: Partial<CreateUserDto>,
   ): Promise<UserEntity> {
     let user = await this.userRepository.findOne({ where: { auth0Id } });
 
@@ -89,7 +89,7 @@ export class UserService {
 
   async updateUserPreferences(
     userId: number,
-    preferences: UpdateUserPreferencesDto
+    preferences: UpdateUserPreferencesDto,
   ): Promise<UserEntity> {
     const user = await this.getUserById(userId);
 
@@ -100,7 +100,7 @@ export class UserService {
         newLanguage = preferences.language;
       } else {
         throw new ConflictException(
-          `Invalid language code. Supported languages: ${VALID_LANGUAGES.join(', ')}`
+          `Invalid language code. Supported languages: ${VALID_LANGUAGES.join(', ')}`,
         );
       }
     }
@@ -121,7 +121,7 @@ export class UserService {
 
   async addFavorite(
     userId: number,
-    recipeId: number
+    recipeId: number,
   ): Promise<UserFavoriteEntity> {
     // Check if already favorited
     const existingFavorite = await this.userFavoriteRepository.findOne({

@@ -7,7 +7,7 @@ export class ScraperService {
   private readonly outputDir = path.resolve(__dirname, '..', 'data', 'scrapes');
 
   async fetchAndStore(
-    url: string
+    url: string,
   ): Promise<{ filename: string; filePath: string }> {
     try {
       await mkdir(this.outputDir, { recursive: true });
@@ -28,7 +28,7 @@ export class ScraperService {
       return { filename, filePath };
     } catch (error) {
       throw new InternalServerErrorException(
-        'Failed to scrape and store the page'
+        'Failed to scrape and store the page',
       );
     }
   }
@@ -40,7 +40,7 @@ export class ScraperService {
       const pathPart =
         u.pathname.replace(/\/+$/, '').replace(/\//g, '_') || 'root';
       const queryHash = u.search ? this.hashString(u.search) : 'noquery';
-      return `${u.hostname}${pathPart ? '_' + pathPart : ''}_${queryHash}_${timestamp}`
+      return `${u.hostname}${pathPart ? `_${  pathPart}` : ''}_${queryHash}_${timestamp}`
         .replace(/[^a-zA-Z0-9._-]/g, '_')
         .slice(0, 200);
     } catch {

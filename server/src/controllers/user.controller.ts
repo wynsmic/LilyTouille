@@ -27,7 +27,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async createOrUpdateUser(
     @Request() req: AuthenticatedRequest,
-    @Body() createUserDto: CreateUserDto
+    @Body() createUserDto: CreateUserDto,
   ) {
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -35,7 +35,7 @@ export class UserController {
 
     const user = await this.userService.findOrCreateUser(
       req.user.sub,
-      createUserDto
+      createUserDto,
     );
     return {
       id: user.id,
@@ -78,7 +78,7 @@ export class UserController {
   @Put('me/preferences')
   async updatePreferences(
     @Request() req: AuthenticatedRequest,
-    @Body() preferences: UpdateUserPreferencesDto
+    @Body() preferences: UpdateUserPreferencesDto,
   ) {
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -92,7 +92,7 @@ export class UserController {
 
     const updatedUser = await this.userService.updateUserPreferences(
       user.id,
-      preferences
+      preferences,
     );
 
     return {
@@ -124,20 +124,20 @@ export class UserController {
         createdAt: fav.createdAt,
         recipe: fav.recipe
           ? {
-              id: fav.recipe.id,
-              title: fav.recipe.title,
-              description: fav.recipe.description,
-              overview: fav.recipe.overview,
-              imageUrl: fav.recipe.imageUrl,
-              rating: fav.recipe.rating,
-              difficulty: fav.recipe.difficulty,
-              totalPrepTime: fav.recipe.totalPrepTime,
-              totalCookTime: fav.recipe.totalCookTime,
-              servings: fav.recipe.servings,
-              tags: fav.recipe.tags,
-              author: fav.recipe.author,
-              chunks: fav.recipe.chunks || [],
-            }
+            id: fav.recipe.id,
+            title: fav.recipe.title,
+            description: fav.recipe.description,
+            overview: fav.recipe.overview,
+            imageUrl: fav.recipe.imageUrl,
+            rating: fav.recipe.rating,
+            difficulty: fav.recipe.difficulty,
+            totalPrepTime: fav.recipe.totalPrepTime,
+            totalCookTime: fav.recipe.totalCookTime,
+            servings: fav.recipe.servings,
+            tags: fav.recipe.tags,
+            author: fav.recipe.author,
+            chunks: fav.recipe.chunks || [],
+          }
           : null,
       })),
     };
@@ -147,7 +147,7 @@ export class UserController {
   @HttpCode(HttpStatus.CREATED)
   async addFavorite(
     @Request() req: AuthenticatedRequest,
-    @Param('recipeId') recipeId: number
+    @Param('recipeId') recipeId: number,
   ) {
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -172,7 +172,7 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeFavorite(
     @Request() req: AuthenticatedRequest,
-    @Param('recipeId') recipeId: number
+    @Param('recipeId') recipeId: number,
   ) {
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -190,7 +190,7 @@ export class UserController {
   @Get('me/favorites/:recipeId/status')
   async getFavoriteStatus(
     @Request() req: AuthenticatedRequest,
-    @Param('recipeId') recipeId: number
+    @Param('recipeId') recipeId: number,
   ) {
     if (!req.user) {
       return { isFavorite: false };

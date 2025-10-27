@@ -21,7 +21,7 @@ export interface AuthenticatedRequest extends Request {
 export class Auth0Middleware implements NestMiddleware {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   async use(req: AuthenticatedRequest, res: Response, next: NextFunction) {

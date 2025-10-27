@@ -43,7 +43,7 @@ export class ChunkRepository implements IChunkRepository {
 
   async update(
     id: number,
-    chunk: Partial<ChunkEntity>
+    chunk: Partial<ChunkEntity>,
   ): Promise<ChunkEntity | null> {
     await this.repository.update(id, chunk);
     return this.findById(id);

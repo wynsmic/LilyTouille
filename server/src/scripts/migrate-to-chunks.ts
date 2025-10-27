@@ -83,7 +83,7 @@ async function migrateRecipesToChunks() {
         if ((recipe as any).parts && (recipe as any).parts.length > 0) {
           // Recipe has parts - convert each part to a chunk
           console.log(
-            `📝 Converting ${(recipe as any).parts.length} parts to chunks`
+            `📝 Converting ${(recipe as any).parts.length} parts to chunks`,
           );
 
           for (let i = 0; i < (recipe as any).parts.length; i++) {
@@ -108,7 +108,7 @@ async function migrateRecipesToChunks() {
           }
         } else {
           // Recipe doesn't have parts - create a single chunk from the recipe data
-          console.log(`📝 Creating single chunk from recipe data`);
+          console.log('📝 Creating single chunk from recipe data');
 
           const chunkData: Partial<ChunkEntity> = {
             title: recipe.title,
@@ -136,12 +136,12 @@ async function migrateRecipesToChunks() {
       }
     }
 
-    console.log(`\n🎉 Migration completed!`);
-    console.log(`📊 Statistics:`);
+    console.log('\n🎉 Migration completed!');
+    console.log('📊 Statistics:');
     console.log(`   - Migrated: ${migratedCount} recipes`);
     console.log(`   - Skipped: ${skippedCount} recipes`);
     console.log(
-      `   - Total processed: ${migratedCount + skippedCount} recipes`
+      `   - Total processed: ${migratedCount + skippedCount} recipes`,
     );
   } catch (error) {
     console.error('❌ Migration failed:', error);

@@ -115,7 +115,7 @@ export class RecipeService {
           orderIndex: index,
           recipeId: recipeEntity.id,
         });
-      })
+      }),
     );
 
     // Return the complete recipe with chunks
@@ -159,7 +159,7 @@ export class RecipeService {
    */
   async updateChunk(
     id: number,
-    updateData: Partial<CreateChunkDto>
+    updateData: Partial<CreateChunkDto>,
   ): Promise<Chunk | null> {
     const chunkRepository = this.databaseService.getChunkRepository();
     const chunk = await chunkRepository.update(id, updateData);

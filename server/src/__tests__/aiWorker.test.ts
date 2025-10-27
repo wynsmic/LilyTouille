@@ -396,7 +396,7 @@ describe('AI Worker Functions', () => {
 
       const result = preserveRecipeImages(html);
       expect(result).toContain(
-        'data-image-url="https://example.com/recipe.jpg"'
+        'data-image-url="https://example.com/recipe.jpg"',
       );
       expect(result).toContain('data-image-url="step-image.png"');
       expect(result).toContain('src="https://example.com/recipe.jpg"');
@@ -414,7 +414,7 @@ describe('AI Worker Functions', () => {
       const result = preserveRecipeImages(html);
       // Should not add duplicate data-image-url
       const matches = result.match(
-        /data-image-url="https:\/\/example\.com\/recipe\.jpg"/g
+        /data-image-url="https:\/\/example\.com\/recipe\.jpg"/g,
       );
       expect(matches).toHaveLength(1);
     });
@@ -562,7 +562,7 @@ describe('AI Worker Functions', () => {
 
     it('should truncate content at HTML tag boundary when possible', () => {
       const content =
-        'A'.repeat(1000) + '<p>End of paragraph</p>' + 'B'.repeat(1000);
+        `${'A'.repeat(1000)  }<p>End of paragraph</p>${  'B'.repeat(1000)}`;
       const result = limitPayloadSize(content, 400); // ~1140 characters, should find the tag
       expect(result).toContain('End of paragraph');
       expect(result).toContain('...');
@@ -570,7 +570,7 @@ describe('AI Worker Functions', () => {
 
     it('should truncate content at sentence boundary when no HTML tags', () => {
       const content =
-        'A'.repeat(1000) + '. End of sentence.' + 'B'.repeat(1000);
+        `${'A'.repeat(1000)  }. End of sentence.${  'B'.repeat(1000)}`;
       const result = limitPayloadSize(content, 400); // ~1140 characters, should find the sentence
       expect(result).toContain('End of sentence');
       expect(result).toContain('...');
@@ -602,7 +602,7 @@ describe('AI Worker Functions', () => {
             <li>Ingredient 2</li>
           </ul>
         </div>
-      ` + 'A'.repeat(200000);
+      ${  'A'.repeat(200000)}`;
 
       const result = limitPayloadSize(content, 200); // ~700 characters
       expect(result.length).toBeLessThanOrEqual(703); // 700 + '...'
@@ -703,7 +703,7 @@ describe('AI Worker Functions', () => {
           <h2>Commentaires</h2>
           <p>Many user comments here...</p>
         </section>
-      ` + 'A'.repeat(200000);
+      ${  'A'.repeat(200000)}`;
 
       const cleaned = cleanHtml(largeHtml);
       const limited = limitPayloadSize(cleaned, 1000); // ~3500 characters

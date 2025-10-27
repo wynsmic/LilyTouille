@@ -42,58 +42,58 @@ export enum RecipeType {
 
 export class InventRecipeDto {
   @IsString()
-  title!: string;
+    title!: string;
 
   @IsOptional()
   @IsString()
-  description?: string;
+    description?: string;
 
   @IsOptional()
   @IsEnum(RecipeCuisine)
-  cuisine?: RecipeCuisine;
+    cuisine?: RecipeCuisine;
 
   @IsOptional()
   @IsEnum(RecipeType)
-  type?: RecipeType;
+    type?: RecipeType;
 
   @IsOptional()
   @IsEnum(RecipeDifficulty)
-  difficulty?: RecipeDifficulty;
+    difficulty?: RecipeDifficulty;
 
   @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(20)
-  servings?: number;
+    servings?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(5)
   @Max(300)
-  prepTime?: number;
+    prepTime?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(5)
   @Max(480)
-  cookTime?: number;
+    cookTime?: number;
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  ingredients?: string[];
+    ingredients?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  dietaryRestrictions?: string[];
+    dietaryRestrictions?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  cookingMethods?: string[];
+    cookingMethods?: string[];
 
   @IsOptional()
   @IsString()
-  specialInstructions?: string;
+    specialInstructions?: string;
 }

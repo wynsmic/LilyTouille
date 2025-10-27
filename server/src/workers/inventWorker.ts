@@ -31,14 +31,14 @@ async function callAiForRecipeInvention(task: InventTask): Promise<{
   aiQuery: string;
   aiResponse: string;
 }> {
-  const apiKey = config.ai.apiKey;
-  const endpoint = config.ai.endpoint;
+  const {apiKey} = config.ai;
+  const {endpoint} = config.ai;
   if (!apiKey) {
     throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
   }
 
   // Build a comprehensive prompt for recipe invention
-  const system = `You are a creative chef and recipe developer. Create a complete, detailed recipe based on the user's specifications. The recipe should be practical, well-structured, and include all necessary details for successful cooking.`;
+  const system = 'You are a creative chef and recipe developer. Create a complete, detailed recipe based on the user\'s specifications. The recipe should be practical, well-structured, and include all necessary details for successful cooking.';
 
   const userContent = `Create a complete recipe with the following specifications:
 
@@ -193,18 +193,18 @@ function validateRecipeJson(candidate: any): void {
         chunk.recipeSteps.forEach((step: any, stepIndex: number) => {
           if (typeof step !== 'object' || step === null) {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`
+              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`,
             );
             return;
           }
           if (step.type !== 'text' && step.type !== 'image') {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`
+              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`,
             );
           }
           if (typeof step.content !== 'string') {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`
+              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`,
             );
           }
           if (
@@ -213,7 +213,7 @@ function validateRecipeJson(candidate: any): void {
             typeof step.imageUrl !== 'string'
           ) {
             errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`
+              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`,
             );
           }
         });
@@ -230,7 +230,7 @@ async function storeInventedRecipe(
   recipe: RecipeType,
   task: InventTask,
   aiQuery: string,
-  aiResponse: string
+  aiResponse: string,
 ): Promise<Recipe> {
   const db = new DatabaseService();
   await db.initialize();
@@ -241,8 +241,8 @@ async function storeInventedRecipe(
     author: 'AI Chef',
     sourceUrl: undefined, // No source URL for invented recipes
     scrapedHtml: undefined,
-    aiQuery: aiQuery,
-    aiResponse: aiResponse,
+    aiQuery,
+    aiResponse,
     urlMappings: undefined,
     scrapedAt: new Date().toISOString(),
   };
@@ -260,7 +260,7 @@ async function runDirect(task: InventTask): Promise<void> {
       result.recipe,
       task,
       result.aiQuery,
-      result.aiResponse
+      result.aiResponse,
     );
 
     await redis.publishProgress({
@@ -322,7 +322,7 @@ async function runQueue(): Promise<void> {
             result.recipe,
             task,
             result.aiQuery,
-            result.aiResponse
+            result.aiResponse,
           );
 
           await redis.publishProgress({

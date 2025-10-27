@@ -57,7 +57,7 @@ export class RedisService implements OnModuleDestroy {
   async blockPopUrl(timeoutSeconds = 5): Promise<string | null> {
     const result = await this.redis.brpop(
       this.processingQueueKey,
-      timeoutSeconds
+      timeoutSeconds,
     );
     return result ? result[1] : null;
   }
@@ -80,7 +80,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async blockPopAiTask(
-    timeoutSeconds = 5
+    timeoutSeconds = 5,
   ): Promise<{ url: string; html: string } | null> {
     const result = await this.redis.brpop(this.aiQueueKey, timeoutSeconds);
     if (!result) return null;
@@ -99,7 +99,7 @@ export class RedisService implements OnModuleDestroy {
       const payload = JSON.stringify(update);
       await this.redis.publish(this.progressChannel, payload);
       this.logger.debug(
-        `publishProgress channel=${this.progressChannel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`
+        `publishProgress channel=${this.progressChannel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`,
       );
     } catch (e) {
       this.logger.error('publishProgress error', e as any);
@@ -108,7 +108,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async subscribeToProgress(
-    callback: (update: ProgressUpdate) => void
+    callback: (update: ProgressUpdate) => void,
   ): Promise<void> {
     const subscriber = this.redis.duplicate();
     await subscriber.subscribe(this.progressChannel);
@@ -118,7 +118,7 @@ export class RedisService implements OnModuleDestroy {
         try {
           const update = JSON.parse(message) as ProgressUpdate;
           this.logger.debug(
-            `subscribeToProgress <- message channel=${channel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`
+            `subscribeToProgress <- message channel=${channel} url=${update.url} stage=${update.stage} ts=${update.timestamp}`,
           );
           callback(update);
         } catch (error) {
@@ -162,7 +162,7 @@ export class RedisService implements OnModuleDestroy {
 
   // Utility methods
   async getQueueLength(
-    queueName: 'processing' | 'ai' | 'invent'
+    queueName: 'processing' | 'ai' | 'invent',
   ): Promise<number> {
     const keyMap = {
       processing: this.processingQueueKey,
@@ -176,7 +176,7 @@ export class RedisService implements OnModuleDestroy {
     await this.redis.del(
       this.processingQueueKey,
       this.aiQueueKey,
-      this.inventQueueKey
+      this.inventQueueKey,
     );
   }
 

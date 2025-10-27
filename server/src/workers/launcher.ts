@@ -22,11 +22,11 @@ export function startWorkers(): void {
   const available = cpus().length;
   const required = Math.max(
     config.workers.minThreads,
-    config.workers.scrapeWorkers + config.workers.aiWorkers
+    config.workers.scrapeWorkers + config.workers.aiWorkers,
   );
   if (available < required) {
     throw new Error(
-      `Insufficient threads/CPUs. Required at least ${required}, found ${available}`
+      `Insufficient threads/CPUs. Required at least ${required}, found ${available}`,
     );
   }
 

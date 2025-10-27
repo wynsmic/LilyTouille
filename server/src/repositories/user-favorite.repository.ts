@@ -30,7 +30,7 @@ export class UserFavoriteRepository implements IUserFavoriteRepository {
 
   async findByUserIdAndRecipeId(
     userId: number,
-    recipeId: number
+    recipeId: number,
   ): Promise<UserFavoriteEntity | null> {
     return this.repository.findOne({
       where: { userId, recipeId },
@@ -39,7 +39,7 @@ export class UserFavoriteRepository implements IUserFavoriteRepository {
   }
 
   async save(
-    favorite: Partial<UserFavoriteEntity>
+    favorite: Partial<UserFavoriteEntity>,
   ): Promise<UserFavoriteEntity> {
     const favoriteEntity = this.repository.create(favorite);
     return this.repository.save(favoriteEntity);
@@ -47,7 +47,7 @@ export class UserFavoriteRepository implements IUserFavoriteRepository {
 
   async deleteByUserIdAndRecipeId(
     userId: number,
-    recipeId: number
+    recipeId: number,
   ): Promise<boolean> {
     const result = await this.repository.delete({ userId, recipeId });
     return (result.affected ?? 0) > 0;

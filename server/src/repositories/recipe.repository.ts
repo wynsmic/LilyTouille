@@ -30,7 +30,7 @@ export class RecipeRepository implements IRecipeRepository {
           'JSON_EXTRACT(chunks.ingredients, "$") LIKE :ingredient',
           {
             ingredient: `%${filters.ingredient}%`,
-          }
+          },
         );
       }
 
@@ -69,7 +69,7 @@ export class RecipeRepository implements IRecipeRepository {
 
   async update(
     id: number,
-    recipe: Partial<RecipeEntity>
+    recipe: Partial<RecipeEntity>,
   ): Promise<RecipeEntity | null> {
     await this.repository.update(id, recipe);
     return this.findById(id);
@@ -95,7 +95,7 @@ export class RecipeRepository implements IRecipeRepository {
     });
 
     const allIngredients = recipes.flatMap(recipe =>
-      recipe.chunks.flatMap(chunk => chunk.ingredients)
+      recipe.chunks.flatMap(chunk => chunk.ingredients),
     );
     return [...new Set(allIngredients)].sort();
   }

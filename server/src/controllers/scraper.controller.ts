@@ -15,7 +15,7 @@ import { Logger } from '@nestjs/common';
 export class ScraperController {
   constructor(
     private readonly scraperService: ScraperService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
   ) {}
 
   private readonly logger = new Logger(ScraperController.name);

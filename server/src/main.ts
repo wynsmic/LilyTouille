@@ -25,13 +25,13 @@ async function bootstrap() {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-    })
+    }),
   );
 
   // Global prefix for API routes
   app.setGlobalPrefix('api');
 
-  const port = config.app.port;
+  const {port} = config.app;
   await app.listen(port);
 
   logger.info(`NestJS Server running on port ${port}`);

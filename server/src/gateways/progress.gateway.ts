@@ -26,10 +26,10 @@ import * as jwt from 'jsonwebtoken';
   namespace: '/',
 })
 export class ProgressGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   @WebSocketServer()
-  server: Server;
+    server: Server;
 
   private readonly logger = new Logger(ProgressGateway.name);
   private isSubscribed = false;
@@ -39,7 +39,7 @@ export class ProgressGateway
   constructor(
     private readonly redisService: RedisService,
     private readonly webSocketJwtStrategy: WebSocketJwtStrategy,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {
     // Setup JWKS secret provider for RS256 token verification
     this.getSecret = passportJwtSecret({
@@ -101,10 +101,10 @@ export class ProgressGateway
       // Safely check if server and sockets are available
       if (this.server && this.server.sockets && this.server.sockets.sockets) {
         const clientIds: string[] = Array.from(
-          this.server.sockets.sockets.keys()
+          this.server.sockets.sockets.keys(),
         );
         this.logger.log(
-          `Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`
+          `Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`,
         );
       } else {
         this.logger.warn('Server sockets not available during connection');
@@ -120,7 +120,7 @@ export class ProgressGateway
   }
 
   handleDisconnect(client: Socket) {
-    const user = client.data.user;
+    const {user} = client.data;
     if (user) {
       this.logger.log(`Client disconnected: ${client.id} (user: ${user.sub})`);
     } else {
@@ -132,7 +132,7 @@ export class ProgressGateway
     try {
       // Extract token from handshake
       const token =
-        client.handshake?.auth?.token || client.handshake?.query?.token;
+        client.handshake.auth.token || client.handshake.query.token;
 
       if (!token) {
         this.logger.error(`No token provided for client ${client.id}`);
@@ -163,7 +163,7 @@ export class ProgressGateway
     } catch (error) {
       this.logger.error(
         `Token verification failed for client ${client.id}:`,
-        error
+        error,
       );
       return null;
     }
@@ -204,7 +204,7 @@ export class ProgressGateway
 
       await this.redisService.subscribeToProgress((update: ProgressUpdate) => {
         this.logger.log(
-          `Progress update received: ${update.url} - ${update.stage}${update.userId ? ` (user: ${update.userId})` : ''}`
+          `Progress update received: ${update.url} - ${update.stage}${update.userId ? ` (user: ${update.userId})` : ''}`,
         );
 
         // Check if server is available and has connected clients
@@ -222,7 +222,7 @@ export class ProgressGateway
             if (room) {
               room.emit('progress-update', update);
               this.logger.log(
-                `✅ Successfully broadcasted progress-update: ${update.url} - ${update.stage} to user room: ${userRoom}`
+                `✅ Successfully broadcasted progress-update: ${update.url} - ${update.stage} to user room: ${userRoom}`,
               );
             } else {
               this.logger.warn(`User room ${userRoom} not found or empty`);
@@ -231,7 +231,7 @@ export class ProgressGateway
             // Fallback: broadcast to all connected clients (for backward compatibility)
             this.server.emit('progress-update', update);
             this.logger.log(
-              `✅ Successfully broadcasted progress-update: ${update.url} - ${update.stage} to all clients (no userId specified)`
+              `✅ Successfully broadcasted progress-update: ${update.url} - ${update.stage} to all clients (no userId specified)`,
             );
           }
         } catch (e) {
