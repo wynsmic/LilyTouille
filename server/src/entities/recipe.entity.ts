@@ -58,6 +58,9 @@ export class RecipeEntity {
   scrapedHtml?: string;
 
   @Column({ type: 'text', nullable: true })
+  advancedCleanedHtml?: string;
+
+  @Column({ type: 'text', nullable: true })
   aiQuery?: string;
 
   @Column({ type: 'text', nullable: true })

@@ -6,13 +6,17 @@ import { ChunkEntity } from '../entities/chunk.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UserFavoriteEntity } from '../entities/user-favorite.entity';
 import { RecipeRepository } from '../repositories/recipe.repository';
-import { ChunkRepository } from '../repositories/chunk.repository';
+import {
+  ChunkRepository,
+  IChunkRepository,
+} from '../repositories/chunk.repository';
 import { UserRepository } from '../repositories/user.repository';
-import { UserFavoriteRepository } from '../repositories/user-favorite.repository';
+import {
+  UserFavoriteRepository,
+  IUserFavoriteRepository,
+} from '../repositories/user-favorite.repository';
 import { IRecipeRepository } from '../repositories/recipe.repository.interface';
-import { IChunkRepository } from '../repositories/chunk.repository';
 import { IUserRepository } from '../repositories/user.repository.interface';
-import { IUserFavoriteRepository } from '../repositories/user-favorite.repository';
 import { RecipeType } from '../workers/types';
 import { Recipe } from '../interfaces/recipe.interface';
 
@@ -29,7 +33,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleDestroy() {
-    if (this.dataSource?.isInitialized) {
+    if (this.dataSource.isInitialized) {
       await this.dataSource.destroy();
     }
   }
@@ -92,6 +96,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const { chunks, ...recipeData } = recipe as any;
 
     // Remove ID from recipe to ensure auto-generation
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...recipeWithoutId } = recipeData;
 
     // Check if recipe already exists by sourceUrl only
@@ -201,6 +206,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       chunks: entity.chunks || [],
       sourceUrl: entity.sourceUrl,
       scrapedHtml: entity.scrapedHtml,
+      advancedCleanedHtml: entity.advancedCleanedHtml,
       aiQuery: entity.aiQuery,
       aiResponse: entity.aiResponse,
       urlMappings: entity.urlMappings,

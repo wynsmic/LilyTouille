@@ -13,7 +13,6 @@ interface UrlMapping {
   [shortCode: string]: string;
 }
 
-let urlMappings: UrlMapping = {};
 let urlCounter = 1;
 
 // Generate a short code for URL mapping
@@ -237,7 +236,7 @@ export function limitPayloadSize(
     const breakPoint = Math.max(lastTagEnd, lastSentenceEnd);
     const safeBreakPoint = Math.max(breakPoint, maxCharacters * 0.9); // Don't go back more than 10%
 
-    return html.substring(0, safeBreakPoint) + '...';
+    return `${html.substring(0, safeBreakPoint)}...`;
   }
 
   return html;
@@ -337,6 +336,63 @@ export function removeCommentSections(html: string): string {
   return cleaned;
 }
 
+async function callAiForHtmlCleaning(html: string): Promise<string> {
+  const { apiKey } = config.ai;
+  const { endpoint } = config.ai;
+  if (!apiKey) {
+    throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
+  }
+
+  const system =
+    'You are an HTML cleaner that removes all HTML tags and elements that are not relevant for recipe extraction. Your goal is to keep only the content that would be useful for understanding and extracting a recipe.';
+  const userContent = `Remove all irrelevant HTML from the following content. Keep only:
+- Recipe-related content (ingredients, instructions, descriptions, tips)
+- Text content related to the recipe
+- Recipe images (but remove their img tags, just keep reference to the URL)
+- Any metadata about cooking times, servings, difficulty, etc.
+
+Remove:
+- Navigation menus
+- Headers and footers
+- Sidebar content
+- Social media widgets
+- Comments and reviews sections
+- Advertisement blocks
+- Website chrome and UI elements
+- Script and style tags (already removed, but remove their references)
+- Any decorative elements
+
+Return only the cleaned HTML as plain text with minimal markup:
+
+HTML:\n${html}`;
+
+  const requestBody = {
+    model: config.ai.model,
+    temperature: 0,
+    messages: [
+      { role: 'system', content: system },
+      { role: 'user', content: userContent },
+    ],
+  };
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`AI cleaning request failed: ${res.status} ${text}`);
+  }
+
+  const data = (await res.json()) as any;
+  return data.choices?.[0]?.message?.content ?? html;
+}
+
 async function callAiForRecipe(
   html: string,
   url: string
@@ -346,8 +402,8 @@ async function callAiForRecipe(
   aiResponse: string;
   urlMappings: UrlMapping;
 }> {
-  const apiKey = config.ai.apiKey;
-  const endpoint = config.ai.endpoint;
+  const { apiKey } = config.ai;
+  const { endpoint } = config.ai;
   if (!apiKey) {
     throw new Error('Missing AI_API_KEY/OPENAI_API_KEY');
   }
@@ -355,9 +411,6 @@ async function callAiForRecipe(
   // Replace URLs with short codes to reduce token usage
   const { cleanedHtml: htmlWithCodes, urlMappings } =
     replaceUrlsWithCodes(html);
-
-  // Clean the HTML before sending to AI
-  const cleanedHtml = cleanHtml(htmlWithCodes);
 
   // Enhanced prompt to preserve original recipe content while adding meaningful overview
   const system =
@@ -401,7 +454,7 @@ CHUNK EXAMPLES:
 - Cake with frosting: chunks: [{"title": "Cake", "ingredients": [...], "recipeSteps": [...], "prepTime": 25, "cookTime": 35, "servings": 8, "difficulty": "medium", "tags": [...], "rating": 4.8, "orderIndex": 0, ...}, {"title": "Frosting", "ingredients": [...], "recipeSteps": [...], "prepTime": 15, "cookTime": 0, "servings": 8, "difficulty": "easy", "tags": [...], "rating": 4.8, "orderIndex": 1, ...}, {"title": "Assembly", "ingredients": [], "recipeSteps": [...], "prepTime": 10, "cookTime": 0, "servings": 8, "difficulty": "easy", "tags": [...], "rating": 4.8, "orderIndex": 2, ...}]
 - Pizza recipe: chunks: [{"title": "Dough", "ingredients": [...], "recipeSteps": [...], "prepTime": 15, "cookTime": 0, "servings": 4, "difficulty": "medium", "tags": [...], "rating": 4.2, "orderIndex": 0, ...}, {"title": "Sauce", "ingredients": [...], "recipeSteps": [...], "prepTime": 10, "cookTime": 20, "servings": 4, "difficulty": "easy", "tags": [...], "rating": 4.2, "orderIndex": 1, ...}, {"title": "Assembly & Baking", "ingredients": [...], "recipeSteps": [...], "prepTime": 5, "cookTime": 15, "servings": 4, "difficulty": "easy", "tags": [...], "rating": 4.2, "orderIndex": 2, ...}]
 
-Source URL: ${url}. HTML:\n${cleanedHtml}`;
+Source URL: ${url}. HTML:\n${htmlWithCodes}`;
 
   // Limit the payload size to control costs (approximately 128k characters)
   const limitedUserContent = limitPayloadSize(userContent, 128000);
@@ -454,8 +507,16 @@ async function processRecipe(
   aiQuery: string;
   aiResponse: string;
   urlMappings: UrlMapping;
+  advancedCleanedHtml?: string;
 }> {
-  const result = await callAiForRecipe(html, url);
+  // Step 1: Basic programmatic cleaning
+  const basicCleanedHtml = cleanHtml(html);
+
+  // Step 2: AI-powered cleaning to remove irrelevant HTML tags
+  const advancedCleanedHtml = await callAiForHtmlCleaning(basicCleanedHtml);
+
+  // Step 3: Extract recipe from advanced cleaned HTML
+  const result = await callAiForRecipe(advancedCleanedHtml, url);
 
   // Restore URLs in the recipe
   const restoredRecipe = restoreUrlsInRecipe(result.recipe, result.urlMappings);
@@ -463,6 +524,7 @@ async function processRecipe(
   return {
     ...result,
     recipe: restoredRecipe,
+    advancedCleanedHtml,
   };
 }
 
@@ -570,6 +632,7 @@ async function storeRecipe(
   recipe: RecipeType,
   url: string,
   html: string,
+  advancedCleanedHtml: string | undefined,
   aiQuery: string,
   aiResponse: string,
   urlMappings: UrlMapping
@@ -584,9 +647,10 @@ async function storeRecipe(
     ...recipe,
     sourceUrl: url,
     scrapedHtml: html,
-    aiQuery: aiQuery,
-    aiResponse: aiResponse,
-    urlMappings: urlMappings,
+    advancedCleanedHtml,
+    aiQuery,
+    aiResponse,
+    urlMappings,
     scrapedAt: new Date().toISOString(),
   };
 
@@ -604,6 +668,7 @@ async function runDirect(url: string, html: string): Promise<void> {
       result.recipe,
       url,
       html,
+      result.advancedCleanedHtml,
       result.aiQuery,
       result.aiResponse,
       result.urlMappings
@@ -650,6 +715,7 @@ async function runQueue(): Promise<void> {
             result.recipe,
             task.url,
             task.html,
+            result.advancedCleanedHtml,
             result.aiQuery,
             result.aiResponse,
             result.urlMappings

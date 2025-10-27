@@ -38,6 +38,7 @@ export interface Recipe {
   // Scraping metadata
   sourceUrl?: string;
   scrapedHtml?: string;
+  advancedCleanedHtml?: string;
   aiQuery?: string;
   aiResponse?: string;
   urlMappings?: { [shortCode: string]: string };

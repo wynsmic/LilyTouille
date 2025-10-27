@@ -9,10 +9,13 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../services/redis.service';
 import { config } from '../config';
 import { ProgressUpdate } from '../workers/types';
 import { WebSocketJwtStrategy } from '../strategies/websocket-jwt.strategy';
+import { passportJwtSecret } from 'jwks-rsa';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 @WebSocketGateway({
@@ -31,10 +34,21 @@ export class ProgressGateway
   private readonly logger = new Logger(ProgressGateway.name);
   private isSubscribed = false;
 
+  private getSecret: (request: any, rawJwtToken: any, done: any) => void;
+
   constructor(
     private readonly redisService: RedisService,
-    private readonly webSocketJwtStrategy: WebSocketJwtStrategy
-  ) {}
+    private readonly webSocketJwtStrategy: WebSocketJwtStrategy,
+    private readonly configService: ConfigService
+  ) {
+    // Setup JWKS secret provider for RS256 token verification
+    this.getSecret = passportJwtSecret({
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
+      jwksUri: `https://${configService.get('AUTH0_DOMAIN')}/.well-known/jwks.json`,
+    });
+  }
 
   async onModuleInit() {
     this.logger.log('ProgressGateway initialized');
@@ -116,8 +130,35 @@ export class ProgressGateway
 
   private async authenticateClient(client: Socket): Promise<any> {
     try {
-      // Use the WebSocket JWT strategy to validate the token
-      const user = await this.webSocketJwtStrategy.validate(client);
+      // Extract token from handshake
+      const token =
+        client.handshake?.auth?.token || client.handshake?.query?.token;
+
+      if (!token) {
+        this.logger.error(`No token provided for client ${client.id}`);
+        return null;
+      }
+
+      // Get signing key from JWKS
+      const secret = await new Promise<string>((resolve, reject) => {
+        this.getSecret(null, token, (err: any, key: any) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(key);
+          }
+        });
+      });
+
+      // Verify and decode the JWT token
+      const decoded = jwt.verify(token, secret, {
+        audience: this.configService.get('AUTH0_AUDIENCE'),
+        issuer: `https://${this.configService.get('AUTH0_DOMAIN')}/`,
+        algorithms: ['RS256'],
+      }) as any;
+
+      // Validate the payload using the strategy
+      const user = await this.webSocketJwtStrategy.validate(decoded);
       return user;
     } catch (error) {
       this.logger.error(
