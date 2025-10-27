@@ -1,11 +1,6 @@
 import type { Recipe, RecipeStep } from '@/interfaces/recipe.interface';
 
-export type TaskStatus =
-  | 'queued'
-  | 'processing'
-  | 'succeeded'
-  | 'failed'
-  | 'retry';
+export type TaskStatus = 'queued' | 'processing' | 'succeeded' | 'failed' | 'retry';
 
 export interface QueueMessage<T = unknown> {
   id: string;

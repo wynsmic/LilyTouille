@@ -26,12 +26,9 @@ export class RecipeRepository implements IRecipeRepository {
       }
 
       if (filters.ingredient) {
-        queryBuilder.andWhere(
-          'JSON_EXTRACT(chunks.ingredients, "$") LIKE :ingredient',
-          {
-            ingredient: `%${filters.ingredient}%`,
-          },
-        );
+        queryBuilder.andWhere('JSON_EXTRACT(chunks.ingredients, "$") LIKE :ingredient', {
+          ingredient: `%${filters.ingredient}%`,
+        });
       }
 
       if (filters.difficulty) {
@@ -67,10 +64,7 @@ export class RecipeRepository implements IRecipeRepository {
     return this.repository.save(recipeEntity);
   }
 
-  async update(
-    id: number,
-    recipe: Partial<RecipeEntity>,
-  ): Promise<RecipeEntity | null> {
+  async update(id: number, recipe: Partial<RecipeEntity>): Promise<RecipeEntity | null> {
     await this.repository.update(id, recipe);
     return this.findById(id);
   }
@@ -94,9 +88,7 @@ export class RecipeRepository implements IRecipeRepository {
       relations: ['chunks'],
     });
 
-    const allIngredients = recipes.flatMap(recipe =>
-      recipe.chunks.flatMap(chunk => chunk.ingredients),
-    );
+    const allIngredients = recipes.flatMap(recipe => recipe.chunks.flatMap(chunk => chunk.ingredients));
     return [...new Set(allIngredients)].sort();
   }
 

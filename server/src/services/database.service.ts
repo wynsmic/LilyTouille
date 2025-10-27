@@ -6,15 +6,9 @@ import { ChunkEntity } from '../entities/chunk.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UserFavoriteEntity } from '../entities/user-favorite.entity';
 import { RecipeRepository } from '../repositories/recipe.repository';
-import {
-  ChunkRepository,
-  IChunkRepository,
-} from '../repositories/chunk.repository';
+import { ChunkRepository, IChunkRepository } from '../repositories/chunk.repository';
 import { UserRepository } from '../repositories/user.repository';
-import {
-  UserFavoriteRepository,
-  IUserFavoriteRepository,
-} from '../repositories/user-favorite.repository';
+import { UserFavoriteRepository, IUserFavoriteRepository } from '../repositories/user-favorite.repository';
 import { IRecipeRepository } from '../repositories/recipe.repository.interface';
 import { IUserRepository } from '../repositories/user.repository.interface';
 import { RecipeType } from '../workers/types';
@@ -50,9 +44,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
 
     await this.dataSource.initialize();
     this.recipeRepository = new RecipeRepository(this.dataSource);
-    this.chunkRepository = new ChunkRepository(
-      this.dataSource.getRepository(ChunkEntity),
-    );
+    this.chunkRepository = new ChunkRepository(this.dataSource.getRepository(ChunkEntity));
     this.userRepository = new UserRepository(this.dataSource);
     this.userFavoriteRepository = new UserFavoriteRepository(this.dataSource);
 
@@ -103,19 +95,14 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     let existingRecipe: RecipeEntity | null = null;
 
     if (recipeWithoutId.sourceUrl) {
-      existingRecipe = await recipeRepository.findBySourceUrl(
-        recipeWithoutId.sourceUrl,
-      );
+      existingRecipe = await recipeRepository.findBySourceUrl(recipeWithoutId.sourceUrl);
     }
 
     let savedRecipe: RecipeEntity;
 
     if (existingRecipe) {
       // Update existing recipe
-      savedRecipe = (await recipeRepository.update(
-        existingRecipe.id,
-        recipeWithoutId,
-      )) as RecipeEntity;
+      savedRecipe = (await recipeRepository.update(existingRecipe.id, recipeWithoutId)) as RecipeEntity;
 
       // Delete existing chunks and recreate them
       await chunkRepository.deleteByRecipeId(existingRecipe.id);
@@ -210,9 +197,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       aiQuery: entity.aiQuery,
       aiResponse: entity.aiResponse,
       urlMappings: entity.urlMappings,
-      scrapedAt: entity.scrapedAt
-        ? new Date(entity.scrapedAt).toISOString()
-        : undefined,
+      scrapedAt: entity.scrapedAt ? new Date(entity.scrapedAt).toISOString() : undefined,
     } as Recipe;
   }
 

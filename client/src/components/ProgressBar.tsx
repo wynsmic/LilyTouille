@@ -167,8 +167,7 @@ const TimelineText = styled.span<{ isActive: boolean; isCompleted: boolean }>`
     if (props.isActive) return 'var(--color-gray-900)';
     return 'var(--color-gray-500)';
   }};
-  font-weight: ${props =>
-    props.isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)'};
+  font-weight: ${props => (props.isActive ? 'var(--font-weight-medium)' : 'var(--font-weight-normal)')};
 `;
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage, url }) => {
@@ -193,14 +192,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage, url }) => {
     }
   };
 
-  const stages = [
-    'queued',
-    'scraping',
-    'scraped',
-    'ai_processing',
-    'ai_processed',
-    'stored',
-  ];
+  const stages = ['queued', 'scraping', 'scraped', 'ai_processing', 'ai_processed', 'stored'];
   const currentStageIndex = stages.indexOf(stage);
   const isFailed = stage === 'failed';
 
@@ -223,21 +215,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, stage, url }) => {
         <ProgressTimeline>
           {stages.map((stageName, index) => {
             const isActive = index === currentStageIndex && !isFailed;
-            const isCompleted =
-              index < currentStageIndex ||
-              (isFailed && index < currentStageIndex);
+            const isCompleted = index < currentStageIndex || (isFailed && index < currentStageIndex);
 
             return (
-              <TimelineItem
-                key={stageName}
-                isActive={isActive}
-                isCompleted={isCompleted}
-              >
-                <TimelineDot
-                  isActive={isActive}
-                  isCompleted={isCompleted}
-                  stage={stageName}
-                />
+              <TimelineItem key={stageName} isActive={isActive} isCompleted={isCompleted}>
+                <TimelineDot isActive={isActive} isCompleted={isCompleted} stage={stageName} />
                 <TimelineText isActive={isActive} isCompleted={isCompleted}>
                   {getStageDisplayName(stageName)}
                 </TimelineText>

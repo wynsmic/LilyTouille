@@ -1,10 +1,9 @@
-import React, { useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useState, ReactNode, createContext } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { Recipe } from '../services/api';
-import { UserContext } from './userContext';
 
 export interface User {
   id: number;
@@ -56,6 +55,10 @@ interface UserContextType {
 interface UserProviderProps {
   children: ReactNode;
 }
+
+/* eslint-disable react-refresh/only-export-components */
+export const UserContext = createContext<UserContextType | undefined>(undefined);
+/* eslint-enable react-refresh/only-export-components */
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { user: auth0User, isAuthenticated, getAccessTokenSilently } = useAuth0();
@@ -196,7 +199,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     if (userData?.user) {
       setUser(userData.user);
-    } else if (isAuthenticated && auth0User && !userData && !userLoading) {
+    } else if (isAuthenticated && auth0User && !userData?.user && !userLoading) {
       // User doesn't exist in our database, create them
       createUserMutation.mutate();
     }

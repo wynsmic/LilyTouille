@@ -55,15 +55,13 @@ const Nav = styled.nav`
 const NavLink = styled(Link)<{ $isActive: boolean }>`
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  color: ${props =>
-    props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-600)'};
+  color: ${props => (props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-600)')};
   text-decoration: none;
   transition: color var(--transition-fast);
   position: relative;
 
   &:hover {
-    color: ${props =>
-      props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-900)'};
+    color: ${props => (props.$isActive ? 'var(--color-primary-600)' : 'var(--color-gray-900)')};
   }
 `;
 
@@ -97,14 +95,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <NavLink to="/" $isActive={location.pathname === '/'}>
                 {t('nav.allRecipes')}
               </NavLink>
-              <NavLink
-                to="/favorites"
-                $isActive={location.pathname === '/favorites'}
-              >
+              <NavLink to="/favorites" $isActive={location.pathname === '/favorites'}>
                 {t('nav.favorites')}
-                {favoriteRecipeIds.length > 0 && (
-                  <Badge>{favoriteRecipeIds.length}</Badge>
-                )}
+                {favoriteRecipeIds.length > 0 && <Badge>{favoriteRecipeIds.length}</Badge>}
               </NavLink>
             </Nav>
             <UserProfile />

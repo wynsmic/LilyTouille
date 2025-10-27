@@ -6,10 +6,7 @@ export interface IRecipeRepository {
   findById(id: number): Promise<RecipeEntity | null>;
   findBySourceUrl(sourceUrl: string): Promise<RecipeEntity | null>;
   save(recipe: Partial<RecipeEntity>): Promise<RecipeEntity>;
-  update(
-    id: number,
-    recipe: Partial<RecipeEntity>
-  ): Promise<RecipeEntity | null>;
+  update(id: number, recipe: Partial<RecipeEntity>): Promise<RecipeEntity | null>;
   delete(id: number): Promise<boolean>;
   findAllTags(): Promise<string[]>;
   findAllIngredients(): Promise<string[]>;

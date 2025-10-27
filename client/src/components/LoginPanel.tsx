@@ -20,21 +20,9 @@ const LoginContainer = styled.div`
     right: 0;
     bottom: 0;
     background:
-      radial-gradient(
-        circle at 20% 80%,
-        rgba(251, 207, 232, 0.3) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 80% 20%,
-        rgba(196, 181, 253, 0.3) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 40% 40%,
-        rgba(254, 202, 202, 0.2) 0%,
-        transparent 50%
-      );
+      radial-gradient(circle at 20% 80%, rgba(251, 207, 232, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(196, 181, 253, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(254, 202, 202, 0.2) 0%, transparent 50%);
   }
 `;
 
@@ -187,12 +175,7 @@ const LoginButton = styled.button`
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     transition: left 0.6s;
   }
 
@@ -251,9 +234,7 @@ const LoginPanel: React.FC = () => {
             <FeatureItem>
               <FeatureIcon>📄</FeatureIcon>
               <FeatureContent>
-                <FeatureText>
-                  Save recipes from any website instantly
-                </FeatureText>
+                <FeatureText>Save recipes from any website instantly</FeatureText>
               </FeatureContent>
             </FeatureItem>
             <FeatureItem>

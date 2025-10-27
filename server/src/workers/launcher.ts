@@ -13,21 +13,14 @@ type WorkerSpec = {
 
 function resolveScript(scriptTs: string, scriptJs: string): string {
   const isProd = config.app.env === 'production';
-  return isProd
-    ? path.resolve(__dirname, '..', '..', 'dist', scriptJs)
-    : path.resolve(__dirname, '..', scriptTs);
+  return isProd ? path.resolve(__dirname, '..', '..', 'dist', scriptJs) : path.resolve(__dirname, '..', scriptTs);
 }
 
 export function startWorkers(): void {
   const available = cpus().length;
-  const required = Math.max(
-    config.workers.minThreads,
-    config.workers.scrapeWorkers + config.workers.aiWorkers,
-  );
+  const required = Math.max(config.workers.minThreads, config.workers.scrapeWorkers + config.workers.aiWorkers);
   if (available < required) {
-    throw new Error(
-      `Insufficient threads/CPUs. Required at least ${required}, found ${available}`,
-    );
+    throw new Error(`Insufficient threads/CPUs. Required at least ${required}, found ${available}`);
   }
 
   const workers: WorkerSpec[] = [

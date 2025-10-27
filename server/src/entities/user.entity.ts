@@ -1,37 +1,29 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-  Index,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, Index } from 'typeorm';
 import { UserFavoriteEntity } from './user-favorite.entity';
 
 @Entity('users')
 @Index(['auth0Id'], { unique: true })
 export class UserEntity {
   @PrimaryGeneratedColumn()
-    id: number;
+  id: number;
 
   @Column({ type: 'varchar', length: 255, unique: true })
-    auth0Id: string;
+  auth0Id: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-    email?: string;
+  email?: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-    name?: string;
+  name?: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-    picture?: string;
+  picture?: string;
 
   @Column({ type: 'varchar', length: 10, default: 'en' })
-    language: 'en' | 'fr' | 'es' | 'de' | 'it';
+  language: 'en' | 'fr' | 'es' | 'de' | 'it';
 
   @Column({ type: 'json', nullable: true })
-    preferences?: {
+  preferences?: {
     theme?: 'light' | 'dark' | 'auto';
     notifications?: boolean;
     dietaryRestrictions?: string[];
@@ -42,11 +34,11 @@ export class UserEntity {
   @OneToMany(() => UserFavoriteEntity, favorite => favorite.user, {
     cascade: true,
   })
-    favorites: UserFavoriteEntity[];
+  favorites: UserFavoriteEntity[];
 
   @CreateDateColumn()
-    createdAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-    updatedAt: Date;
+  updatedAt: Date;
 }

@@ -50,8 +50,4 @@ export const scrapeApi = createApi({
   }),
 });
 
-export const {
-  useScrapeMutation,
-  useQueueScrapeMutation,
-  useGetQueueStatusQuery,
-} = scrapeApi;
+export const { useScrapeMutation, useQueueScrapeMutation, useGetQueueStatusQuery } = scrapeApi;

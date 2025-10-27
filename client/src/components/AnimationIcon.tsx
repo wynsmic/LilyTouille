@@ -34,11 +34,7 @@ const ScrapingIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(
-    circle,
-    rgba(59, 130, 246, 0.1) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   border-radius: 50%;
 `;
 
@@ -114,11 +110,7 @@ const AIIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(
-    circle,
-    rgba(139, 92, 246, 0.1) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
   border-radius: 50%;
 `;
 

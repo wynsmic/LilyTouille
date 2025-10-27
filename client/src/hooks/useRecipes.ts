@@ -51,7 +51,7 @@ export const useRecipes = () => {
     (recipeId: string) => {
       dispatch(toggleFavorite(recipeId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Set multiple favorites at once
@@ -59,7 +59,7 @@ export const useRecipes = () => {
     (recipeIds: string[]) => {
       dispatch(setFavorites(recipeIds));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Filter recipes by search query and tags
@@ -73,7 +73,7 @@ export const useRecipes = () => {
       }
       dispatch(filterRecipes());
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Clear all filters
@@ -85,9 +85,7 @@ export const useRecipes = () => {
 
   // Get favorite recipes
   const favoriteRecipes = useMemo(() => {
-    return state.recipes.filter(recipe =>
-      state.favoriteRecipeIds.includes(recipe.id.toString())
-    );
+    return state.recipes.filter(recipe => state.favoriteRecipeIds.includes(recipe.id.toString()));
   }, [state.recipes, state.favoriteRecipeIds]);
 
   // Check if a recipe is favorite
@@ -95,7 +93,7 @@ export const useRecipes = () => {
     (recipeId: string) => {
       return state.favoriteRecipeIds.includes(recipeId);
     },
-    [state.favoriteRecipeIds]
+    [state.favoriteRecipeIds],
   );
 
   // Delete a recipe
@@ -109,7 +107,7 @@ export const useRecipes = () => {
         throw error;
       }
     },
-    [dispatch]
+    [dispatch],
   );
 
   return {

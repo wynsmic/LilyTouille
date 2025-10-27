@@ -81,11 +81,11 @@ const RecipeCard = styled.div`
 
 const ImageContainer = styled.div`
   position: relative;
-  height: 16rem;
+  height: 20rem;
   overflow: hidden;
 
   @media (min-width: 768px) {
-    height: 20rem;
+    height: 28rem;
   }
 `;
 
@@ -93,7 +93,7 @@ const RecipeImage = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: 50% 75%;
 `;
 
 const ImageOverlay = styled.div`
@@ -108,10 +108,8 @@ const FavoriteButton = styled.button<{ $isFavorite: boolean }>`
   padding: var(--space-2);
   border-radius: var(--radius-full);
   transition: all var(--transition-fast);
-  background-color: ${props =>
-    props.$isFavorite ? '#ef4444' : 'var(--color-white)'};
-  color: ${props =>
-    props.$isFavorite ? 'var(--color-white)' : 'var(--color-gray-400)'};
+  background-color: ${props => (props.$isFavorite ? '#ef4444' : 'var(--color-white)')};
+  color: ${props => (props.$isFavorite ? 'var(--color-white)' : 'var(--color-gray-400)')};
   border: none;
   cursor: pointer;
 
@@ -547,9 +545,7 @@ const RecipeDetail: React.FC = () => {
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
   // Helper function to get ingredients grouped by chunk
-  const getIngredientsByChunk = (
-    recipe: Recipe
-  ): { chunkTitle?: string; ingredients: string[] }[] => {
+  const getIngredientsByChunk = (recipe: Recipe): { chunkTitle?: string; ingredients: string[] }[] => {
     if (!recipe.chunks || recipe.chunks.length === 0) {
       return [];
     }
@@ -589,9 +585,7 @@ const RecipeDetail: React.FC = () => {
         <NotFoundContainer>
           <NotFoundContent>
             <NotFoundTitle>Recipe not found</NotFoundTitle>
-            <BackButton onClick={() => navigate('/')}>
-              Back to Recipes
-            </BackButton>
+            <BackButton onClick={() => navigate('/')}>Back to Recipes</BackButton>
           </NotFoundContent>
         </NotFoundContainer>
       </Layout>
@@ -604,38 +598,26 @@ const RecipeDetail: React.FC = () => {
     <Layout>
       <Container>
         <BackButtonContainer>
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
             <BackButtonLink onClick={() => navigate('/')}>
               <BackIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </BackIcon>
               Back to Recipes
             </BackButtonLink>
           </motion.div>
         </BackButtonContainer>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <RecipeCard>
             <ImageContainer>
               <motion.div
                 initial={{ scale: 1.1 }}
                 animate={{ scale: 1 }}
                 transition={{ duration: 0.8 }}
+                style={{ width: '100%', height: '100%' }}
               >
-                <RecipeImage src={recipe.imageUrl} alt={recipe.title} />
+                <RecipeImage src={recipe.imageUrl} alt={recipe.title} style={{ objectPosition: '50% 50%' }} />
               </motion.div>
               <ImageOverlay>
                 <motion.div
@@ -646,11 +628,7 @@ const RecipeDetail: React.FC = () => {
                   <FavoriteButton
                     onClick={() => toggleFavoriteRecipe(recipe.id.toString())}
                     $isFavorite={isRecipeFavorite}
-                    aria-label={
-                      isRecipeFavorite
-                        ? 'Remove from favorites'
-                        : 'Add to favorites'
-                    }
+                    aria-label={isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'}
                     as={motion.button}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -668,9 +646,7 @@ const RecipeDetail: React.FC = () => {
                       />
                     </FavoriteIcon>
                   </FavoriteButton>
-                  <DifficultyBadge $difficulty={recipe.difficulty}>
-                    {recipe.difficulty}
-                  </DifficultyBadge>
+                  <DifficultyBadge $difficulty={recipe.difficulty}>{recipe.difficulty}</DifficultyBadge>
                 </motion.div>
               </ImageOverlay>
             </ImageContainer>
@@ -685,16 +661,8 @@ const RecipeDetail: React.FC = () => {
                   <RecipeTitle>{recipe.title}</RecipeTitle>
                   <RecipeDescription>{recipe.description}</RecipeDescription>
                   {recipe.sourceUrl && (
-                    <SourceUrlButton
-                      href={recipe.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <SourceUrlIcon
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                    <SourceUrlButton href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">
+                      <SourceUrlIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -761,27 +729,22 @@ const RecipeDetail: React.FC = () => {
                       )}
                       <IngredientsList>
                         <IngredientsUl>
-                          {chunkGroup.ingredients.map(
-                            (ingredient, ingredientIndex) => (
-                              <motion.div
-                                key={ingredientIndex}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{
-                                  delay:
-                                    0.6 +
-                                    chunkIndex * 0.1 +
-                                    ingredientIndex * 0.05,
-                                  duration: 0.4,
-                                }}
-                              >
-                                <IngredientItem>
-                                  <IngredientBullet />
-                                  <IngredientText>{ingredient}</IngredientText>
-                                </IngredientItem>
-                              </motion.div>
-                            )
-                          )}
+                          {chunkGroup.ingredients.map((ingredient, ingredientIndex) => (
+                            <motion.div
+                              key={ingredientIndex}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{
+                                delay: 0.6 + chunkIndex * 0.1 + ingredientIndex * 0.05,
+                                duration: 0.4,
+                              }}
+                            >
+                              <IngredientItem>
+                                <IngredientBullet />
+                                <IngredientText>{ingredient}</IngredientText>
+                              </IngredientItem>
+                            </motion.div>
+                          ))}
                         </IngredientsUl>
                       </IngredientsList>
                     </motion.div>
@@ -848,9 +811,7 @@ const RecipeDetail: React.FC = () => {
                     >
                       <RecipePartSection>
                         <PartTitle>{chunk.title}</PartTitle>
-                        {chunk.description && (
-                          <PartDescription>{chunk.description}</PartDescription>
-                        )}
+                        {chunk.description && <PartDescription>{chunk.description}</PartDescription>}
 
                         {chunk.recipeSteps && chunk.recipeSteps.length > 0 && (
                           <PartStepsContainer>
@@ -860,13 +821,8 @@ const RecipeDetail: React.FC = () => {
                                   <span>{step.content}</span>
                                 ) : (
                                   <>
-                                    <PartStepImage
-                                      src={step.imageUrl}
-                                      alt={step.content}
-                                    />
-                                    <PartStepImageCaption>
-                                      {step.content}
-                                    </PartStepImageCaption>
+                                    <PartStepImage src={step.imageUrl} alt={step.content} />
+                                    <PartStepImageCaption>{step.content}</PartStepImageCaption>
                                   </>
                                 )}
                               </PartStepItem>
@@ -890,27 +846,21 @@ const RecipeDetail: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.8, y: 20 }}
                 transition={{ duration: 0.3 }}
+                onClick={() => setIsModalOpen(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ cursor: 'pointer' }}
               >
-                <motion.button
-                  onClick={() => setIsModalOpen(true)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <FloatingButtonElement>
-                    <FloatingIcon
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                      />
-                    </FloatingIcon>
-                  </FloatingButtonElement>
-                </motion.button>
+                <FloatingButtonElement as="div">
+                  <FloatingIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </FloatingIcon>
+                </FloatingButtonElement>
               </motion.div>
             </FloatingButton>
           )}
@@ -937,17 +887,8 @@ const RecipeDetail: React.FC = () => {
                     <ModalHeaderContent>
                       <ModalTitle>Recipe Info</ModalTitle>
                       <CloseButton onClick={() => setIsModalOpen(false)}>
-                        <CloseIcon
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
+                        <CloseIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </CloseIcon>
                       </CloseButton>
                     </ModalHeaderContent>
@@ -963,24 +904,19 @@ const RecipeDetail: React.FC = () => {
                                 fontWeight: 'var(--font-weight-semibold)',
                                 color: 'var(--color-gray-900)',
                                 marginBottom: 'var(--space-2)',
-                                marginTop:
-                                  chunkIndex > 0 ? 'var(--space-4)' : '0',
+                                marginTop: chunkIndex > 0 ? 'var(--space-4)' : '0',
                               }}
                             >
                               {chunkGroup.chunkTitle}
                             </h4>
                           )}
                           <ModalIngredientsList>
-                            {chunkGroup.ingredients.map(
-                              (ingredient, ingredientIndex) => (
-                                <ModalIngredientItem key={ingredientIndex}>
-                                  <ModalIngredientBullet />
-                                  <ModalIngredientText>
-                                    {ingredient}
-                                  </ModalIngredientText>
-                                </ModalIngredientItem>
-                              )
-                            )}
+                            {chunkGroup.ingredients.map((ingredient, ingredientIndex) => (
+                              <ModalIngredientItem key={ingredientIndex}>
+                                <ModalIngredientBullet />
+                                <ModalIngredientText>{ingredient}</ModalIngredientText>
+                              </ModalIngredientItem>
+                            ))}
                           </ModalIngredientsList>
                         </div>
                       ))}
@@ -992,15 +928,11 @@ const RecipeDetail: React.FC = () => {
                         <ModalMetadataLabel>Total Time</ModalMetadataLabel>
                       </ModalMetadataCard>
                       <ModalMetadataCard>
-                        <ModalMetadataValue>
-                          {recipe.servings}
-                        </ModalMetadataValue>
+                        <ModalMetadataValue>{recipe.servings}</ModalMetadataValue>
                         <ModalMetadataLabel>Servings</ModalMetadataLabel>
                       </ModalMetadataCard>
                       <ModalMetadataCard>
-                        <ModalMetadataValue>
-                          {recipe.difficulty}
-                        </ModalMetadataValue>
+                        <ModalMetadataValue>{recipe.difficulty}</ModalMetadataValue>
                         <ModalMetadataLabel>Difficulty</ModalMetadataLabel>
                       </ModalMetadataCard>
                     </ModalMetadataGrid>

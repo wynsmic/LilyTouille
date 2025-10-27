@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../contexts/useUser';
 
 const ProfileContainer = styled.div`
   position: relative;
@@ -71,8 +71,7 @@ const DropdownMenu = styled.div<{ $isOpen: boolean }>`
   z-index: 1000;
   opacity: ${props => (props.$isOpen ? 1 : 0)};
   visibility: ${props => (props.$isOpen ? 'visible' : 'hidden')};
-  transform: ${props =>
-    props.$isOpen ? 'translateY(0)' : 'translateY(-10px)'};
+  transform: ${props => (props.$isOpen ? 'translateY(0)' : 'translateY(-10px)')};
   transition: all var(--transition-fast);
   margin-top: var(--space-1);
 `;
@@ -131,10 +130,7 @@ const UserProfile: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
@@ -186,9 +182,7 @@ const UserProfile: React.FC = () => {
         {user.picture ? (
           <Avatar src={user.picture} alt={user.name || 'User'} />
         ) : (
-          <DefaultAvatar>
-            {getUserInitials(user.name || user.email || 'U')}
-          </DefaultAvatar>
+          <DefaultAvatar>{getUserInitials(user.name || user.email || 'U')}</DefaultAvatar>
         )}
         <UserName>{user.name || user.email}</UserName>
       </ProfileButton>

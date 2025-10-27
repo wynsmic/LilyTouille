@@ -12,11 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { RecipeService } from '../services/recipe.service';
-import {
-  RecipeFiltersDto,
-  CreateRecipeDto,
-  CreateChunkDto,
-} from '../dto/recipe.dto';
+import { RecipeFiltersDto, CreateRecipeDto, CreateChunkDto } from '../dto/recipe.dto';
 import { RecipeFilters } from '../interfaces/recipe.interface';
 
 @Controller('recipes')

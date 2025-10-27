@@ -46,9 +46,7 @@ const HomePage: React.FC = () => {
       <Container>
         <Header>
           <Title>Discover Amazing Recipes</Title>
-          <Subtitle>
-            Find your next favorite dish from around the world
-          </Subtitle>
+          <Subtitle>Find your next favorite dish from around the world</Subtitle>
         </Header>
 
         <FilterBar />

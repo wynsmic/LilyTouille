@@ -12,61 +12,61 @@ import { RecipeEntity } from './recipe.entity';
 @Entity('chunks')
 export class ChunkEntity {
   @PrimaryGeneratedColumn()
-    id: number;
+  id: number;
 
   @Column({ type: 'varchar', length: 255 })
-    title: string;
+  title: string;
 
   @Column({ type: 'text', nullable: true })
-    description?: string;
+  description?: string;
 
   @Column({ type: 'json' })
-    ingredients: string[];
+  ingredients: string[];
 
   @Column({ type: 'json' })
-    recipeSteps: Array<{
+  recipeSteps: Array<{
     type: 'text' | 'image';
     content: string;
     imageUrl?: string;
   }>;
 
   @Column({ type: 'int', default: 0 })
-    prepTime: number;
+  prepTime: number;
 
   @Column({ type: 'int', default: 0 })
-    cookTime: number;
+  cookTime: number;
 
   @Column({ type: 'int', default: 1 })
-    servings: number;
+  servings: number;
 
   @Column({ type: 'varchar', length: 20, default: 'easy' })
-    difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'easy' | 'medium' | 'hard';
 
   @Column({ type: 'json' })
-    tags: string[];
+  tags: string[];
 
   @Column({ type: 'varchar', length: 500, nullable: true })
-    imageUrl?: string;
+  imageUrl?: string;
 
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
-    rating: number;
+  rating: number;
 
   @Column({ type: 'int', default: 0 })
-    orderIndex: number;
+  orderIndex: number;
 
   // Foreign key to recipe
   @Column({ type: 'int' })
-    recipeId: number;
+  recipeId: number;
 
   @ManyToOne(() => RecipeEntity, recipe => recipe.chunks, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'recipeId' })
-    recipe: RecipeEntity;
+  recipe: RecipeEntity;
 
   @CreateDateColumn()
-    createdAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-    updatedAt: Date;
+  updatedAt: Date;
 }

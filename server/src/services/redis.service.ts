@@ -25,9 +25,7 @@ export class RedisService implements OnModuleDestroy {
     this.logger.log(`Connecting to Redis: ${maskedUrl}`);
 
     // Railway requires IPv6 support - add family=0 to handle dual-stack lookup
-    const redisUrlWithFamily = redisUrl.includes('?')
-      ? `${redisUrl}&family=0`
-      : `${redisUrl}?family=0`;
+    const redisUrlWithFamily = redisUrl.includes('?') ? `${redisUrl}&family=0` : `${redisUrl}?family=0`;
 
     this.redis = new IORedis(redisUrlWithFamily, {
       lazyConnect: true,
@@ -55,10 +53,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async blockPopUrl(timeoutSeconds = 5): Promise<string | null> {
-    const result = await this.redis.brpop(
-      this.processingQueueKey,
-      timeoutSeconds,
-    );
+    const result = await this.redis.brpop(this.processingQueueKey, timeoutSeconds);
     return result ? result[1] : null;
   }
 
@@ -79,9 +74,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  async blockPopAiTask(
-    timeoutSeconds = 5,
-  ): Promise<{ url: string; html: string } | null> {
+  async blockPopAiTask(timeoutSeconds = 5): Promise<{ url: string; html: string } | null> {
     const result = await this.redis.brpop(this.aiQueueKey, timeoutSeconds);
     if (!result) return null;
 
@@ -107,9 +100,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  async subscribeToProgress(
-    callback: (update: ProgressUpdate) => void,
-  ): Promise<void> {
+  async subscribeToProgress(callback: (update: ProgressUpdate) => void): Promise<void> {
     const subscriber = this.redis.duplicate();
     await subscriber.subscribe(this.progressChannel);
 
@@ -161,9 +152,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   // Utility methods
-  async getQueueLength(
-    queueName: 'processing' | 'ai' | 'invent',
-  ): Promise<number> {
+  async getQueueLength(queueName: 'processing' | 'ai' | 'invent'): Promise<number> {
     const keyMap = {
       processing: this.processingQueueKey,
       ai: this.aiQueueKey,
@@ -173,11 +162,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async clearQueues(): Promise<void> {
-    await this.redis.del(
-      this.processingQueueKey,
-      this.aiQueueKey,
-      this.inventQueueKey,
-    );
+    await this.redis.del(this.processingQueueKey, this.aiQueueKey, this.inventQueueKey);
   }
 
   // Concurrency helpers

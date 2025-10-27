@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../contexts/useUser';
 import Layout from '../components/Layout';
 import i18n from '../i18n/config';
 
@@ -145,12 +145,8 @@ const SettingsPage: React.FC = () => {
   const { user, updatePreferences } = useUser();
   const [language, setLanguage] = useState(user?.language || 'en');
   const [theme, setTheme] = useState(user?.preferences?.theme || 'auto');
-  const [notifications, setNotifications] = useState(
-    user?.preferences?.notifications ?? true
-  );
-  const [cookingSkill, setCookingSkill] = useState(
-    user?.preferences?.cookingSkill || 'beginner'
-  );
+  const [notifications, setNotifications] = useState(user?.preferences?.notifications ?? true);
+  const [cookingSkill, setCookingSkill] = useState(user?.preferences?.cookingSkill || 'beginner');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
@@ -226,17 +222,9 @@ const SettingsPage: React.FC = () => {
           <SectionTitle>{t('settings.preferences')}</SectionTitle>
 
           <SettingItem>
-            <SettingLabel htmlFor="language">
-              {t('settings.language')}
-            </SettingLabel>
-            <SettingDescription>
-              {t('settings.languageDescription')}
-            </SettingDescription>
-            <Select
-              id="language"
-              value={language}
-              onChange={e => setLanguage(e.target.value)}
-            >
+            <SettingLabel htmlFor="language">{t('settings.language')}</SettingLabel>
+            <SettingDescription>{t('settings.languageDescription')}</SettingDescription>
+            <Select id="language" value={language} onChange={e => setLanguage(e.target.value)}>
               <option value="en">{t('settings.english')}</option>
               <option value="fr">{t('settings.french')}</option>
               <option value="es">{t('settings.spanish')}</option>
@@ -247,16 +235,8 @@ const SettingsPage: React.FC = () => {
 
           <SettingItem>
             <SettingLabel htmlFor="theme">{t('settings.theme')}</SettingLabel>
-            <SettingDescription>
-              {t('settings.themeDescription')}
-            </SettingDescription>
-            <Select
-              id="theme"
-              value={theme}
-              onChange={e =>
-                setTheme(e.target.value as 'light' | 'dark' | 'auto')
-              }
-            >
+            <SettingDescription>{t('settings.themeDescription')}</SettingDescription>
+            <Select id="theme" value={theme} onChange={e => setTheme(e.target.value as 'light' | 'dark' | 'auto')}>
               <option value="auto">{t('settings.auto')}</option>
               <option value="light">{t('settings.light')}</option>
               <option value="dark">{t('settings.dark')}</option>
@@ -264,12 +244,8 @@ const SettingsPage: React.FC = () => {
           </SettingItem>
 
           <SettingItem>
-            <SettingLabel htmlFor="notifications">
-              {t('settings.notifications')}
-            </SettingLabel>
-            <SettingDescription>
-              {t('settings.notificationsDescription')}
-            </SettingDescription>
+            <SettingLabel htmlFor="notifications">{t('settings.notifications')}</SettingLabel>
+            <SettingDescription>{t('settings.notificationsDescription')}</SettingDescription>
             <CheckboxContainer>
               <Checkbox
                 id="notifications"
@@ -277,27 +253,17 @@ const SettingsPage: React.FC = () => {
                 checked={notifications}
                 onChange={e => setNotifications(e.target.checked)}
               />
-              <CheckboxLabel htmlFor="notifications">
-                {t('settings.enableNotifications')}
-              </CheckboxLabel>
+              <CheckboxLabel htmlFor="notifications">{t('settings.enableNotifications')}</CheckboxLabel>
             </CheckboxContainer>
           </SettingItem>
 
           <SettingItem>
-            <SettingLabel htmlFor="cookingSkill">
-              {t('settings.cookingSkill')}
-            </SettingLabel>
-            <SettingDescription>
-              {t('settings.cookingSkillDescription')}
-            </SettingDescription>
+            <SettingLabel htmlFor="cookingSkill">{t('settings.cookingSkill')}</SettingLabel>
+            <SettingDescription>{t('settings.cookingSkillDescription')}</SettingDescription>
             <Select
               id="cookingSkill"
               value={cookingSkill}
-              onChange={e =>
-                setCookingSkill(
-                  e.target.value as 'beginner' | 'intermediate' | 'advanced'
-                )
-              }
+              onChange={e => setCookingSkill(e.target.value as 'beginner' | 'intermediate' | 'advanced')}
             >
               <option value="beginner">{t('settings.beginner')}</option>
               <option value="intermediate">{t('settings.intermediate')}</option>

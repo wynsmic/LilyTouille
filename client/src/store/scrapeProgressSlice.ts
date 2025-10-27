@@ -2,14 +2,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 
 export interface JobProgress {
   url: string; // For scraping jobs, this is the URL. For invention jobs, this is the task ID.
-  stage:
-    | 'queued'
-    | 'scraping'
-    | 'scraped'
-    | 'ai_processing'
-    | 'ai_processed'
-    | 'stored'
-    | 'failed';
+  stage: 'queued' | 'scraping' | 'scraped' | 'ai_processing' | 'ai_processed' | 'stored' | 'failed';
   timestamp: number;
   error?: string;
   progress?: number; // 0-100 percentage
@@ -49,10 +42,7 @@ const jobProgressSlice = createSlice({
   initialState,
   reducers: {
     // WebSocket connection management
-    setConnectionStatus: (
-      state,
-      action: PayloadAction<{ connected: boolean; error?: string }>
-    ) => {
+    setConnectionStatus: (state, action: PayloadAction<{ connected: boolean; error?: string }>) => {
       state.isConnected = action.payload.connected;
       state.connectionError = action.payload.error || null;
     },
@@ -65,7 +55,7 @@ const jobProgressSlice = createSlice({
         url: string;
         type: 'scrape' | 'invent';
         title?: string;
-      }>
+      }>,
     ) => {
       const { id, url, type, title } = action.payload;
       const now = Date.now();
@@ -90,13 +80,10 @@ const jobProgressSlice = createSlice({
     },
 
     updateJobProgress: (state, action: PayloadAction<JobProgress>) => {
-      const { url, stage, timestamp, error, progress, recipeId } =
-        action.payload;
+      const { url, stage, timestamp, error, progress, recipeId } = action.payload;
 
       // Find the job by URL
-      let jobId = Object.keys(state.activeJobs).find(
-        id => state.activeJobs[id].url === url
-      );
+      let jobId = Object.keys(state.activeJobs).find(id => state.activeJobs[id].url === url);
 
       // If job not found in active jobs, check if it's already finalized
       if (!jobId) {
@@ -107,9 +94,7 @@ const jobProgressSlice = createSlice({
         }
 
         // Create a synthetic job so we can surface the update (e.g., failure)
-        const syntheticId = `job-${Date.now()}-${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
+        const syntheticId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         const now = timestamp || Date.now();
         state.activeJobs[syntheticId] = {
           id: syntheticId,
@@ -166,18 +151,14 @@ const jobProgressSlice = createSlice({
     // Cleanup completed jobs (keep only last 50)
     cleanupCompletedJobs: state => {
       if (state.completedJobs.length > 50) {
-        state.completedJobs = state.completedJobs
-          .sort((a, b) => b.updatedAt - a.updatedAt)
-          .slice(0, 50);
+        state.completedJobs = state.completedJobs.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 50);
       }
     },
 
     // Cleanup failed jobs (keep only last 20)
     cleanupFailedJobs: state => {
       if (state.failedJobs.length > 20) {
-        state.failedJobs = state.failedJobs
-          .sort((a, b) => b.updatedAt - a.updatedAt)
-          .slice(0, 20);
+        state.failedJobs = state.failedJobs.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 20);
       }
     },
 
@@ -235,37 +216,21 @@ export const {
 } = jobProgressSlice.actions;
 
 // Base selectors
-const selectJobProgressState = (state: { jobProgress: JobProgressState }) =>
-  state.jobProgress;
+const selectJobProgressState = (state: { jobProgress: JobProgressState }) => state.jobProgress;
 
-const selectActiveJobsMap = createSelector(
-  [selectJobProgressState],
-  jobProgress => jobProgress.activeJobs
-);
+const selectActiveJobsMap = createSelector([selectJobProgressState], jobProgress => jobProgress.activeJobs);
 
-const selectCompletedJobsArray = createSelector(
-  [selectJobProgressState],
-  jobProgress => jobProgress.completedJobs
-);
+const selectCompletedJobsArray = createSelector([selectJobProgressState], jobProgress => jobProgress.completedJobs);
 
-const selectFailedJobsArray = createSelector(
-  [selectJobProgressState],
-  jobProgress => jobProgress.failedJobs
-);
+const selectFailedJobsArray = createSelector([selectJobProgressState], jobProgress => jobProgress.failedJobs);
 
-const selectConnectionInfo = createSelector(
-  [selectJobProgressState],
-  jobProgress => ({
-    isConnected: jobProgress.isConnected,
-    error: jobProgress.connectionError,
-  })
-);
+const selectConnectionInfo = createSelector([selectJobProgressState], jobProgress => ({
+  isConnected: jobProgress.isConnected,
+  error: jobProgress.connectionError,
+}));
 
 // Memoized selectors
-export const selectActiveJobs = createSelector(
-  [selectActiveJobsMap],
-  activeJobs => Object.values(activeJobs)
-);
+export const selectActiveJobs = createSelector([selectActiveJobsMap], activeJobs => Object.values(activeJobs));
 
 export const selectCompletedJobs = selectCompletedJobsArray;
 
@@ -274,9 +239,7 @@ export const selectFailedJobs = selectFailedJobsArray;
 export const selectJobById = createSelector(
   [selectActiveJobsMap, selectCompletedJobsArray, selectFailedJobsArray],
   (activeJobs, completedJobs, failedJobs) => (jobId: string) =>
-    activeJobs[jobId] ||
-    completedJobs.find(job => job.id === jobId) ||
-    failedJobs.find(job => job.id === jobId)
+    activeJobs[jobId] || completedJobs.find(job => job.id === jobId) || failedJobs.find(job => job.id === jobId),
 );
 
 export const selectConnectionStatus = selectConnectionInfo;
@@ -287,7 +250,7 @@ export const selectTotalJobs = createSelector(
     active: Object.keys(activeJobs).length,
     completed: completedJobs.length,
     failed: failedJobs.length,
-  })
+  }),
 );
 
 export default jobProgressSlice.reducer;

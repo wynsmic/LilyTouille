@@ -3,10 +3,7 @@ import { UserFavoriteEntity } from '../entities/user-favorite.entity';
 
 export interface IUserFavoriteRepository {
   findByUserId(userId: number): Promise<UserFavoriteEntity[]>;
-  findByUserIdAndRecipeId(
-    userId: number,
-    recipeId: number
-  ): Promise<UserFavoriteEntity | null>;
+  findByUserIdAndRecipeId(userId: number, recipeId: number): Promise<UserFavoriteEntity | null>;
   save(favorite: Partial<UserFavoriteEntity>): Promise<UserFavoriteEntity>;
   deleteByUserIdAndRecipeId(userId: number, recipeId: number): Promise<boolean>;
   deleteByUserId(userId: number): Promise<boolean>;
@@ -28,27 +25,19 @@ export class UserFavoriteRepository implements IUserFavoriteRepository {
     });
   }
 
-  async findByUserIdAndRecipeId(
-    userId: number,
-    recipeId: number,
-  ): Promise<UserFavoriteEntity | null> {
+  async findByUserIdAndRecipeId(userId: number, recipeId: number): Promise<UserFavoriteEntity | null> {
     return this.repository.findOne({
       where: { userId, recipeId },
       relations: ['recipe'],
     });
   }
 
-  async save(
-    favorite: Partial<UserFavoriteEntity>,
-  ): Promise<UserFavoriteEntity> {
+  async save(favorite: Partial<UserFavoriteEntity>): Promise<UserFavoriteEntity> {
     const favoriteEntity = this.repository.create(favorite);
     return this.repository.save(favoriteEntity);
   }
 
-  async deleteByUserIdAndRecipeId(
-    userId: number,
-    recipeId: number,
-  ): Promise<boolean> {
+  async deleteByUserIdAndRecipeId(userId: number, recipeId: number): Promise<boolean> {
     const result = await this.repository.delete({ userId, recipeId });
     return (result.affected ?? 0) > 0;
   }

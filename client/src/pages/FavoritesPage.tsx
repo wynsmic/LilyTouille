@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../contexts/useUser';
 import RecipeCard from '../components/RecipeCard';
 import Layout from '../components/Layout';
 
@@ -115,18 +115,14 @@ const FavoritesPage: React.FC = () => {
             <EmptyStateIcon>⭐</EmptyStateIcon>
             <EmptyStateTitle>No favorites yet</EmptyStateTitle>
             <EmptyStateText>
-              Browse recipes and click the heart icon to add them to your
-              favorites. They'll appear here for easy access.
+              Browse recipes and click the heart icon to add them to your favorites. They'll appear here for easy
+              access.
             </EmptyStateText>
           </EmptyState>
         ) : (
           <RecipesGrid>
             {favorites.map(favorite => (
-              <RecipeCard
-                key={favorite.id}
-                recipe={favorite.recipe!}
-                showFavoriteButton={true}
-              />
+              <RecipeCard key={favorite.id} recipe={favorite.recipe!} showFavoriteButton={true} />
             ))}
           </RecipesGrid>
         )}

@@ -253,14 +253,7 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
   };
 
   const getProgressPercentage = () => {
-    const stages = [
-      'queued',
-      'scraping',
-      'scraped',
-      'ai_processing',
-      'ai_processed',
-      'stored',
-    ];
+    const stages = ['queued', 'scraping', 'scraped', 'ai_processing', 'ai_processed', 'stored'];
     const currentStage = getCurrentStage();
     const stageIndex = stages.indexOf(currentStage);
 
@@ -272,14 +265,7 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
     return new Date(timestamp).toLocaleString();
   };
 
-  const stages = [
-    'queued',
-    'scraping',
-    'scraped',
-    'ai_processing',
-    'ai_processed',
-    'stored',
-  ];
+  const stages = ['queued', 'scraping', 'scraped', 'ai_processing', 'ai_processed', 'stored'];
   const currentStage = getCurrentStage();
   const currentStageIndex = stages.indexOf(currentStage);
   const progress = getProgressPercentage();
@@ -287,12 +273,8 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
   return (
     <Card status={job.status}>
       <CardHeader status={job.status}>
-        <StatusBadge status={job.status}>
-          {getStatusDisplayName(job.status)}
-        </StatusBadge>
-        <UrlText>
-          {job.type === 'invent' ? job.title || 'Recipe Invention' : job.url}
-        </UrlText>
+        <StatusBadge status={job.status}>{getStatusDisplayName(job.status)}</StatusBadge>
+        <UrlText>{job.type === 'invent' ? job.title || 'Recipe Invention' : job.url}</UrlText>
       </CardHeader>
 
       <CardBody>
@@ -308,22 +290,12 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
 
         <Timeline>
           {stages.map((stage, index) => {
-            const isActive =
-              index === currentStageIndex && job.status === 'in_progress';
-            const isCompleted =
-              index < currentStageIndex || job.status === 'completed';
+            const isActive = index === currentStageIndex && job.status === 'in_progress';
+            const isCompleted = index < currentStageIndex || job.status === 'completed';
 
             return (
-              <TimelineItem
-                key={stage}
-                isActive={isActive}
-                isCompleted={isCompleted}
-              >
-                <TimelineDot
-                  isActive={isActive}
-                  isCompleted={isCompleted}
-                  status={job.status}
-                />
+              <TimelineItem key={stage} isActive={isActive} isCompleted={isCompleted}>
+                <TimelineDot isActive={isActive} isCompleted={isCompleted} status={job.status} />
                 <TimelineText isActive={isActive} isCompleted={isCompleted}>
                   {stage.replace('_', ' ').toUpperCase()}
                 </TimelineText>
@@ -335,9 +307,7 @@ const JobProgressCard: React.FC<JobProgressCardProps> = ({ job, onRetry }) => {
 
       <CardFooter>
         <Timestamp>Started: {formatTimestamp(job.createdAt)}</Timestamp>
-        {job.status === 'failed' && onRetry && (
-          <RetryButton onClick={() => onRetry(job.id)}>Retry</RetryButton>
-        )}
+        {job.status === 'failed' && onRetry && <RetryButton onClick={() => onRetry(job.id)}>Retry</RetryButton>}
       </CardFooter>
     </Card>
   );

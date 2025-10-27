@@ -1,13 +1,7 @@
-import { useUser } from '../contexts/UserContext';
+import { useUser } from '../contexts/useUser';
 
 export const useUserFavorites = () => {
-  const {
-    favorites,
-    favoritesLoading,
-    addFavorite,
-    removeFavorite,
-    isFavorite,
-  } = useUser();
+  const { favorites, favoritesLoading, addFavorite, removeFavorite, isFavorite } = useUser();
 
   const toggleFavorite = async (recipeId: number) => {
     if (isFavorite(recipeId)) {

@@ -54,14 +54,12 @@ const ActionButton = styled.button<{ $isFavorite?: boolean }>`
   text-align: center;
   cursor: pointer;
   backdrop-filter: blur(4px);
-  color: ${(props: { $isFavorite?: boolean }) =>
-    props.$isFavorite ? '#ef4444' : 'var(--color-gray-600)'};
+  color: ${(props: { $isFavorite?: boolean }) => (props.$isFavorite ? '#ef4444' : 'var(--color-gray-600)')};
   box-shadow: var(--shadow-sm);
 
   &:hover {
     background: rgba(255, 255, 255, 1);
-    color: ${(props: { $isFavorite?: boolean }) =>
-      props.$isFavorite ? '#dc2626' : '#ef4444'};
+    color: ${(props: { $isFavorite?: boolean }) => (props.$isFavorite ? '#dc2626' : '#ef4444')};
     transform: scale(1.1);
     box-shadow: var(--shadow-md);
   }
@@ -216,11 +214,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const handleDeleteClick = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when clicking delete button
 
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${recipe.title}"? This action cannot be undone.`
-      )
-    ) {
+    if (window.confirm(`Are you sure you want to delete "${recipe.title}"? This action cannot be undone.`)) {
       onDelete?.(recipe.id);
     }
   };
@@ -236,9 +230,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <ActionButton
             onClick={handleFavoriteClick}
             $isFavorite={isRecipeFavorite}
-            aria-label={
-              isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'
-            }
+            aria-label={isRecipeFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             {isRecipeFavorite ? (
               <Favorite style={{ width: '16px', height: '16px' }} />
@@ -263,9 +255,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               <span>{recipe.totalPrepTime + recipe.totalCookTime} min</span>
             </MetadataItem>
             <MetadataItem>
-              <DifficultyBadge $difficulty={recipe.difficulty}>
-                {recipe.difficulty}
-              </DifficultyBadge>
+              <DifficultyBadge $difficulty={recipe.difficulty}>{recipe.difficulty}</DifficultyBadge>
             </MetadataItem>
             <MetadataItem>
               <span>{recipe.servings} servings</span>
@@ -279,9 +269,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           {recipe.tags.slice(0, 2).map(tag => (
             <Tag key={tag}>{tag}</Tag>
           ))}
-          {recipe.tags.length > 2 && (
-            <MoreTags>+{recipe.tags.length - 2}</MoreTags>
-          )}
+          {recipe.tags.length > 2 && <MoreTags>+{recipe.tags.length - 2}</MoreTags>}
         </TagsContainer>
       </ContentSection>
 

@@ -1,10 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  webSocketManager,
-  ProgressUpdate,
-  QueueStatus,
-} from '../services/websocketManager';
+import { webSocketManager, ProgressUpdate, QueueStatus } from '../services/websocketManager';
 import {
   updateJobProgress,
   setConnectionStatus,
@@ -22,11 +18,7 @@ interface UseWebSocketOptions {
 }
 
 export const useWebSocket = (options: UseWebSocketOptions = {}) => {
-  const {
-    autoConnect = true,
-    enableProgressUpdates = true,
-    enableQueueStatus = true,
-  } = options;
+  const { autoConnect = true, enableProgressUpdates = true, enableQueueStatus = true } = options;
 
   const dispatch = useDispatch();
   const activeJobs = useSelector(selectActiveJobs);
@@ -36,12 +28,8 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const isInitialized = useRef(false);
-  const progressUpdateHandler = useRef<
-    ((update: ProgressUpdate) => void) | null
-  >(null);
-  const queueStatusHandler = useRef<((status: QueueStatus) => void) | null>(
-    null
-  );
+  const progressUpdateHandler = useRef<((update: ProgressUpdate) => void) | null>(null);
+  const queueStatusHandler = useRef<((status: QueueStatus) => void) | null>(null);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -61,7 +49,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
           setConnectionStatus({
             connected: true,
             error: undefined,
-          })
+          }),
         );
 
         // Join progress room
@@ -101,7 +89,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
             setConnectionStatus({
               connected: false,
               error: error.message,
-            })
+            }),
           );
         });
       } catch (error) {
@@ -110,7 +98,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
           setConnectionStatus({
             connected: false,
             error: error instanceof Error ? error.message : 'Connection failed',
-          })
+          }),
         );
       }
     };

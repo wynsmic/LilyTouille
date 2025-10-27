@@ -1,12 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { RecipeEntity } from './recipe.entity';
 
@@ -14,26 +6,26 @@ import { RecipeEntity } from './recipe.entity';
 @Index(['userId', 'recipeId'], { unique: true })
 export class UserFavoriteEntity {
   @PrimaryGeneratedColumn()
-    id: number;
+  id: number;
 
   @Column({ type: 'int' })
-    userId: number;
+  userId: number;
 
   @Column({ type: 'int' })
-    recipeId: number;
+  recipeId: number;
 
   @ManyToOne(() => UserEntity, user => user.favorites, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-    user: UserEntity;
+  user: UserEntity;
 
   @ManyToOne(() => RecipeEntity, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'recipeId' })
-    recipe: RecipeEntity;
+  recipe: RecipeEntity;
 
   @CreateDateColumn()
-    createdAt: Date;
+  createdAt: Date;
 }

@@ -11,8 +11,7 @@ export const store = configureStore({
     [scrapeApi.reducerPath]: scrapeApi.reducer,
     [inventApi.reducerPath]: inventApi.reducer,
   },
-  middleware: getDefaultMiddleware =>
-    getDefaultMiddleware().concat(scrapeApi.middleware, inventApi.middleware),
+  middleware: getDefaultMiddleware => getDefaultMiddleware().concat(scrapeApi.middleware, inventApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

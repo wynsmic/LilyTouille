@@ -28,9 +28,7 @@ const recipeSlice = createSlice({
     setRecipes: (state, action: PayloadAction<Recipe[]>) => {
       state.recipes = action.payload;
       // Sort recipes by name when they are initially loaded
-      state.filteredRecipes = [...action.payload].sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
+      state.filteredRecipes = [...action.payload].sort((a, b) => a.title.localeCompare(b.title));
     },
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
@@ -51,15 +49,13 @@ const recipeSlice = createSlice({
             recipe.chunks
               .map(chunk => chunk.ingredients)
               .flat()
-              .some(ingredient => ingredient.toLowerCase().includes(query))
+              .some(ingredient => ingredient.toLowerCase().includes(query)),
         );
       }
 
       // Filter by selected tags
       if (state.selectedTags.length > 0) {
-        filtered = filtered.filter(recipe =>
-          state.selectedTags.some(tag => recipe.tags.includes(tag))
-        );
+        filtered = filtered.filter(recipe => state.selectedTags.some(tag => recipe.tags.includes(tag)));
       }
 
       // Sort by recipe name (title)
@@ -78,9 +74,7 @@ const recipeSlice = createSlice({
       const isFavorite = state.favoriteRecipeIds.includes(recipeId);
 
       if (isFavorite) {
-        state.favoriteRecipeIds = state.favoriteRecipeIds.filter(
-          id => id !== recipeId
-        );
+        state.favoriteRecipeIds = state.favoriteRecipeIds.filter(id => id !== recipeId);
       } else {
         state.favoriteRecipeIds.push(recipeId);
       }
@@ -91,13 +85,9 @@ const recipeSlice = createSlice({
     deleteRecipe: (state, action: PayloadAction<number>) => {
       const recipeId = action.payload;
       state.recipes = state.recipes.filter(recipe => recipe.id !== recipeId);
-      state.filteredRecipes = state.filteredRecipes.filter(
-        recipe => recipe.id !== recipeId
-      );
+      state.filteredRecipes = state.filteredRecipes.filter(recipe => recipe.id !== recipeId);
       // Also remove from favorites if it was favorited
-      state.favoriteRecipeIds = state.favoriteRecipeIds.filter(
-        id => id !== recipeId.toString()
-      );
+      state.favoriteRecipeIds = state.favoriteRecipeIds.filter(id => id !== recipeId.toString());
     },
   },
 });

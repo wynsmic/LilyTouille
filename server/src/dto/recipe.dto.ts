@@ -1,12 +1,4 @@
-import {
-  IsString,
-  IsNumber,
-  IsArray,
-  IsOptional,
-  IsEnum,
-  ValidateNested,
-  IsIn,
-} from 'class-validator';
+import { IsString, IsNumber, IsArray, IsOptional, IsEnum, ValidateNested, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum Difficulty {
@@ -17,256 +9,256 @@ export enum Difficulty {
 
 export class RecipeStepDto {
   @IsIn(['text', 'image'])
-    type: 'text' | 'image';
+  type: 'text' | 'image';
 
   @IsString()
-    content: string;
+  content: string;
 
   @IsOptional()
   @IsString()
-    imageUrl?: string;
+  imageUrl?: string;
 }
 
 export class ChunkDto {
   @IsNumber()
-    id: number;
+  id: number;
 
   @IsString()
-    title: string;
+  title: string;
 
   @IsOptional()
   @IsString()
-    description?: string;
+  description?: string;
 
   @IsArray()
   @IsString({ each: true })
-    ingredients: string[];
+  ingredients: string[];
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => RecipeStepDto)
-    recipeSteps: RecipeStepDto[];
+  recipeSteps: RecipeStepDto[];
 
   @IsNumber()
-    prepTime: number;
+  prepTime: number;
 
   @IsNumber()
-    cookTime: number;
+  cookTime: number;
 
   @IsNumber()
-    servings: number;
+  servings: number;
 
   @IsEnum(Difficulty)
-    difficulty: Difficulty;
+  difficulty: Difficulty;
 
   @IsArray()
   @IsString({ each: true })
-    tags: string[];
+  tags: string[];
 
   @IsOptional()
   @IsString()
-    imageUrl?: string;
+  imageUrl?: string;
 
   @IsNumber()
-    rating: number;
+  rating: number;
 
   @IsNumber()
-    orderIndex: number;
+  orderIndex: number;
 
   @IsNumber()
-    recipeId: number;
+  recipeId: number;
 }
 
 export class RecipeDto {
   @IsNumber()
-    id: number;
+  id: number;
 
   @IsString()
-    title: string;
+  title: string;
 
   @IsString()
-    description: string;
+  description: string;
 
   @IsArray()
   @IsString({ each: true })
-    overview: string[];
+  overview: string[];
 
   @IsNumber()
-    totalPrepTime: number;
+  totalPrepTime: number;
 
   @IsNumber()
-    totalCookTime: number;
+  totalCookTime: number;
 
   @IsNumber()
-    servings: number;
+  servings: number;
 
   @IsEnum(Difficulty)
-    difficulty: Difficulty;
+  difficulty: Difficulty;
 
   @IsArray()
   @IsString({ each: true })
-    tags: string[];
+  tags: string[];
 
   @IsString()
-    imageUrl: string;
+  imageUrl: string;
 
   @IsNumber()
-    rating: number;
+  rating: number;
 
   @IsString()
-    author: string;
+  author: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChunkDto)
-    chunks: ChunkDto[];
+  chunks: ChunkDto[];
 
   // Scraping metadata (optional)
   @IsOptional()
   @IsString()
-    sourceUrl?: string;
+  sourceUrl?: string;
 
   @IsOptional()
   @IsString()
-    scrapedHtml?: string;
+  scrapedHtml?: string;
 
   @IsOptional()
   @IsString()
-    aiQuery?: string;
+  aiQuery?: string;
 
   @IsOptional()
   @IsString()
-    aiResponse?: string;
+  aiResponse?: string;
 
   @IsOptional()
   @IsString()
-    scrapedAt?: string;
+  scrapedAt?: string;
 }
 
 export class CreateChunkDto {
   @IsString()
-    title: string;
+  title: string;
 
   @IsOptional()
   @IsString()
-    description?: string;
+  description?: string;
 
   @IsArray()
   @IsString({ each: true })
-    ingredients: string[];
+  ingredients: string[];
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => RecipeStepDto)
-    recipeSteps: RecipeStepDto[];
+  recipeSteps: RecipeStepDto[];
 
   @IsNumber()
-    prepTime: number;
+  prepTime: number;
 
   @IsNumber()
-    cookTime: number;
+  cookTime: number;
 
   @IsNumber()
-    servings: number;
+  servings: number;
 
   @IsEnum(Difficulty)
-    difficulty: Difficulty;
+  difficulty: Difficulty;
 
   @IsArray()
   @IsString({ each: true })
-    tags: string[];
+  tags: string[];
 
   @IsOptional()
   @IsString()
-    imageUrl?: string;
+  imageUrl?: string;
 
   @IsNumber()
-    rating: number;
+  rating: number;
 
   @IsNumber()
-    orderIndex: number;
+  orderIndex: number;
 
   @IsNumber()
-    recipeId: number;
+  recipeId: number;
 }
 
 export class CreateRecipeDto {
   @IsString()
-    title: string;
+  title: string;
 
   @IsString()
-    description: string;
+  description: string;
 
   @IsArray()
   @IsString({ each: true })
-    overview: string[];
+  overview: string[];
 
   @IsNumber()
-    totalPrepTime: number;
+  totalPrepTime: number;
 
   @IsNumber()
-    totalCookTime: number;
+  totalCookTime: number;
 
   @IsNumber()
-    servings: number;
+  servings: number;
 
   @IsEnum(Difficulty)
-    difficulty: Difficulty;
+  difficulty: Difficulty;
 
   @IsArray()
   @IsString({ each: true })
-    tags: string[];
+  tags: string[];
 
   @IsString()
-    imageUrl: string;
+  imageUrl: string;
 
   @IsNumber()
-    rating: number;
+  rating: number;
 
   @IsString()
-    author: string;
+  author: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateChunkDto)
-    chunks: CreateChunkDto[];
+  chunks: CreateChunkDto[];
 
   // Scraping metadata (optional)
   @IsOptional()
   @IsString()
-    sourceUrl?: string;
+  sourceUrl?: string;
 
   @IsOptional()
   @IsString()
-    scrapedHtml?: string;
+  scrapedHtml?: string;
 
   @IsOptional()
   @IsString()
-    aiQuery?: string;
+  aiQuery?: string;
 
   @IsOptional()
   @IsString()
-    aiResponse?: string;
+  aiResponse?: string;
 
   @IsOptional()
   @IsString()
-    scrapedAt?: string;
+  scrapedAt?: string;
 }
 
 export class RecipeFiltersDto {
   @IsOptional()
   @IsString()
-    tag?: string;
+  tag?: string;
 
   @IsOptional()
   @IsString()
-    ingredient?: string;
+  ingredient?: string;
 
   @IsOptional()
   @IsEnum(Difficulty)
-    difficulty?: Difficulty;
+  difficulty?: Difficulty;
 
   @IsOptional()
   @IsString()
-    author?: string;
+  author?: string;
 }

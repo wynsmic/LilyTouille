@@ -73,20 +73,14 @@ const TagButton = styled.button<{ $isSelected: boolean }>`
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-normal);
-  border: ${props =>
-    props.$isSelected ? 'none' : '1px solid var(--color-gray-200)'};
-  background-color: ${props =>
-    props.$isSelected ? 'var(--color-primary-500)' : 'var(--color-gray-50)'};
-  color: ${props =>
-    props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-600)'};
+  border: ${props => (props.$isSelected ? 'none' : '1px solid var(--color-gray-200)')};
+  background-color: ${props => (props.$isSelected ? 'var(--color-primary-500)' : 'var(--color-gray-50)')};
+  color: ${props => (props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-600)')};
 
   &:hover {
-    background-color: ${props =>
-      props.$isSelected ? 'var(--color-primary-600)' : 'var(--color-gray-100)'};
-    color: ${props =>
-      props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-800)'};
-    border-color: ${props =>
-      props.$isSelected ? 'none' : 'var(--color-gray-300)'};
+    background-color: ${props => (props.$isSelected ? 'var(--color-primary-600)' : 'var(--color-gray-100)')};
+    color: ${props => (props.$isSelected ? 'var(--color-white)' : 'var(--color-gray-800)')};
+    border-color: ${props => (props.$isSelected ? 'none' : 'var(--color-gray-300)')};
   }
 `;
 
@@ -220,15 +214,12 @@ const ButtonText = styled.span`
 `;
 
 const FilterBar: React.FC = () => {
-  const { recipes, searchQuery, selectedTags, applyFilters, clearFilters } =
-    useRecipes();
+  const { recipes, searchQuery, selectedTags, applyFilters, clearFilters } = useRecipes();
 
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   // Get all unique tags from recipes
-  const allTags = Array.from(
-    new Set(recipes.flatMap(recipe => recipe.tags))
-  ).sort();
+  const allTags = Array.from(new Set(recipes.flatMap(recipe => recipe.tags))).sort();
 
   // Debounced search effect
   useEffect(() => {
@@ -240,9 +231,7 @@ const FilterBar: React.FC = () => {
   }, [localSearchQuery, selectedTags, applyFilters]);
 
   const handleTagToggle = (tag: string) => {
-    const newSelectedTags = selectedTags.includes(tag)
-      ? selectedTags.filter(t => t !== tag)
-      : [...selectedTags, tag];
+    const newSelectedTags = selectedTags.includes(tag) ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag];
 
     applyFilters(searchQuery, newSelectedTags);
   };
@@ -277,23 +266,14 @@ const FilterBar: React.FC = () => {
 
         <TagsContainer>
           {allTags.map(tag => (
-            <TagButton
-              key={tag}
-              onClick={() => handleTagToggle(tag)}
-              $isSelected={selectedTags.includes(tag)}
-            >
+            <TagButton key={tag} onClick={() => handleTagToggle(tag)} $isSelected={selectedTags.includes(tag)}>
               {tag}
             </TagButton>
           ))}
           {(searchQuery || selectedTags.length > 0) && (
             <ClearButton onClick={handleClearFilters} title="Clear all filters">
               <ClearIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </ClearIcon>
             </ClearButton>
           )}
@@ -326,14 +306,8 @@ const FilterBar: React.FC = () => {
         </AIButton>
       </AIButtonsContainer>
 
-      <ScrapeRecipeModal
-        open={isScrapeOpen}
-        onClose={() => setIsScrapeOpen(false)}
-      />
-      <InventRecipeModal
-        open={isInventOpen}
-        onClose={() => setIsInventOpen(false)}
-      />
+      <ScrapeRecipeModal open={isScrapeOpen} onClose={() => setIsScrapeOpen(false)} />
+      <InventRecipeModal open={isInventOpen} onClose={() => setIsInventOpen(false)} />
     </FilterContainer>
   );
 };
