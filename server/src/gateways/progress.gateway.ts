@@ -5,7 +5,6 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -25,11 +24,9 @@ import * as jwt from 'jsonwebtoken';
   },
   namespace: '/',
 })
-export class ProgressGateway
-implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
-{
+export class ProgressGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
-    server: Server;
+  server: Server;
 
   private readonly logger = new Logger(ProgressGateway.name);
   private isSubscribed = false;
@@ -100,12 +97,8 @@ implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
     try {
       // Safely check if server and sockets are available
       if (this.server && this.server.sockets && this.server.sockets.sockets) {
-        const clientIds: string[] = Array.from(
-          this.server.sockets.sockets.keys(),
-        );
-        this.logger.log(
-          `Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`,
-        );
+        const clientIds: string[] = Array.from(this.server.sockets.sockets.keys());
+        this.logger.log(`Currently connected clients (${clientIds.length}): [${clientIds.join(', ')}]`);
       } else {
         this.logger.warn('Server sockets not available during connection');
       }
@@ -120,7 +113,7 @@ implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
   }
 
   handleDisconnect(client: Socket) {
-    const {user} = client.data;
+    const { user } = client.data;
     if (user) {
       this.logger.log(`Client disconnected: ${client.id} (user: ${user.sub})`);
     } else {
@@ -131,8 +124,7 @@ implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
   private async authenticateClient(client: Socket): Promise<any> {
     try {
       // Extract token from handshake
-      const token =
-        client.handshake.auth.token || client.handshake.query.token;
+      const token = client.handshake.auth.token || client.handshake.query.token;
 
       if (!token) {
         this.logger.error(`No token provided for client ${client.id}`);
@@ -161,10 +153,7 @@ implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
       const user = await this.webSocketJwtStrategy.validate(decoded);
       return user;
     } catch (error) {
-      this.logger.error(
-        `Token verification failed for client ${client.id}:`,
-        error,
-      );
+      this.logger.error(`Token verification failed for client ${client.id}:`, error);
       return null;
     }
   }
@@ -178,8 +167,7 @@ implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
   @SubscribeMessage('get-queue-status')
   async handleGetQueueStatus() {
     try {
-      const processingQueueLength =
-        await this.redisService.getQueueLength('processing');
+      const processingQueueLength = await this.redisService.getQueueLength('processing');
       const aiQueueLength = await this.redisService.getQueueLength('ai');
 
       this.server.emit('queue-status', {

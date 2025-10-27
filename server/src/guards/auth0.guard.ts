@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 export interface AuthenticatedRequest {
@@ -21,7 +17,7 @@ export class Auth0Guard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any, _info: any) {
     if (err || !user) {
       throw err || new UnauthorizedException('Invalid token');
     }

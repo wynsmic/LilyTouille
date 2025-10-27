@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Recipe, RecipeFilters, Chunk } from '../interfaces/recipe.interface';
 import { DatabaseService } from './database.service';
 import { CreateRecipeDto, CreateChunkDto } from '../dto/recipe.dto';
-import { ChunkEntity } from '../entities/chunk.entity';
 
 @Injectable()
 export class RecipeService {
@@ -92,9 +91,7 @@ export class RecipeService {
       scrapedHtml: createRecipeDto.scrapedHtml,
       aiQuery: createRecipeDto.aiQuery,
       aiResponse: createRecipeDto.aiResponse,
-      scrapedAt: createRecipeDto.scrapedAt
-        ? new Date(createRecipeDto.scrapedAt)
-        : undefined,
+      scrapedAt: createRecipeDto.scrapedAt ? new Date(createRecipeDto.scrapedAt) : undefined,
     });
 
     // Create chunks
@@ -157,10 +154,7 @@ export class RecipeService {
   /**
    * Update a chunk
    */
-  async updateChunk(
-    id: number,
-    updateData: Partial<CreateChunkDto>,
-  ): Promise<Chunk | null> {
+  async updateChunk(id: number, updateData: Partial<CreateChunkDto>): Promise<Chunk | null> {
     const chunkRepository = this.databaseService.getChunkRepository();
     const chunk = await chunkRepository.update(id, updateData);
     return chunk ? this.entityToChunk(chunk) : null;
@@ -188,8 +182,7 @@ export class RecipeService {
       imageUrl: entity.imageUrl,
       rating: entity.rating,
       author: entity.author,
-      chunks:
-        entity.chunks?.map((chunk: any) => this.entityToChunk(chunk)) || [],
+      chunks: entity.chunks?.map((chunk: any) => this.entityToChunk(chunk)) || [],
       sourceUrl: entity.sourceUrl,
       scrapedHtml: entity.scrapedHtml,
       aiQuery: entity.aiQuery,

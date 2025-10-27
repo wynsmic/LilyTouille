@@ -25,8 +25,7 @@ class WebSocketService {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       // Remove /api suffix for websocket connections
-      const apiUrl =
-        import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const serverUrl = apiUrl.replace('/api', '');
       console.log('[WebSocket] Attempting to connect to:', serverUrl);
 
@@ -84,11 +83,7 @@ class WebSocketService {
       });
 
       this.socket.on('pong', latency => {
-        console.log(
-          '[WebSocket] 📡 received pong from server, latency:',
-          latency,
-          'ms'
-        );
+        console.log('[WebSocket] 📡 received pong from server, latency:', latency, 'ms');
       });
     });
   }
@@ -96,11 +91,10 @@ class WebSocketService {
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      const delay =
-        this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
       console.log(
-        `🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+        `🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
       );
 
       setTimeout(() => {
@@ -125,21 +119,20 @@ class WebSocketService {
   // Event listeners
   on<K extends keyof WebSocketEvents>(event: K, callback: WebSocketEvents[K]) {
     if (this.socket) {
-      this.socket.on(event, callback as any);
+      // @ts-expect-error - Socket.io type incompatibility
+      this.socket.on(event, callback);
     }
   }
 
-  off<K extends keyof WebSocketEvents>(
-    event: K,
-    callback?: WebSocketEvents[K]
-  ) {
+  off<K extends keyof WebSocketEvents>(event: K, callback?: WebSocketEvents[K]) {
     if (this.socket) {
-      this.socket.off(event, callback as any);
+      // @ts-expect-error - Socket.io type incompatibility
+      this.socket.off(event, callback);
     }
   }
 
   // Emit events
-  emit(event: string, data?: any) {
+  emit(event: string, data?: unknown) {
     if (this.socket) {
       console.log('[WebSocket] → emit', event, data);
       this.socket.emit(event, data);

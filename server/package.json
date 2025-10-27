@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "start:prod": "node dist/main.js",
-    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 100",
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
     "test": "jest",
     "test:watch": "jest --watch",

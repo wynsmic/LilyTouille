@@ -29,9 +29,7 @@ export const useScrapeProgress = () => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const [queueScrape, { isLoading: isQueueing }] = useQueueScrapeMutation();
-  const progressUpdateHandler = useRef<
-    ((update: ProgressUpdate) => void) | null
-  >(null);
+  const progressUpdateHandler = useRef<((update: ProgressUpdate) => void) | null>(null);
 
   // Set up progress update listener
   useEffect(() => {
@@ -77,7 +75,7 @@ export const useScrapeProgress = () => {
         console.log('[Hook] ✓ queued', { url });
 
         return { success: true, jobId };
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('[Hook] Failed to queue scrape:', error);
 
         // Remove the job from state since it failed
@@ -85,28 +83,38 @@ export const useScrapeProgress = () => {
 
         let errorMessage = 'Failed to queue scrape';
 
-        if (error?.status === 404) {
-          errorMessage =
-            'Scraping service is currently unavailable. Please try again later.';
-        } else if (error?.status === 500) {
-          errorMessage = 'Server error occurred. Please try again later.';
-        } else if (error?.status === 0) {
-          errorMessage =
-            'Unable to connect to the server. Please check your connection.';
-        } else if (error?.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error?.message) {
+        if (typeof error === 'object' && error !== null && 'status' in error) {
+          const errorWithStatus = error as {
+            status?: number;
+            data?: { message?: string };
+            message?: string;
+          };
+          if (errorWithStatus.status === 404) {
+            errorMessage = 'Scraping service is currently unavailable. Please try again later.';
+          } else if (errorWithStatus.status === 500) {
+            errorMessage = 'Server error occurred. Please try again later.';
+          } else if (errorWithStatus.status === 0) {
+            errorMessage = 'Unable to connect to the server. Please check your connection.';
+          } else if (errorWithStatus.data?.message) {
+            errorMessage = errorWithStatus.data.message;
+          } else if (errorWithStatus.message) {
+            errorMessage = errorWithStatus.message;
+          }
+        } else if (error instanceof Error) {
           errorMessage = error.message;
         }
 
         return {
           success: false,
           error: errorMessage,
-          status: error?.status,
+          status:
+            typeof error === 'object' && error !== null && 'status' in error
+              ? (error as { status?: number }).status
+              : undefined,
         };
       }
     },
-    [dispatch, queueScrape]
+    [dispatch, queueScrape],
   );
 
   // Request queue status

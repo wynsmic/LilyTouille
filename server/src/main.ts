@@ -31,7 +31,7 @@ async function bootstrap() {
   // Global prefix for API routes
   app.setGlobalPrefix('api');
 
-  const {port} = config.app;
+  const { port } = config.app;
   await app.listen(port);
 
   logger.info(`NestJS Server running on port ${port}`);
@@ -44,4 +44,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+void bootstrap();

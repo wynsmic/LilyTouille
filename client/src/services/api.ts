@@ -25,15 +25,13 @@ const apiClient = axios.create({
 // Request interceptor for logging
 apiClient.interceptors.request.use(
   config => {
-    console.log(
-      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
-    );
+    console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   error => {
     console.error('❌ API Request Error:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for error handling
@@ -43,12 +41,9 @@ apiClient.interceptors.response.use(
     return response;
   },
   error => {
-    console.error(
-      '❌ API Response Error:',
-      error.response?.data || error.message
-    );
+    console.error('❌ API Response Error:', error.response?.data || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Recipe interface matching backend
@@ -132,7 +127,7 @@ export const recipeApi = {
     if (filters?.author) params.append('author', filters.author);
 
     const response = await apiClient.get<ApiResponse<Recipe[]>>(
-      `/recipes${params.toString() ? `?${params.toString()}` : ''}`
+      `/recipes${params.toString() ? `?${params.toString()}` : ''}`,
     );
     return response.data.data;
   },
@@ -145,23 +140,19 @@ export const recipeApi = {
 
   // Get all available tags
   getAllTags: async (): Promise<string[]> => {
-    const response =
-      await apiClient.get<ApiResponse<string[]>>('/recipes/tags');
+    const response = await apiClient.get<ApiResponse<string[]>>('/recipes/tags');
     return response.data.data;
   },
 
   // Get all available ingredients
   getAllIngredients: async (): Promise<string[]> => {
-    const response = await apiClient.get<ApiResponse<string[]>>(
-      '/recipes/ingredients'
-    );
+    const response = await apiClient.get<ApiResponse<string[]>>('/recipes/ingredients');
     return response.data.data;
   },
 
   // Get all available authors
   getAllAuthors: async (): Promise<string[]> => {
-    const response =
-      await apiClient.get<ApiResponse<string[]>>('/recipes/authors');
+    const response = await apiClient.get<ApiResponse<string[]>>('/recipes/authors');
     return response.data.data;
   },
 
@@ -172,51 +163,31 @@ export const recipeApi = {
 
   // Create a new recipe with chunks
   createRecipe: async (recipe: Omit<Recipe, 'id'>): Promise<Recipe> => {
-    const response = await apiClient.post<ApiResponse<Recipe>>(
-      '/recipes',
-      recipe
-    );
+    const response = await apiClient.post<ApiResponse<Recipe>>('/recipes', recipe);
     return response.data.data;
   },
 
   // Get chunks for a specific recipe
   getRecipeChunks: async (recipeId: number): Promise<Chunk[]> => {
-    const response = await apiClient.get<ApiResponse<Chunk[]>>(
-      `/recipes/${recipeId}/chunks`
-    );
+    const response = await apiClient.get<ApiResponse<Chunk[]>>(`/recipes/${recipeId}/chunks`);
     return response.data.data;
   },
 
   // Create a new chunk for a recipe
-  createChunk: async (
-    recipeId: number,
-    chunk: Omit<Chunk, 'id' | 'recipeId'>
-  ): Promise<Chunk> => {
-    const response = await apiClient.post<ApiResponse<Chunk>>(
-      `/recipes/${recipeId}/chunks`,
-      chunk
-    );
+  createChunk: async (recipeId: number, chunk: Omit<Chunk, 'id' | 'recipeId'>): Promise<Chunk> => {
+    const response = await apiClient.post<ApiResponse<Chunk>>(`/recipes/${recipeId}/chunks`, chunk);
     return response.data.data;
   },
 
   // Update a chunk
-  updateChunk: async (
-    recipeId: number,
-    chunkId: number,
-    chunk: Partial<Chunk>
-  ): Promise<Chunk> => {
-    const response = await apiClient.put<ApiResponse<Chunk>>(
-      `/recipes/${recipeId}/chunks/${chunkId}`,
-      chunk
-    );
+  updateChunk: async (recipeId: number, chunkId: number, chunk: Partial<Chunk>): Promise<Chunk> => {
+    const response = await apiClient.put<ApiResponse<Chunk>>(`/recipes/${recipeId}/chunks/${chunkId}`, chunk);
     return response.data.data;
   },
 
   // Delete a chunk
   deleteChunk: async (recipeId: number, chunkId: number): Promise<void> => {
-    await apiClient.delete<ApiResponse<void>>(
-      `/recipes/${recipeId}/chunks/${chunkId}`
-    );
+    await apiClient.delete<ApiResponse<void>>(`/recipes/${recipeId}/chunks/${chunkId}`);
   },
 };
 
@@ -231,7 +202,7 @@ export const userApi = {
   },
 
   // Create or update user
-  createOrUpdateUser: async (token: string, userData: any) => {
+  createOrUpdateUser: async (token: string, userData: Record<string, unknown>) => {
     const response = await apiClient.post('/users/me', userData, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -239,7 +210,7 @@ export const userApi = {
   },
 
   // Update user preferences
-  updatePreferences: async (token: string, preferences: any) => {
+  updatePreferences: async (token: string, preferences: Record<string, unknown>) => {
     const response = await apiClient.put('/users/me/preferences', preferences, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -261,7 +232,7 @@ export const userApi = {
       {},
       {
         headers: { Authorization: `Bearer ${token}` },
-      }
+      },
     );
     return response.data;
   },
@@ -275,12 +246,9 @@ export const userApi = {
 
   // Check if recipe is favorite
   getFavoriteStatus: async (token: string, recipeId: number) => {
-    const response = await apiClient.get(
-      `/users/me/favorites/${recipeId}/status`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const response = await apiClient.get(`/users/me/favorites/${recipeId}/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   },
 };

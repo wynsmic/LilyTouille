@@ -16,12 +16,7 @@ export interface WebSocketEvents {
   connect_error: (error: Error) => void;
 }
 
-export type ConnectionState =
-  | 'disconnected'
-  | 'connecting'
-  | 'connected'
-  | 'reconnecting'
-  | 'error';
+export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 interface ConnectionConfig {
   maxReconnectAttempts: number;
@@ -47,7 +42,7 @@ class WebSocketManager {
   private reconnectTimeoutId: NodeJS.Timeout | null = null;
   private heartbeatIntervalId: NodeJS.Timeout | null = null;
   private connectionStartTime: number | null = null;
-  private eventListeners = new Map<string, Set<Function>>();
+  private eventListeners = new Map<string, Set<(...args: unknown[]) => void>>();
 
   private readonly config: ConnectionConfig = {
     maxReconnectAttempts: 5,
@@ -67,13 +62,13 @@ class WebSocketManager {
   };
 
   private readonly logger = {
-    log: (message: string, data?: any) => {
+    log: (message: string, data?: unknown) => {
       console.log(`[WebSocketManager] ${message}`, data || '');
     },
-    error: (message: string, error?: any) => {
+    error: (message: string, error?: unknown) => {
       console.error(`[WebSocketManager] ${message}`, error || '');
     },
-    warn: (message: string, data?: any) => {
+    warn: (message: string, data?: unknown) => {
       console.warn(`[WebSocketManager] ${message}`, data || '');
     },
   };
@@ -106,10 +101,7 @@ class WebSocketManager {
     // Handle online/offline events
     window.addEventListener('online', () => {
       this.logger.log('Network online, attempting reconnection');
-      if (
-        this.connectionState === 'disconnected' ||
-        this.connectionState === 'error'
-      ) {
+      if (this.connectionState === 'disconnected' || this.connectionState === 'error') {
         this.connect();
       }
     });
@@ -121,10 +113,7 @@ class WebSocketManager {
   }
 
   async connect(token?: string): Promise<void> {
-    if (
-      this.connectionState === 'connected' ||
-      this.connectionState === 'connecting'
-    ) {
+    if (this.connectionState === 'connected' || this.connectionState === 'connecting') {
       this.logger.log('Already connected or connecting, skipping');
       return;
     }
@@ -134,8 +123,7 @@ class WebSocketManager {
 
     return new Promise((resolve, reject) => {
       try {
-        const apiUrl =
-          import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         const serverUrl = apiUrl.replace('/api', '');
 
         this.logger.log('Attempting to connect to:', serverUrl);
@@ -161,15 +149,12 @@ class WebSocketManager {
       } catch (error) {
         this.logger.error('Failed to create socket connection:', error);
         this.setConnectionState('error');
-        reject(error);
+        reject(error instanceof Error ? error : new Error('Failed to create socket connection'));
       }
     });
   }
 
-  private setupSocketEventListeners(
-    resolve: () => void,
-    reject: (error: Error) => void
-  ) {
+  private setupSocketEventListeners(resolve: () => void, reject: (error: unknown) => void) {
     if (!this.socket) return;
 
     const connectionTimeout = setTimeout(() => {
@@ -233,13 +218,10 @@ class WebSocketManager {
     });
 
     // Set up authentication event listeners
-    this.socket.on(
-      'authenticated',
-      (data: { userId: string; message: string }) => {
-        this.logger.log('✅ Authenticated:', data);
-        this.emit('authenticated', data);
-      }
-    );
+    this.socket.on('authenticated', (data: { userId: string; message: string }) => {
+      this.logger.log('✅ Authenticated:', data);
+      this.emit('authenticated', data);
+    });
 
     this.socket.on('auth-error', (error: { message: string }) => {
       this.logger.error('❌ Authentication error:', error);
@@ -284,16 +266,17 @@ class WebSocketManager {
 
     const delay = Math.min(
       this.config.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
-      this.config.maxReconnectDelay
+      this.config.maxReconnectDelay,
     );
 
     this.logger.log(
-      `🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`
+      `🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`,
     );
 
     this.reconnectTimeoutId = setTimeout(() => {
       this.connect().catch(error => {
         this.logger.error('Reconnection failed:', error);
+        this.setConnectionState('error');
       });
     }, delay);
   }
@@ -360,9 +343,7 @@ class WebSocketManager {
 
   // Public API
   isConnected(): boolean {
-    return (
-      this.connectionState === 'connected' && this.socket?.connected === true
-    );
+    return this.connectionState === 'connected' && this.socket?.connected === true;
   }
 
   getConnectionState(): ConnectionState {
@@ -381,10 +362,7 @@ class WebSocketManager {
     this.eventListeners.get(event)!.add(callback);
   }
 
-  off<K extends keyof WebSocketEvents>(
-    event: K,
-    callback?: WebSocketEvents[K]
-  ) {
+  off<K extends keyof WebSocketEvents>(event: K, callback?: WebSocketEvents[K]) {
     const listeners = this.eventListeners.get(event);
     if (listeners && callback) {
       listeners.delete(callback);
@@ -393,15 +371,12 @@ class WebSocketManager {
     }
   }
 
-  private emit<K extends keyof WebSocketEvents>(
-    event: K,
-    ...args: Parameters<WebSocketEvents[K]>
-  ) {
+  private emit<K extends keyof WebSocketEvents>(event: K, ...args: Parameters<WebSocketEvents[K]>) {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.forEach(callback => {
         try {
-          (callback as any)(...args);
+          callback(...args);
         } catch (error) {
           this.logger.error(`Error in event listener for ${event}:`, error);
         }
@@ -420,7 +395,7 @@ class WebSocketManager {
     this.sendMessage('get-queue-status');
   }
 
-  sendMessage(event: string, data?: any) {
+  sendMessage(event: string, data?: unknown) {
     if (this.socket?.connected) {
       this.logger.log(`→ emit ${event}`, data);
       this.socket.emit(event, data);

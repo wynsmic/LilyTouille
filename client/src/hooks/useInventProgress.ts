@@ -27,9 +27,7 @@ export const useInventProgress = () => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const [inventRecipe, { isLoading: isInventing }] = useInventRecipeMutation();
-  const progressUpdateHandler = useRef<
-    ((update: ProgressUpdate) => void) | null
-  >(null);
+  const progressUpdateHandler = useRef<((update: ProgressUpdate) => void) | null>(null);
 
   // Set up progress update listener
   useEffect(() => {
@@ -62,7 +60,14 @@ export const useInventProgress = () => {
 
   // Trigger a new recipe invention
   const triggerInvent = useCallback(
-    async (inventData: any) => {
+    async (inventData: {
+      title?: string;
+      description: string;
+      difficulty: 'easy' | 'medium' | 'hard';
+      servings: number;
+      dietaryRestrictions?: string[];
+      cookingMethods?: string[];
+    }) => {
       try {
         const jobId = `invent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -72,8 +77,8 @@ export const useInventProgress = () => {
             id: jobId,
             url: jobId, // Use jobId as URL for invention jobs
             type: 'invent',
-            title: inventData.title,
-          })
+            title: inventData.title || '',
+          }),
         );
 
         // Queue the invention
@@ -86,14 +91,11 @@ export const useInventProgress = () => {
         console.error('[Hook] Failed to queue invention:', error);
         return {
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Failed to queue invention',
+          error: error instanceof Error ? error.message : 'Failed to queue invention',
         };
       }
     },
-    [dispatch, inventRecipe]
+    [dispatch, inventRecipe],
   );
 
   // Request queue status
@@ -123,12 +125,8 @@ export const useInventProgress = () => {
 export const useInventJob = (jobId: string) => {
   return useSelector((state: RootState) => {
     const activeJob = state.jobProgress.activeJobs[jobId];
-    const completedJob = state.jobProgress.completedJobs.find(
-      job => job.id === jobId
-    );
-    const failedJob = state.jobProgress.failedJobs.find(
-      job => job.id === jobId
-    );
+    const completedJob = state.jobProgress.completedJobs.find(job => job.id === jobId);
+    const failedJob = state.jobProgress.failedJobs.find(job => job.id === jobId);
 
     return activeJob || completedJob || failedJob || null;
   });

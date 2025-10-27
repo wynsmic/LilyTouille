@@ -26,17 +26,19 @@ async function migrateJsonToDatabase() {
     console.log('You can now safely remove the JSON file if desired.');
   } catch (error) {
     console.error('Migration failed:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
 // Run migration if this script is executed directly
 if (require.main === module) {
   migrateJsonToDatabase()
-    .then(() => process.exit(0))
+    .then(() => {
+      console.log('Migration completed successfully');
+    })
     .catch(error => {
       console.error('Migration script failed:', error);
-      process.exit(1);
+      throw error;
     });
 }
 

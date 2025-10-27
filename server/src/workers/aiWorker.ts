@@ -38,12 +38,7 @@ export function replaceUrlsWithCodes(html: string): {
     /<img([^>]*?)\s+src\s*=\s*["']([^"']+)["']([^>]*?)>/gi,
     (match, before, src, after) => {
       // Only replace if it looks like a URL (starts with http/https or is a relative path)
-      if (
-        src.startsWith('http') ||
-        src.startsWith('//') ||
-        src.startsWith('/') ||
-        src.includes('.')
-      ) {
+      if (src.startsWith('http') || src.startsWith('//') || src.startsWith('/') || src.includes('.')) {
         const shortCode = generateUrlCode();
         mappings[shortCode] = src;
         return `<img${before} src="${shortCode}"${after}>`;
@@ -53,51 +48,32 @@ export function replaceUrlsWithCodes(html: string): {
   );
 
   // Replace data-image-url attributes
-  processedHtml = processedHtml.replace(
-    /data-image-url\s*=\s*["']([^"']+)["']/gi,
-    (match, url) => {
-      // Only replace if it looks like a URL (starts with http/https or is a relative path)
-      if (
-        url.startsWith('http') ||
-        url.startsWith('//') ||
-        url.startsWith('/') ||
-        url.includes('.')
-      ) {
-        const shortCode = generateUrlCode();
-        mappings[shortCode] = url;
-        return `data-image-url="${shortCode}"`;
-      }
-      return match;
-    },
-  );
+  processedHtml = processedHtml.replace(/data-image-url\s*=\s*["']([^"']+)["']/gi, (match, url) => {
+    // Only replace if it looks like a URL (starts with http/https or is a relative path)
+    if (url.startsWith('http') || url.startsWith('//') || url.startsWith('/') || url.includes('.')) {
+      const shortCode = generateUrlCode();
+      mappings[shortCode] = url;
+      return `data-image-url="${shortCode}"`;
+    }
+    return match;
+  });
 
   // Replace other common URL patterns (href, src in other tags)
-  processedHtml = processedHtml.replace(
-    /(href|src|action)\s*=\s*["']([^"']+)["']/gi,
-    (match, attr, url) => {
-      // Only replace if it looks like a URL (starts with http/https or is a relative path)
-      if (
-        url.startsWith('http') ||
-        url.startsWith('//') ||
-        url.startsWith('/') ||
-        url.includes('.')
-      ) {
-        const shortCode = generateUrlCode();
-        mappings[shortCode] = url;
-        return `${attr}="${shortCode}"`;
-      }
-      return match;
-    },
-  );
+  processedHtml = processedHtml.replace(/(href|src|action)\s*=\s*["']([^"']+)["']/gi, (match, attr, url) => {
+    // Only replace if it looks like a URL (starts with http/https or is a relative path)
+    if (url.startsWith('http') || url.startsWith('//') || url.startsWith('/') || url.includes('.')) {
+      const shortCode = generateUrlCode();
+      mappings[shortCode] = url;
+      return `${attr}="${shortCode}"`;
+    }
+    return match;
+  });
 
   return { cleanedHtml: processedHtml, urlMappings: mappings };
 }
 
 // Restore URLs from short codes after AI processing
-export function restoreUrlsFromCodes(
-  content: string,
-  mappings: UrlMapping,
-): string {
+export function restoreUrlsFromCodes(content: string, mappings: UrlMapping): string {
   let restored = content;
 
   Object.entries(mappings).forEach(([shortCode, originalUrl]) => {
@@ -109,10 +85,7 @@ export function restoreUrlsFromCodes(
 }
 
 // Restore URLs in recipe object
-function restoreUrlsInRecipe(
-  recipe: RecipeType,
-  mappings: UrlMapping,
-): RecipeType {
+function restoreUrlsInRecipe(recipe: RecipeType, mappings: UrlMapping): RecipeType {
   const restored = { ...recipe };
 
   // Restore main imageUrl
@@ -125,10 +98,7 @@ function restoreUrlsInRecipe(
     (restored as any).chunks = (restored as any).chunks.map((chunk: any) => ({
       ...chunk,
       // Restore chunk imageUrl if present
-      imageUrl:
-        chunk.imageUrl && mappings[chunk.imageUrl]
-          ? mappings[chunk.imageUrl]
-          : chunk.imageUrl,
+      imageUrl: chunk.imageUrl && mappings[chunk.imageUrl] ? mappings[chunk.imageUrl] : chunk.imageUrl,
       // Restore URLs in recipeSteps
       recipeSteps: chunk.recipeSteps.map((step: any) => {
         if (step.type === 'image' && step.imageUrl && mappings[step.imageUrl]) {
@@ -144,16 +114,10 @@ function restoreUrlsInRecipe(
 
 export function cleanHtml(html: string): string {
   // Remove script tags and their content
-  let cleaned = html.replace(
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    '',
-  );
+  let cleaned = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 
   // Remove style tags and their content
-  cleaned = cleaned.replace(
-    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
-    '',
-  );
+  cleaned = cleaned.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
 
   // Remove HTML comments
   cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
@@ -181,36 +145,26 @@ export function preserveRecipeImages(html: string): string {
   let cleaned = html;
 
   // Fix common image issues: missing quotes, relative URLs, etc.
-  cleaned = cleaned.replace(
-    /<img([^>]*?)\s+src\s*=\s*([^>\s]+)([^>]*?)>/gi,
-    (match, before, src, after) => {
-      // Ensure src is properly quoted
-      const cleanSrc = src.replace(/^["']|["']$/g, '');
-      return `<img${before} src="${cleanSrc}"${after}>`;
-    },
-  );
+  cleaned = cleaned.replace(/<img([^>]*?)\s+src\s*=\s*([^>\s]+)([^>]*?)>/gi, (match, before, src, after) => {
+    // Ensure src is properly quoted
+    const cleanSrc = src.replace(/^["']|["']$/g, '');
+    return `<img${before} src="${cleanSrc}"${after}>`;
+  });
 
   // Add data attributes to make images more visible to AI
-  cleaned = cleaned.replace(
-    /<img([^>]*?)\s+src\s*=\s*["']([^"']+)["']([^>]*?)>/gi,
-    (match, before, src, after) => {
-      // Add data-image-url attribute to make the URL more explicit for AI
-      const hasDataAttr =
-        before.includes('data-image-url') || after.includes('data-image-url');
-      if (!hasDataAttr) {
-        return `<img${before} src="${src}" data-image-url="${src}"${after}>`;
-      }
-      return match;
-    },
-  );
+  cleaned = cleaned.replace(/<img([^>]*?)\s+src\s*=\s*["']([^"']+)["']([^>]*?)>/gi, (match, before, src, after) => {
+    // Add data-image-url attribute to make the URL more explicit for AI
+    const hasDataAttr = before.includes('data-image-url') || after.includes('data-image-url');
+    if (!hasDataAttr) {
+      return `<img${before} src="${src}" data-image-url="${src}"${after}>`;
+    }
+    return match;
+  });
 
   return cleaned;
 }
 
-export function limitPayloadSize(
-  html: string,
-  maxTokens: number = 128000,
-): string {
+export function limitPayloadSize(html: string, maxTokens: number = 128000): string {
   const estimatedTokens = estimateTokenCount(html);
 
   if (estimatedTokens <= maxTokens) {
@@ -409,8 +363,7 @@ async function callAiForRecipe(
   }
 
   // Replace URLs with short codes to reduce token usage
-  const { cleanedHtml: htmlWithCodes, urlMappings } =
-    replaceUrlsWithCodes(html);
+  const { cleanedHtml: htmlWithCodes, urlMappings } = replaceUrlsWithCodes(html);
 
   // Enhanced prompt to preserve original recipe content while adding meaningful overview
   const system =
@@ -594,29 +547,17 @@ function validateRecipeJson(candidate: any): void {
       if (Array.isArray(chunk.recipeSteps)) {
         chunk.recipeSteps.forEach((step: any, stepIndex: number) => {
           if (typeof step !== 'object' || step === null) {
-            errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}] must be an object`,
-            );
+            errors.push(`chunks[${index}].recipeSteps[${stepIndex}] must be an object`);
             return;
           }
           if (step.type !== 'text' && step.type !== 'image') {
-            errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`,
-            );
+            errors.push(`chunks[${index}].recipeSteps[${stepIndex}].type must be 'text' or 'image'`);
           }
           if (typeof step.content !== 'string') {
-            errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].content must be a string`,
-            );
+            errors.push(`chunks[${index}].recipeSteps[${stepIndex}].content must be a string`);
           }
-          if (
-            step.type === 'image' &&
-            step.imageUrl !== undefined &&
-            typeof step.imageUrl !== 'string'
-          ) {
-            errors.push(
-              `chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`,
-            );
+          if (step.type === 'image' && step.imageUrl !== undefined && typeof step.imageUrl !== 'string') {
+            errors.push(`chunks[${index}].recipeSteps[${stepIndex}].imageUrl must be a string when provided`);
           }
         });
       }
@@ -628,15 +569,19 @@ function validateRecipeJson(candidate: any): void {
   }
 }
 
-async function storeRecipe(
-  recipe: RecipeType,
-  url: string,
-  html: string,
-  advancedCleanedHtml: string | undefined,
-  aiQuery: string,
-  aiResponse: string,
-  urlMappings: UrlMapping,
-): Promise<Recipe> {
+interface StoreRecipeParams {
+  recipe: RecipeType;
+  url: string;
+  html: string;
+  advancedCleanedHtml?: string;
+  aiQuery: string;
+  aiResponse: string;
+  urlMappings: UrlMapping;
+}
+
+async function storeRecipe(params: StoreRecipeParams): Promise<Recipe> {
+  const { recipe, url, html, advancedCleanedHtml, aiQuery, aiResponse, urlMappings } = params;
+
   // Note: In a production environment, you would inject DatabaseService
   // For now, we'll create a new instance for the worker
   const db = new DatabaseService();
@@ -664,15 +609,15 @@ async function runDirect(url: string, html: string): Promise<void> {
   const redis = new RedisService();
   try {
     const result = await processRecipe(url, html);
-    const savedRecipe = await storeRecipe(
-      result.recipe,
+    const savedRecipe = await storeRecipe({
+      recipe: result.recipe,
       url,
       html,
-      result.advancedCleanedHtml,
-      result.aiQuery,
-      result.aiResponse,
-      result.urlMappings,
-    );
+      advancedCleanedHtml: result.advancedCleanedHtml,
+      aiQuery: result.aiQuery,
+      aiResponse: result.aiResponse,
+      urlMappings: result.urlMappings,
+    });
     await redis.publishProgress({
       url,
       stage: 'ai_processed',
@@ -711,15 +656,15 @@ async function runQueue(): Promise<void> {
 
         try {
           const result = await processRecipe(task.url, task.html);
-          const savedRecipe = await storeRecipe(
-            result.recipe,
-            task.url,
-            task.html,
-            result.advancedCleanedHtml,
-            result.aiQuery,
-            result.aiResponse,
-            result.urlMappings,
-          );
+          const savedRecipe = await storeRecipe({
+            recipe: result.recipe,
+            url: task.url,
+            html: task.html,
+            advancedCleanedHtml: result.advancedCleanedHtml,
+            aiQuery: result.aiQuery,
+            aiResponse: result.aiResponse,
+            urlMappings: result.urlMappings,
+          });
           await redis.publishProgress({
             url: task.url,
             stage: 'ai_processed',

@@ -1,9 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy } from 'passport-jwt';
+import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { passportJwtSecret } from 'jwks-rsa';
-import { ExtractJwt } from 'passport-jwt';
 
 @Injectable()
 export class WebSocketJwtStrategy extends PassportStrategy(Strategy, 'websocket-jwt') {
@@ -16,7 +15,7 @@ export class WebSocketJwtStrategy extends PassportStrategy(Strategy, 'websocket-
         jwksUri: `https://${configService.get('AUTH0_DOMAIN')}/.well-known/jwks.json`,
       }),
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request) => {
+        request => {
           // For WebSocket connections, extract token from handshake
           if (request.handshake?.auth?.token) {
             return request.handshake.auth.token;

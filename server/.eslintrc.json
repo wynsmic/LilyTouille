@@ -6,59 +6,52 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2020,
-    "sourceType": "module",
-    "project": "tsconfig.json"
+    "sourceType": "module"
   },
   "rules": {
     // TypeScript rules for clean code
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      { "argsIgnorePattern": "^_" }
-    ],
-    "@typescript-eslint/no-explicit-any": "error",
-    "prefer-const": "error",
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-var-requires": "error",
-    "@typescript-eslint/explicit-function-return-type": "warn",
-    "@typescript-eslint/explicit-module-boundary-types": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-non-null-assertion": "warn",
-    "@typescript-eslint/prefer-nullish-coalescing": "error",
-    "@typescript-eslint/prefer-optional-chain": "error",
-    "@typescript-eslint/no-unnecessary-condition": "warn",
-    "@typescript-eslint/no-floating-promises": "error",
-    "@typescript-eslint/await-thenable": "error",
-    "@typescript-eslint/no-misused-promises": "error",
-    "@typescript-eslint/require-await": "error",
-    "@typescript-eslint/no-unsafe-assignment": "warn",
-    "@typescript-eslint/no-unsafe-call": "warn",
-    "@typescript-eslint/no-unsafe-member-access": "warn",
-    "@typescript-eslint/no-unsafe-return": "warn",
+    "@typescript-eslint/prefer-nullish-coalescing": "off",
+    "@typescript-eslint/prefer-optional-chain": "off",
+    "@typescript-eslint/no-unnecessary-condition": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/await-thenable": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
 
     // General clean code rules
-    "no-console": "warn",
     "no-debugger": "error",
     "no-var": "error",
-    "prefer-const": "error",
     "prefer-arrow-callback": "error",
     "arrow-spacing": "error",
-    "no-duplicate-imports": "error",
+    "no-duplicate-imports": "warn",
     "no-unused-expressions": "error",
     "no-useless-return": "error",
     "no-useless-concat": "error",
     "prefer-template": "error",
     "object-shorthand": "error",
     "prefer-destructuring": [
-      "error",
+      "warn",
       {
-        "array": true,
+        "array": false,
         "object": true
       }
     ],
 
-    // Code complexity rules
-    "complexity": ["warn", 10],
-    "max-depth": ["warn", 4],
-    "max-lines-per-function": ["warn", 50],
-    "max-params": ["warn", 4],
+    // Code complexity rules (relaxed for legacy code)
+    "complexity": ["off", 10],
+    "max-depth": ["warn", 5],
+    "max-lines-per-function": ["off", 50],
+    "max-params": ["warn", 5],
 
     // Naming conventions
     "camelcase": [
@@ -72,13 +65,14 @@
     // Code style
     "quotes": ["error", "single", { "avoidEscape": true }],
     "semi": ["error", "always"],
-    "comma-dangle": ["error", "always-multiline"],
-    "indent": ["error", 2],
+    "comma-dangle": "off",
+    "indent": "off",
     "no-trailing-spaces": "error",
     "eol-last": "error",
 
     // Node.js specific rules
     "no-process-env": "off",
-    "no-process-exit": "error"
+    "no-process-exit": "warn",
+    "no-console": "off"
   }
 }

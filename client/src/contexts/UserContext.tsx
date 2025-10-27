@@ -1,15 +1,10 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import api from '../services/api';
 import { Recipe } from '../services/api';
+import { UserContext } from './userContext';
 
 export interface User {
   id: number;
@@ -49,9 +44,7 @@ interface UserContextType {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
-  updatePreferences: (
-    preferences: UpdateUserPreferencesRequest
-  ) => Promise<void>;
+  updatePreferences: (preferences: UpdateUserPreferencesRequest) => Promise<void>;
   favorites: UserFavorite[];
   favoritesLoading: boolean;
   addFavorite: (recipeId: number) => Promise<void>;
@@ -60,26 +53,12 @@ interface UserContextType {
   refreshUser: () => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
-
-export const useUser = (): UserContextType => {
-  const context = useContext(UserContext);
-  if (!context) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
-};
-
 interface UserProviderProps {
   children: ReactNode;
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const {
-    user: auth0User,
-    isAuthenticated,
-    getAccessTokenSilently,
-  } = useAuth0();
+  const { user: auth0User, isAuthenticated, getAccessTokenSilently } = useAuth0();
   const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
@@ -146,7 +125,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       return response.data;
@@ -192,7 +171,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
     },
     onSuccess: () => {
@@ -221,7 +200,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // User doesn't exist in our database, create them
       createUserMutation.mutate();
     }
-  }, [userData, isAuthenticated, auth0User, userLoading]);
+  }, [userData, isAuthenticated, auth0User, userLoading, createUserMutation]);
 
   // Update i18n language when user language changes
   useEffect(() => {
@@ -230,9 +209,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   }, [user?.language, i18n]);
 
-  const updatePreferences = async (
-    preferences: UpdateUserPreferencesRequest
-  ) => {
+  const updatePreferences = async (preferences: UpdateUserPreferencesRequest) => {
     await updatePreferencesMutation.mutateAsync(preferences);
   };
 
@@ -245,11 +222,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   const isFavorite = (recipeId: number): boolean => {
-    return (
-      favoritesData?.favorites?.some(
-        (fav: UserFavorite) => fav.recipeId === recipeId
-      ) || false
-    );
+    return favoritesData?.favorites?.some((fav: UserFavorite) => fav.recipeId === recipeId) || false;
   };
 
   const refreshUser = () => {
@@ -269,7 +242,5 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     refreshUser,
   };
 
-  return (
-    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
-  );
+  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 };

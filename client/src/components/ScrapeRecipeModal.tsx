@@ -50,10 +50,8 @@ const Input = styled.input<{ $disabled?: boolean }>`
   padding: var(--space-4);
   border: 1px solid var(--color-gray-300);
   border-radius: var(--radius-lg);
-  background: ${props =>
-    props.$disabled ? 'var(--color-gray-100)' : 'var(--color-white)'};
-  color: ${props =>
-    props.$disabled ? 'var(--color-gray-500)' : 'var(--color-gray-900)'};
+  background: ${props => (props.$disabled ? 'var(--color-gray-100)' : 'var(--color-white)')};
+  color: ${props => (props.$disabled ? 'var(--color-gray-500)' : 'var(--color-gray-900)')};
   cursor: ${props => (props.$disabled ? 'not-allowed' : 'text')};
   &:focus {
     outline: none;
@@ -187,7 +185,7 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const getCurrentStep = (currentProgress: any) => {
+  const getCurrentStep = (currentProgress: { stage: string; [key: string]: unknown }) => {
     if (!currentProgress) return null;
 
     // Map of stages to their "next" or "current" step
@@ -204,8 +202,7 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     return stageToCurrentStep[currentProgress.stage] || currentProgress.stage;
   };
 
-  const { triggerScrape, activeJobs, completedJobs, failedJobs } =
-    useScrapeProgress();
+  const { triggerScrape, activeJobs, completedJobs, failedJobs } = useScrapeProgress();
 
   // Get current job details
   const currentJob = currentJobId
@@ -215,14 +212,9 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     : null;
 
   // Get current progress from the job's progress array
-  const currentProgress = currentJob
-    ? currentJob.progress[currentJob.progress.length - 1]
-    : null;
+  const currentProgress = currentJob ? currentJob.progress[currentJob.progress.length - 1] : null;
 
-  const isScraping =
-    currentProgress &&
-    currentProgress.stage !== 'stored' &&
-    currentProgress.stage !== 'failed';
+  const isScraping = currentProgress && currentProgress.stage !== 'stored' && currentProgress.stage !== 'failed';
   const isCompleted = currentProgress && currentProgress.stage === 'stored';
   const isFailed = currentProgress && currentProgress.stage === 'failed';
 
@@ -336,9 +328,7 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
               <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
                 Recipe scraped successfully!
                 <br />
-                <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                  Taking you to your new recipe...
-                </span>
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Taking you to your new recipe...</span>
               </div>
             </SuccessMessage>
           )}
@@ -362,33 +352,25 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
                   <>
                     Our recipe scraper is taking a quick break!
                     <br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                      Try again in a few moments
-                    </span>
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Try again in a few moments</span>
                   </>
                 ) : error.includes('connection') ? (
                   <>
                     Having trouble connecting to our servers.
                     <br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                      Check your internet connection
-                    </span>
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Check your internet connection</span>
                   </>
                 ) : error.includes('Server error') ? (
                   <>
                     Something went wrong on our end.
                     <br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                      We're working on it!
-                    </span>
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>We're working on it!</span>
                   </>
                 ) : (
                   <>
                     {error}
                     <br />
-                    <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                      Let's try again
-                    </span>
+                    <span style={{ fontSize: '12px', opacity: 0.8 }}>Let's try again</span>
                   </>
                 )}
               </div>
@@ -397,31 +379,20 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
           {currentProgress && (
             <ProgressSection>
-              {(currentProgress.stage === 'scraping' ||
-                currentProgress.stage === 'scraped') && (
+              {(currentProgress.stage === 'scraping' || currentProgress.stage === 'scraped') && (
                 <ProgressAnimation>
                   <AnimationIcon
-                    stage={
-                      currentProgress.stage === 'scraping'
-                        ? 'scraping'
-                        : 'ai_processing'
-                    }
+                    stage={currentProgress.stage === 'scraping' ? 'scraping' : 'ai_processing'}
                     size={64}
                   />
                 </ProgressAnimation>
               )}
-              <ProgressStatus $stage={currentProgress.stage}>
-                {getCurrentStep(currentProgress)}
-              </ProgressStatus>
+              <ProgressStatus $stage={currentProgress.stage}>{getCurrentStep(currentProgress)}</ProgressStatus>
             </ProgressSection>
           )}
         </Content>
         <Actions>
-          <Button
-            $variant="ghost"
-            onClick={handleClose}
-            disabled={!!isScraping}
-          >
+          <Button $variant="ghost" onClick={handleClose} disabled={!!isScraping}>
             {isScraping ? 'Scraping...' : 'Cancel'}
           </Button>
           {isFailed ? (
@@ -430,7 +401,10 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
             </Button>
           ) : (
             <Button
-              onClick={onSubmit as any}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                void onSubmit(e);
+              }}
               disabled={isScraping || !url.trim()}
             >
               {isScraping ? 'Scraping...' : 'Scrape'}

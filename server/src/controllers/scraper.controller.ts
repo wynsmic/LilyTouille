@@ -1,15 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Logger } from '@nestjs/common';
 import { ScraperService } from '../services/scraper.service';
 import { ScrapeRequestDto } from '../dto/scrape-request.dto';
 import { RedisService } from '../services/redis.service';
-import { Logger } from '@nestjs/common';
 
 @Controller('scrape')
 export class ScraperController {
@@ -45,8 +37,7 @@ export class ScraperController {
 
   @Get('queue/status')
   async getQueueStatus() {
-    const processingQueueLength =
-      await this.redisService.getQueueLength('processing');
+    const processingQueueLength = await this.redisService.getQueueLength('processing');
     const aiQueueLength = await this.redisService.getQueueLength('ai');
     const inventQueueLength = await this.redisService.getQueueLength('invent');
 

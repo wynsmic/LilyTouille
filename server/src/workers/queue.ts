@@ -8,10 +8,7 @@ export class RedisQueue<T = unknown> {
   private readonly queueKey: string;
   private readonly processingKey: string;
 
-  constructor(
-    queueName: string,
-    redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-  ) {
+  constructor(queueName: string, redisUrl = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379') {
     this.redis = new IORedis(redisUrl, {
       lazyConnect: false,
       maxRetriesPerRequest: null,
@@ -41,20 +38,13 @@ export class RedisQueue<T = unknown> {
     },
   ): Promise<void> {
     const concurrency = Math.max(1, options?.concurrency ?? 1);
-    const visibilityTimeoutMs = Math.max(
-      1000,
-      options?.visibilityTimeoutMs ?? 60_000,
-    );
+    const visibilityTimeoutMs = Math.max(1000, options?.visibilityTimeoutMs ?? 60_000);
     const backoffMs = Math.max(100, options?.backoffMs ?? 500);
 
     const worker = async () => {
       for (;;) {
         try {
-          const res = await this.redis.brpoplpush(
-            this.queueKey,
-            this.processingKey,
-            5,
-          );
+          const res = await this.redis.brpoplpush(this.queueKey, this.processingKey, 5);
           if (!res) {
             continue;
           }
@@ -66,10 +56,10 @@ export class RedisQueue<T = unknown> {
             continue;
           }
 
-          const timer = setTimeout(async () => {
+          const timer = setTimeout(() => {
             if (res) {
-              await this.redis.lrem(this.processingKey, 1, res);
-              await this.redis.rpush(this.queueKey, res);
+              void this.redis.lrem(this.processingKey, 1, res);
+              void this.redis.rpush(this.queueKey, res);
             }
           }, visibilityTimeoutMs);
 

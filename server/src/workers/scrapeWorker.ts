@@ -2,7 +2,6 @@ import 'dotenv/config';
 import axios from 'axios';
 import puppeteer from 'puppeteer';
 import { RedisService } from '../services/redis.service';
-import { ProgressUpdate } from './types';
 import { config } from '../config';
 import { logger } from '../logger';
 
@@ -111,7 +110,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const url = process.argv[2];
+  const [, , url] = process.argv;
   if (url) {
     await runDirect(url);
   } else {

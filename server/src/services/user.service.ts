@@ -1,13 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
 import { UserFavoriteEntity } from '../entities/user-favorite.entity';
-import { RecipeEntity } from '../entities/recipe.entity';
 
 export interface CreateUserDto {
   auth0Id: string;
@@ -45,10 +40,7 @@ export class UserService {
     private readonly userFavoriteRepository: Repository<UserFavoriteEntity>,
   ) {}
 
-  async findOrCreateUser(
-    auth0Id: string,
-    userData: Partial<CreateUserDto>,
-  ): Promise<UserEntity> {
+  async findOrCreateUser(auth0Id: string, userData: Partial<CreateUserDto>): Promise<UserEntity> {
     let user = await this.userRepository.findOne({ where: { auth0Id } });
 
     if (!user) {
@@ -64,15 +56,19 @@ export class UserService {
       user = await this.userRepository.save(user);
     } else {
       // Update existing user with latest Auth0 data
-      await this.userRepository.update(user.id, {
+      const userId = user.id;
+      await this.userRepository.update(userId, {
         email: userData.email,
         name: userData.name,
         picture: userData.picture,
       });
-      user = await this.userRepository.findOne({ where: { id: user.id } });
+      user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException(`User with id ${userId} not found after update`);
+      }
     }
 
-    return user!;
+    return user;
   }
 
   async getUserById(id: number): Promise<UserEntity> {
@@ -87,10 +83,7 @@ export class UserService {
     return this.userRepository.findOne({ where: { auth0Id } });
   }
 
-  async updateUserPreferences(
-    userId: number,
-    preferences: UpdateUserPreferencesDto,
-  ): Promise<UserEntity> {
+  async updateUserPreferences(userId: number, preferences: UpdateUserPreferencesDto): Promise<UserEntity> {
     const user = await this.getUserById(userId);
 
     // Validate language if provided
@@ -99,9 +92,7 @@ export class UserService {
       if (VALID_LANGUAGES.includes(preferences.language)) {
         newLanguage = preferences.language;
       } else {
-        throw new ConflictException(
-          `Invalid language code. Supported languages: ${VALID_LANGUAGES.join(', ')}`,
-        );
+        throw new ConflictException(`Invalid language code. Supported languages: ${VALID_LANGUAGES.join(', ')}`);
       }
     }
 
@@ -116,13 +107,15 @@ export class UserService {
     const updatedUser = await this.userRepository.findOne({
       where: { id: userId },
     });
-    return updatedUser!;
+
+    if (!updatedUser) {
+      throw new NotFoundException(`User with id ${userId} not found after update`);
+    }
+
+    return updatedUser;
   }
 
-  async addFavorite(
-    userId: number,
-    recipeId: number,
-  ): Promise<UserFavoriteEntity> {
+  async addFavorite(userId: number, recipeId: number): Promise<UserFavoriteEntity> {
     // Check if already favorited
     const existingFavorite = await this.userFavoriteRepository.findOne({
       where: { userId, recipeId },

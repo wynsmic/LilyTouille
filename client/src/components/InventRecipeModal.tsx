@@ -402,8 +402,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     return '👹'; // Master Chef
   };
 
-  const { activeJobs, completedJobs, failedJobs, triggerInvent } =
-    useInventProgress();
+  const { activeJobs, completedJobs, failedJobs, triggerInvent } = useInventProgress();
 
   // Get current job details
   const currentJob = currentJobId
@@ -413,14 +412,9 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     : null;
 
   // Get current progress from the job's progress array
-  const currentProgress = currentJob
-    ? currentJob.progress[currentJob.progress.length - 1]
-    : null;
+  const currentProgress = currentJob ? currentJob.progress[currentJob.progress.length - 1] : null;
 
-  const isProcessing =
-    currentProgress &&
-    currentProgress.stage !== 'stored' &&
-    currentProgress.stage !== 'failed';
+  const isProcessing = currentProgress && currentProgress.stage !== 'stored' && currentProgress.stage !== 'failed';
   const isCompleted = currentProgress && currentProgress.stage === 'stored';
   const isFailed = currentProgress && currentProgress.stage === 'failed';
 
@@ -455,9 +449,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
   // Handle failure
   useEffect(() => {
     if (isFailed) {
-      setError(
-        'Recipe invention failed. Please try again with different parameters.'
-      );
+      setError('Recipe invention failed. Please try again with different parameters.');
     }
   }, [isFailed]);
 
@@ -493,9 +485,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
         setError(result.error || 'Failed to start recipe invention');
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to start recipe invention'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to start recipe invention');
     }
   };
 
@@ -528,9 +518,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
         setError(result.error || 'Failed to retry recipe invention');
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to retry recipe invention'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to retry recipe invention');
     }
   };
 
@@ -548,7 +536,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     onClose();
   };
 
-  const getCurrentStep = (currentProgress: any) => {
+  const getCurrentStep = (currentProgress: { stage: string; [key: string]: unknown }) => {
     if (!currentProgress) return null;
 
     const stageToCurrentStep: Record<string, string> = {
@@ -576,9 +564,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
             >
               🧙‍♀️ AI Recipe Creator
             </div>
-            <div style={{ fontSize: '16px', opacity: 0.9 }}>
-              Describe your dream dish and watch it come to life
-            </div>
+            <div style={{ fontSize: '16px', opacity: 0.9 }}>Describe your dream dish and watch it come to life</div>
           </div>
         </Header>
         <Content>
@@ -620,9 +606,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
             <DifficultySliderContainer>
               <SliderLabel>
                 <span>Difficulty Level</span>
-                <DifficultyIcon>
-                  {getDifficultyIcon(formData.difficulty)}
-                </DifficultyIcon>
+                <DifficultyIcon>{getDifficultyIcon(formData.difficulty)}</DifficultyIcon>
               </SliderLabel>
               <DifficultySlider
                 type="range"
@@ -640,9 +624,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
             </DifficultySliderContainer>
 
             <div>
-              <SliderLabel style={{ marginBottom: '8px' }}>
-                Preferences & Methods
-              </SliderLabel>
+              <SliderLabel style={{ marginBottom: '8px' }}>Preferences & Methods</SliderLabel>
               <CheckboxGroup>
                 {[
                   'Vegetarian',
@@ -658,14 +640,9 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
                   'Slow-Cooked',
                   'Raw',
                 ].map(option => {
-                  const isDietary = [
-                    'Vegetarian',
-                    'Vegan',
-                    'Gluten-Free',
-                    'Dairy-Free',
-                    'Keto',
-                    'Low-Carb',
-                  ].includes(option);
+                  const isDietary = ['Vegetarian', 'Vegan', 'Gluten-Free', 'Dairy-Free', 'Keto', 'Low-Carb'].includes(
+                    option,
+                  );
                   const isChecked = isDietary
                     ? formData.dietaryRestrictions.includes(option)
                     : formData.cookingMethods.includes(option);
@@ -680,35 +657,24 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
                             if (e.target.checked) {
                               setFormData(prev => ({
                                 ...prev,
-                                dietaryRestrictions: [
-                                  ...prev.dietaryRestrictions,
-                                  option,
-                                ],
+                                dietaryRestrictions: [...prev.dietaryRestrictions, option],
                               }));
                             } else {
                               setFormData(prev => ({
                                 ...prev,
-                                dietaryRestrictions:
-                                  prev.dietaryRestrictions.filter(
-                                    item => item !== option
-                                  ),
+                                dietaryRestrictions: prev.dietaryRestrictions.filter(item => item !== option),
                               }));
                             }
                           } else {
                             if (e.target.checked) {
                               setFormData(prev => ({
                                 ...prev,
-                                cookingMethods: [
-                                  ...prev.cookingMethods,
-                                  option,
-                                ],
+                                cookingMethods: [...prev.cookingMethods, option],
                               }));
                             } else {
                               setFormData(prev => ({
                                 ...prev,
-                                cookingMethods: prev.cookingMethods.filter(
-                                  item => item !== option
-                                ),
+                                cookingMethods: prev.cookingMethods.filter(item => item !== option),
                               }));
                             }
                           }
@@ -740,9 +706,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
               <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
                 Your recipe is ready!
                 <br />
-                <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                  Taking you to see your delicious creation...
-                </span>
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Taking you to see your delicious creation...</span>
               </div>
             </SuccessMessage>
           )}
@@ -764,24 +728,19 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
               <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
                 Something went wrong while creating your recipe.
                 <br />
-                <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                  Let's try again!
-                </span>
+                <span style={{ fontSize: '12px', opacity: 0.8 }}>Let's try again!</span>
               </div>
             </ErrorMessage>
           )}
 
           {currentProgress && (
             <ProgressSection>
-              {(currentProgress.stage === 'ai_processing' ||
-                currentProgress.stage === 'ai_processed') && (
+              {(currentProgress.stage === 'ai_processing' || currentProgress.stage === 'ai_processed') && (
                 <ProgressAnimation>
                   <AnimationIcon stage="ai_processing" size={64} />
                 </ProgressAnimation>
               )}
-              <ProgressStatus $stage={currentProgress.stage}>
-                {getCurrentStep(currentProgress)}
-              </ProgressStatus>
+              <ProgressStatus $stage={currentProgress.stage}>{getCurrentStep(currentProgress)}</ProgressStatus>
             </ProgressSection>
           )}
         </Content>
@@ -795,7 +754,10 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
             </Button>
           ) : (
             <Button
-              onClick={onSubmit as any}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                void onSubmit(e);
+              }}
               disabled={isProcessing || !formData.description.trim()}
             >
               {isProcessing ? 'Creating...' : '✨ Create Recipe'}

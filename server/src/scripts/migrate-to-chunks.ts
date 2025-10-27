@@ -82,9 +82,7 @@ async function migrateRecipesToChunks() {
         // Create chunks based on existing structure
         if ((recipe as any).parts && (recipe as any).parts.length > 0) {
           // Recipe has parts - convert each part to a chunk
-          console.log(
-            `📝 Converting ${(recipe as any).parts.length} parts to chunks`,
-          );
+          console.log(`📝 Converting ${(recipe as any).parts.length} parts to chunks`);
 
           for (let i = 0; i < (recipe as any).parts.length; i++) {
             const part = (recipe as any).parts[i];
@@ -140,9 +138,7 @@ async function migrateRecipesToChunks() {
     console.log('📊 Statistics:');
     console.log(`   - Migrated: ${migratedCount} recipes`);
     console.log(`   - Skipped: ${skippedCount} recipes`);
-    console.log(
-      `   - Total processed: ${migratedCount + skippedCount} recipes`,
-    );
+    console.log(`   - Total processed: ${migratedCount + skippedCount} recipes`);
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;
@@ -157,11 +153,10 @@ if (require.main === module) {
   migrateRecipesToChunks()
     .then(() => {
       console.log('✅ Migration script completed successfully');
-      process.exit(0);
     })
     .catch(error => {
       console.error('❌ Migration script failed:', error);
-      process.exit(1);
+      throw error;
     });
 }
 

@@ -1,28 +1,16 @@
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import { useDispatch } from 'react-redux';
 import { useAuth0 } from '@auth0/auth0-react';
 import { webSocketManager } from '../services/websocketManager';
 import { setConnectionStatus } from '../store/scrapeProgressSlice';
-
-interface WebSocketContextType {
-  isConnected: boolean;
-  connectionState: string;
-  connect: () => Promise<void>;
-  disconnect: () => void;
-  getMetrics: () => any;
-}
-
-const WebSocketContext = createContext<WebSocketContextType | null>(null);
+import { WebSocketContext, WebSocketContextType } from './webSocketContext';
 
 interface WebSocketProviderProps {
   children: ReactNode;
   autoConnect?: boolean;
 }
 
-export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
-  children,
-  autoConnect = true,
-}) => {
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, autoConnect = true }) => {
   const dispatch = useDispatch();
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
@@ -45,12 +33,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           dispatch(setConnectionStatus({ connected: true, error: undefined }));
         });
 
-        webSocketManager.on(
-          'authenticated',
-          (data: { userId: string; message: string }) => {
-            console.log('[WebSocketProvider] Authenticated:', data);
-          }
-        );
+        webSocketManager.on('authenticated', (data: { userId: string; message: string }) => {
+          console.log('[WebSocketProvider] Authenticated:', data);
+        });
 
         webSocketManager.on('auth-error', (error: { message: string }) => {
           console.error('[WebSocketProvider] Authentication error:', error);
@@ -58,7 +43,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             setConnectionStatus({
               connected: false,
               error: `Authentication failed: ${error.message}`,
-            })
+            }),
           );
         });
 
@@ -73,19 +58,16 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             setConnectionStatus({
               connected: false,
               error: error.message,
-            })
+            }),
           );
         });
       } catch (error) {
-        console.error(
-          '[WebSocketProvider] Failed to initialize connection:',
-          error
-        );
+        console.error('[WebSocketProvider] Failed to initialize connection:', error);
         dispatch(
           setConnectionStatus({
             connected: false,
             error: error instanceof Error ? error.message : 'Connection failed',
-          })
+          }),
         );
       }
     };
@@ -123,19 +105,5 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     },
   };
 
-  return (
-    <WebSocketContext.Provider value={contextValue}>
-      {children}
-    </WebSocketContext.Provider>
-  );
-};
-
-export const useWebSocketContext = (): WebSocketContextType => {
-  const context = useContext(WebSocketContext);
-  if (!context) {
-    throw new Error(
-      'useWebSocketContext must be used within a WebSocketProvider'
-    );
-  }
-  return context;
+  return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>;
 };
