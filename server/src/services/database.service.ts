@@ -198,6 +198,12 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       aiResponse: entity.aiResponse,
       urlMappings: entity.urlMappings,
       scrapedAt: entity.scrapedAt ? new Date(entity.scrapedAt).toISOString() : undefined,
+      ownerUserId: entity.ownerUserId,
+      validatedAt: entity.validatedAt
+        ? typeof entity.validatedAt === 'string'
+          ? entity.validatedAt
+          : entity.validatedAt.toISOString()
+        : undefined,
     } as Recipe;
   }
 
