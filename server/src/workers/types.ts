@@ -17,6 +17,7 @@ export interface ScrapeTaskPayload {
 export interface AiTaskPayload {
   url: string;
   html: string;
+  ownerUserId?: number;
 }
 
 export interface ProgressUpdate {

@@ -12,6 +12,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { RecipeService } from '../services/recipe.service';
+import { UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { Auth0Guard, AuthenticatedRequest } from '../guards/auth0.guard';
 import { RecipeFiltersDto, CreateRecipeDto, CreateChunkDto } from '../dto/recipe.dto';
 import { RecipeFilters } from '../interfaces/recipe.interface';
 
@@ -100,7 +102,13 @@ export class RecipeController {
    * DELETE /recipes/:id - Delete a recipe by ID
    */
   @Delete(':id')
-  async deleteRecipe(@Param('id', ParseIntPipe) id: number) {
+  @UseGuards(Auth0Guard)
+  async deleteRecipe(@Param('id', ParseIntPipe) id: number, @Req() req: AuthenticatedRequest) {
+    const canDelete = await this.recipeService.canDeleteRecipe(id, req.user!.sub);
+    if (!canDelete.allowed) {
+      throw new ForbiddenException(canDelete.reason || 'Not allowed to delete this recipe');
+    }
+
     const deleted = await this.recipeService.deleteRecipe(id);
 
     if (!deleted) {
@@ -124,6 +132,28 @@ export class RecipeController {
       success: true,
       data: recipe,
       message: 'Recipe created successfully',
+    };
+  }
+
+  /**
+   * PUT /recipes/:id/validate - Mark a recipe as validated by the owner
+   */
+  @Put(':id/validate')
+  @UseGuards(Auth0Guard)
+  async validateRecipe(@Param('id', ParseIntPipe) id: number, @Req() req: AuthenticatedRequest) {
+    const allowed = await this.recipeService.canDeleteRecipe(id, req.user!.sub); // reuse ownership check
+    if (!allowed.allowed) {
+      throw new ForbiddenException('Only the owner can validate');
+    }
+
+    const updated = await this.recipeService.markRecipeValidated(id, req.user!.sub);
+    if (!updated) {
+      throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      success: true,
+      message: 'Recipe validated',
     };
   }
 

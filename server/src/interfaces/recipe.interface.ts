@@ -43,6 +43,9 @@ export interface Recipe {
   aiResponse?: string;
   urlMappings?: { [shortCode: string]: string };
   scrapedAt?: string;
+  // Ownership & validation
+  ownerUserId?: number;
+  validatedAt?: string;
 }
 
 export interface RecipeFilters {

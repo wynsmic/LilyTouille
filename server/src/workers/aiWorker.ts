@@ -376,7 +376,16 @@ async function callAiForRecipe(
   const urlMappings: UrlMapping = {};
   if (imageMap) {
     Object.entries(imageMap).forEach(([placeholder, originalUrl]) => {
+      // Placeholder looks like [[IMG_0]]
       urlMappings[placeholder] = originalUrl;
+      // Also support IMG_0 without brackets
+      const bare = placeholder.replace(/^\[\[|\]\]$/g, '');
+      urlMappings[bare] = originalUrl;
+      // Also support URL_0 style used by some prompts/models
+      const numMatch = bare.match(/IMG_(\d+)/);
+      if (numMatch) {
+        urlMappings[`URL_${numMatch[1]}`] = originalUrl;
+      }
     });
   }
 
@@ -635,6 +644,9 @@ async function runQueue(): Promise<void> {
 
         try {
           const result = await processRecipe(task.url, task.html);
+          if (typeof task.ownerUserId === 'number') {
+            (result.recipe as any).ownerUserId = task.ownerUserId;
+          }
           const savedRecipe = await storeRecipe({
             recipe: result.recipe,
             url: task.url,

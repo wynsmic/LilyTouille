@@ -90,6 +90,9 @@ export interface Recipe {
   aiQuery?: string;
   aiResponse?: string;
   scrapedAt?: string;
+  // Ownership & validation
+  ownerUserId?: number;
+  validatedAt?: string;
 }
 
 // Legacy interface for backward compatibility
@@ -138,6 +141,17 @@ export const recipeApi = {
     return response.data.data;
   },
 
+  // Validate a recipe
+  validateRecipe: async (id: number, token: string): Promise<void> => {
+    await apiClient.put<ApiResponse<void>>(
+      `/recipes/${id}/validate`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+  },
+
   // Get all available tags
   getAllTags: async (): Promise<string[]> => {
     const response = await apiClient.get<ApiResponse<string[]>>('/recipes/tags');
@@ -157,8 +171,11 @@ export const recipeApi = {
   },
 
   // Delete a recipe by ID
-  deleteRecipe: async (id: number): Promise<void> => {
-    await apiClient.delete<ApiResponse<void>>(`/recipes/${id}`);
+  deleteRecipe: async (id: number, token?: string): Promise<void> => {
+    await apiClient.delete<ApiResponse<void>>(
+      `/recipes/${id}`,
+      token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+    );
   },
 
   // Create a new recipe with chunks

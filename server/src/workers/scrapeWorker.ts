@@ -46,8 +46,25 @@ async function runQueue(): Promise<void> {
   const worker = async () => {
     for (;;) {
       try {
-        const url = await redis.blockPopUrl(5);
-        if (!url) continue;
+        const queued = await redis.blockPopUrl(5);
+        if (!queued) continue;
+
+        // Extract optional ownerUserId from queued payload
+        let ownerUserId: number | undefined;
+        let rest = queued;
+        let url = queued;
+        const ownerIdx = queued.indexOf('|owner:');
+        if (ownerIdx !== -1) {
+          url = queued.substring(0, ownerIdx);
+          rest = queued.substring(ownerIdx + 1);
+          const parts = rest.split('|');
+          for (const p of parts) {
+            if (p.startsWith('ownerUserId:')) {
+              const n = parseInt(p.substring('ownerUserId:'.length));
+              if (!Number.isNaN(n)) ownerUserId = n;
+            }
+          }
+        }
 
         try {
           const claimed = await redis.markScrapeInProgress(url);
@@ -57,7 +74,7 @@ async function runQueue(): Promise<void> {
           }
 
           const html = await scrapeUrl(url);
-          await redis.pushAiTask(url, html);
+          await redis.pushAiTask(url, html, ownerUserId);
           await redis.publishProgress({
             url,
             stage: 'scraped',

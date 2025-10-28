@@ -536,7 +536,7 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     onClose();
   };
 
-  const getCurrentStep = (currentProgress: { stage: string; [key: string]: unknown }) => {
+  const getCurrentStep = (currentProgress: { stage: string }) => {
     if (!currentProgress) return null;
 
     const stageToCurrentStep: Record<string, string> = {
@@ -740,7 +740,9 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
                   <AnimationIcon stage="ai_processing" size={64} />
                 </ProgressAnimation>
               )}
-              <ProgressStatus $stage={currentProgress.stage}>{getCurrentStep(currentProgress)}</ProgressStatus>
+              <ProgressStatus $stage={currentProgress.stage}>
+                {getCurrentStep({ stage: currentProgress.stage })}
+              </ProgressStatus>
             </ProgressSection>
           )}
         </Content>

@@ -1,9 +1,9 @@
 import { useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
 import { webSocketManager, ProgressUpdate } from '../services/websocketManager';
 import { useQueueScrapeMutation } from '../services/scrapeApi';
+import { useAuth0 } from '@auth0/auth0-react';
 import { recipeKeys } from './useRecipeQueries';
 import {
   addJob,
@@ -20,7 +20,6 @@ import { RootState } from '../store';
 
 export const useScrapeProgress = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const activeJobs = useSelector(selectActiveJobs);
   const completedJobs = useSelector(selectCompletedJobs);
@@ -29,6 +28,7 @@ export const useScrapeProgress = () => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const [queueScrape, { isLoading: isQueueing }] = useQueueScrapeMutation();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const progressUpdateHandler = useRef<((update: ProgressUpdate) => void) | null>(null);
 
   // Set up progress update listener
@@ -41,8 +41,8 @@ export const useScrapeProgress = () => {
       if (update.stage === 'stored' && typeof update.recipeId === 'number') {
         // Invalidate recipes cache to refresh the list
         queryClient.invalidateQueries({ queryKey: recipeKeys.all });
-        // Navigate to the new recipe
-        navigate(`/recipe/${update.recipeId}`);
+        // Note: Navigation is now handled by the ScrapeReviewModal
+        // Don't auto-navigate here anymore
       }
     };
 
@@ -58,7 +58,7 @@ export const useScrapeProgress = () => {
         progressUpdateHandler.current = null;
       }
     };
-  }, [dispatch, navigate, queryClient]);
+  }, [dispatch, queryClient]);
 
   // Trigger a new scrape
   const triggerScrape = useCallback(
@@ -71,7 +71,8 @@ export const useScrapeProgress = () => {
 
         // Queue the scrape
         console.log('[Hook] → queueScrape', { url });
-        await queueScrape({ url }).unwrap();
+        const token = isAuthenticated ? await getAccessTokenSilently() : undefined;
+        await queueScrape({ url, token }).unwrap();
         console.log('[Hook] ✓ queued', { url });
 
         return { success: true, jobId };
@@ -114,7 +115,7 @@ export const useScrapeProgress = () => {
         };
       }
     },
-    [dispatch, queueScrape],
+    [dispatch, queueScrape, isAuthenticated, getAccessTokenSilently],
   );
 
   // Request queue status

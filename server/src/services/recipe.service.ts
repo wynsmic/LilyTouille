@@ -68,6 +68,39 @@ export class RecipeService {
   }
 
   /**
+   * Check if a user can delete a recipe
+   */
+  async canDeleteRecipe(id: number, requesterSub: string): Promise<{ allowed: boolean; reason?: string }> {
+    const repo = this.databaseService.getRecipeRepository();
+    const entity = await repo.findById(id);
+    if (!entity) return { allowed: false, reason: 'Recipe not found' };
+
+    // Allow if ownerUserId matches requester user id
+    try {
+      const userRepo = this.databaseService.getUserRepository();
+      const user = await userRepo.findByAuth0Id(requesterSub);
+      const ownerUserId = (entity as any).ownerUserId as number | undefined;
+      if (user && ownerUserId && user.id === ownerUserId) return { allowed: true };
+    } catch {
+      // User not found or other error - continue to return not allowed
+    }
+
+    // Future: allow admins by role from JWT
+    return { allowed: false, reason: 'Only the creator can delete this recipe' };
+  }
+
+  /**
+   * Mark recipe validated
+   */
+  async markRecipeValidated(id: number, _sub: string): Promise<boolean> {
+    const repo = this.databaseService.getRecipeRepository();
+    const entity = await repo.findById(id);
+    if (!entity) return false;
+    await repo.update(id, { validatedAt: new Date() } as any);
+    return true;
+  }
+
+  /**
    * Create a new recipe with chunks
    */
   async createRecipe(createRecipeDto: CreateRecipeDto): Promise<Recipe> {
@@ -189,6 +222,8 @@ export class RecipeService {
       aiResponse: entity.aiResponse,
       urlMappings: entity.urlMappings,
       scrapedAt: entity.scrapedAt,
+      ownerUserId: entity.ownerUserId,
+      validatedAt: entity.validatedAt,
     };
   }
 

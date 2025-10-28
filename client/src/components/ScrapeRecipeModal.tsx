@@ -176,9 +176,11 @@ const ProgressStatus = styled.div<{ $stage: string }>`
 type Props = {
   open: boolean;
   onClose: () => void;
+  initialUrl?: string;
+  autoStart?: boolean;
 };
 
-const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
+const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose, initialUrl, autoStart }) => {
   const navigate = useNavigate();
   const [url, setUrl] = useState('');
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
@@ -227,21 +229,37 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
         setCurrentJobId(null);
         setError(null);
         setIsSuccess(false);
+        // reset any transient state
       }
     }
   }, [open, isFailed]);
 
-  // Handle successful completion
+  // Auto-prefill and auto-start when requested (used for retry from detail page)
+  useEffect(() => {
+    if (open && initialUrl) {
+      setUrl(initialUrl);
+      if (autoStart && !currentJobId && !isScraping) {
+        (async () => {
+          const result = await triggerScrape(initialUrl);
+          if (result.success && result.jobId) {
+            setCurrentJobId(result.jobId);
+          } else {
+            setError(result.error || 'Failed to start scraping');
+          }
+        })();
+      }
+    }
+    // We intentionally omit dependencies that would retrigger while scraping
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialUrl, autoStart]);
+
+  // Handle successful completion - navigate directly to the recipe page
+  // The modal will close automatically when navigation happens since open prop will be false
   useEffect(() => {
     if (isCompleted && currentProgress?.recipeId) {
-      setIsSuccess(true);
-      // Close modal and navigate to recipe after a short delay
-      setTimeout(() => {
-        onClose();
-        navigate(`/recipe/${currentProgress.recipeId}`);
-      }, 2000);
+      navigate(`/recipe/${currentProgress.recipeId}`);
     }
-  }, [isCompleted, currentProgress, navigate, onClose]);
+  }, [isCompleted, currentProgress, navigate]);
 
   // Handle failure
   useEffect(() => {
@@ -294,8 +312,10 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
+  // Review/cancel/delete handlers removed; we navigate directly on completion
+
   return (
-    <Backdrop onClick={handleClose}>
+    <Backdrop onClick={() => handleClose()}>
       <Modal onClick={e => e.stopPropagation()}>
         <Header>Scrape recipe from URL</Header>
         <Content>
@@ -392,26 +412,46 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose }) => {
           )}
         </Content>
         <Actions>
-          <Button $variant="ghost" onClick={handleClose} disabled={!!isScraping}>
-            {isScraping ? 'Scraping...' : 'Cancel'}
-          </Button>
-          {isFailed ? (
-            <Button $variant="retry" onClick={handleRetry}>
-              Retry
-            </Button>
-          ) : (
+          {isCompleted ? (
             <Button
-              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                e.preventDefault();
-                void onSubmit(e);
+              onClick={() => {
+                onClose(); // Close modal first
+                if (currentProgress?.recipeId) {
+                  navigate(`/recipe/${currentProgress.recipeId}`);
+                }
               }}
-              disabled={isScraping || !url.trim()}
             >
-              {isScraping ? 'Scraping...' : 'Scrape'}
+              Review & Validate
             </Button>
+          ) : isFailed ? (
+            <>
+              <Button $variant="ghost" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button $variant="retry" onClick={handleRetry}>
+                Retry
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button $variant="ghost" onClick={handleClose} disabled={!!isScraping}>
+                {isScraping ? 'Scraping...' : 'Cancel'}
+              </Button>
+              <Button
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.preventDefault();
+                  void onSubmit(e);
+                }}
+                disabled={isScraping || !url.trim()}
+              >
+                {isScraping ? 'Scraping...' : 'Scrape'}
+              </Button>
+            </>
           )}
         </Actions>
       </Modal>
+
+      {/* Review modal removed; we navigate directly on completion */}
     </Backdrop>
   );
 };

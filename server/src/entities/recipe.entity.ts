@@ -39,6 +39,8 @@ export class RecipeEntity {
   @Column({ type: 'varchar', length: 255 })
   author: string;
 
+  // Auth ownership (internal user id linkage only)
+
   // Relationship to chunks
   @OneToMany(() => ChunkEntity, chunk => chunk.recipe, { cascade: true })
   chunks: ChunkEntity[];
@@ -70,4 +72,12 @@ export class RecipeEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Validation status
+  @Column({ type: 'timestamp', nullable: true })
+  validatedAt?: Date;
+
+  // Owner linkage: internal user id
+  @Column({ type: 'int', nullable: true })
+  ownerUserId?: number;
 }

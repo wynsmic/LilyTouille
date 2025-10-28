@@ -58,12 +58,12 @@ export class RedisService implements OnModuleDestroy {
   }
 
   // AI Queue operations ({url, html})
-  async pushAiTask(url: string, html: string): Promise<void> {
-    const task = JSON.stringify({ url, html });
+  async pushAiTask(url: string, html: string, ownerUserId?: number): Promise<void> {
+    const task = JSON.stringify({ url, html, ownerUserId });
     await this.redis.lpush(this.aiQueueKey, task);
   }
 
-  async popAiTask(): Promise<{ url: string; html: string } | null> {
+  async popAiTask(): Promise<{ url: string; html: string; ownerUserId?: number } | null> {
     const result = await this.redis.rpop(this.aiQueueKey);
     if (!result) return null;
 
@@ -74,7 +74,7 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
-  async blockPopAiTask(timeoutSeconds = 5): Promise<{ url: string; html: string } | null> {
+  async blockPopAiTask(timeoutSeconds = 5): Promise<{ url: string; html: string; ownerUserId?: number } | null> {
     const result = await this.redis.brpop(this.aiQueueKey, timeoutSeconds);
     if (!result) return null;
 

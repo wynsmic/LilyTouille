@@ -4,6 +4,10 @@ interface ScrapeRequest {
   url: string;
 }
 
+interface QueueScrapeRequest extends ScrapeRequest {
+  token?: string;
+}
+
 interface ScrapeResponse {
   message: string;
   filename: string;
@@ -35,11 +39,12 @@ export const scrapeApi = createApi({
         body,
       }),
     }),
-    queueScrape: builder.mutation<QueueScrapeResponse, ScrapeRequest>({
-      query: body => ({
+    queueScrape: builder.mutation<QueueScrapeResponse, QueueScrapeRequest>({
+      query: ({ token, ...body }) => ({
         url: '/scrape/queue',
         method: 'POST',
         body,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       }),
       invalidatesTags: ['QueueStatus'],
     }),

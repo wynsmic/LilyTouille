@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import { RootState } from '../store';
 import {
   setRecipes,
@@ -10,7 +11,6 @@ import {
   filterRecipes,
   setSearchQuery,
   setSelectedTags,
-  deleteRecipe,
 } from '../store/recipeSlice';
 import { useRecipesQuery } from './useRecipeQueries';
 import { recipeApi } from '../services/api';
@@ -18,6 +18,7 @@ import { recipeApi } from '../services/api';
 export const useRecipes = () => {
   const dispatch = useDispatch();
   const state = useSelector((state: RootState) => state.recipes);
+  const queryClient = useQueryClient();
 
   // Use React Query to fetch recipes
   const {
@@ -96,18 +97,15 @@ export const useRecipes = () => {
     [state.favoriteRecipeIds],
   );
 
-  // Delete a recipe
+  // Delete a recipe (no optimistic update; invalidate cache to refetch)
   const deleteRecipeById = useCallback(
-    async (recipeId: number) => {
-      try {
-        await recipeApi.deleteRecipe(recipeId);
-        dispatch(deleteRecipe(recipeId));
-      } catch (error) {
-        console.error('Failed to delete recipe:', error);
-        throw error;
-      }
+    async (recipeId: number, token?: string) => {
+      await recipeApi.deleteRecipe(recipeId, token);
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      // Optionally, force an immediate refetch
+      // void refetchRecipes();
     },
-    [dispatch],
+    [queryClient],
   );
 
   return {
