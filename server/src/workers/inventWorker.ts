@@ -241,50 +241,6 @@ async function storeInventedRecipe(
   return savedRecipe;
 }
 
-async function runDirect(task: InventTask): Promise<void> {
-  const redis = new RedisService();
-  try {
-    const result = await processRecipeInvention(task);
-    const savedRecipe = await storeInventedRecipe(result.recipe, task, result.aiQuery, result.aiResponse);
-
-    await redis.publishProgress({
-      url: task.id, // Use task ID as URL for progress tracking
-      stage: 'ai_processed',
-      timestamp: Date.now(),
-      recipeId: savedRecipe.id,
-      userId: task.userId,
-    });
-
-    await redis.publishProgress({
-      url: task.id,
-      stage: 'stored',
-      timestamp: Date.now(),
-      recipeId: savedRecipe.id,
-      userId: task.userId,
-    });
-
-    logger.info('recipe invention + store succeeded', {
-      taskId: task.id,
-      title: task.title,
-    });
-  } catch (err) {
-    const message = (err as Error).message || String(err);
-    await redis.publishProgress({
-      url: task.id,
-      stage: 'failed',
-      timestamp: Date.now(),
-      error: message,
-      userId: task.userId,
-    });
-    logger.error('recipe invention failed', {
-      taskId: task.id,
-      error: message,
-    });
-  } finally {
-    await redis.close();
-  }
-}
-
 async function runQueue(): Promise<void> {
   const redis = new RedisService();
 
@@ -356,13 +312,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const [, , taskJson] = process.argv;
-  if (taskJson) {
-    const task = JSON.parse(taskJson) as InventTask;
-    await runDirect(task);
-  } else {
-    await runQueue();
-  }
+  await runQueue();
 }
 
 // Only run main if not in test environment

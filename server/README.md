@@ -13,7 +13,7 @@ See `WORKERS.md` for worker architecture, operations, and error handling.
 ### Architecture (clean)
 
 - Controller → Service → Worker
-  - `controllers/scraper.controller.ts`: enqueue or direct scrape
+  - `controllers/scraper.controller.ts`: enqueue URLs
   - `services/scraper.service.ts`: direct HTML fetch-to-disk
   - `workers/scrapeWorker.ts`: robust scrape (axios → puppeteer fallback)
   - `workers/aiWorker.ts`: call AI API, validate JSON, store
@@ -123,7 +123,6 @@ npx ts-node src/workers/aiWorker.ts
 ### Key endpoints
 
 - `GET /api/health` – liveness
-- `POST /api/scrape` – direct fetch-to-disk (debug)
 - `POST /api/scrape/queue` – enqueue URL
 - `GET /api/scrape/queue/status` – queue lengths
 

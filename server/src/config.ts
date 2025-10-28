@@ -21,7 +21,7 @@ export const config = {
   ai: {
     apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '',
     endpoint: process.env.AI_API_ENDPOINT || 'https://api.openai.com/v1/chat/completions',
-    model: process.env.AI_MODEL || 'gpt-4o-mini',
+    model: process.env.AI_MODEL || 'gpt-4o',
     concurrency: Number(process.env.AI_CONCURRENCY || 1),
   },
   scrape: {

@@ -39,31 +39,6 @@ async function scrapeUrl(url: string): Promise<string> {
   }
 }
 
-// Process a single URL directly (useful for CLI/testing)
-async function runDirect(url: string): Promise<void> {
-  const redis = new RedisService();
-  try {
-    // Claim this URL to prevent duplicate work across workers
-    const claimed = await redis.markScrapeInProgress(url);
-    if (!claimed) {
-      logger.info('scrape already in progress elsewhere', { url });
-      return;
-    }
-
-    const html = await scrapeUrl(url);
-    await redis.pushAiTask(url, html);
-    await redis.publishProgress({
-      url,
-      stage: 'scraped',
-      timestamp: Date.now(),
-    });
-    logger.info('scrape succeeded', { url });
-  } finally {
-    await redis.clearScrapeInProgress(url);
-    await redis.close();
-  }
-}
-
 async function runQueue(): Promise<void> {
   const redis = new RedisService();
 
@@ -110,12 +85,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const [, , url] = process.argv;
-  if (url) {
-    await runDirect(url);
-  } else {
-    await runQueue();
-  }
+  await runQueue();
 }
 
 main().catch(err => {
