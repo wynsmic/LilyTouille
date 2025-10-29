@@ -146,7 +146,16 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   async getRecipeById(id: number): Promise<Recipe | null> {
     const repository = this.getRecipeRepository();
     const entity = await repository.findById(id);
-    return entity ? this.entityToRecipe(entity) : null;
+    if (!entity) return null;
+
+    // Log for debugging
+    console.log('[DatabaseService] Recipe entity:', {
+      id: entity.id,
+      validatedAt: entity.validatedAt,
+      ownerUserId: entity.ownerUserId,
+    });
+
+    return this.entityToRecipe(entity);
   }
 
   // New methods for enhanced functionality

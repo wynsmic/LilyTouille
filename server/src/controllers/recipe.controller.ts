@@ -92,6 +92,13 @@ export class RecipeController {
       throw new HttpException('Recipe not found', HttpStatus.NOT_FOUND);
     }
 
+    // Log for debugging
+    console.log('[RecipeController] Returning recipe:', {
+      id: recipe.id,
+      validatedAt: (recipe as any).validatedAt,
+      ownerUserId: (recipe as any).ownerUserId,
+    });
+
     return {
       success: true,
       data: recipe,
