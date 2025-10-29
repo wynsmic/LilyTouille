@@ -92,7 +92,7 @@ export interface Recipe {
   scrapedAt?: string;
   // Ownership & validation
   ownerUserId?: number;
-  validatedAt?: string;
+  validatedAt?: string | null;
 }
 
 // Legacy interface for backward compatibility

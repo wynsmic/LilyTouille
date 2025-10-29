@@ -45,7 +45,7 @@ export interface Recipe {
   scrapedAt?: string;
   // Ownership & validation
   ownerUserId?: number;
-  validatedAt?: string;
+  validatedAt?: string | null;
 }
 
 export interface RecipeFilters {

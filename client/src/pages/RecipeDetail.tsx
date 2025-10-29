@@ -4,11 +4,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRecipes } from '../hooks';
-import { useUser } from '../contexts/useUser';
 import { useRecipeQuery } from '../hooks/useRecipeQueries';
 import { Recipe, recipeApi } from '../services/api';
 import Layout from '../components/Layout';
-import { RecipeValidationModal, ScrapeRecipeModal } from '../components';
+import { RecipeValidationModal, ScrapeRecipeModal, InventRecipeModal } from '../components';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Container = styled.div`
@@ -538,14 +537,14 @@ const ModalMetadataLabel = styled.div`
 const RecipeDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toggleFavoriteRecipe, isFavorite } = useRecipes();
+  const { toggleFavoriteRecipe, isFavorite, deleteRecipeById, fetchRecipes } = useRecipes();
   const { getAccessTokenSilently } = useAuth0();
-  const { user } = useUser();
   const queryClient = useQueryClient();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isScrapeModalOpen, setIsScrapeModalOpen] = useState(false);
+  const [isInventModalOpen, setIsInventModalOpen] = useState(false);
 
   // Fetch recipe directly from API instead of using cached data
   const recipeId = parseInt(id || '0');
@@ -553,16 +552,17 @@ const RecipeDetail: React.FC = () => {
 
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
-  // Check if user is the owner and recipe needs validation
-  const needsValidation =
-    !!recipe && !recipe.validatedAt && (recipe.ownerUserId == null || (!!user && user.id === recipe.ownerUserId));
+  // Check if recipe needs validation
+  // Show modal for any recipe that doesn't have validatedAt (both created and scraped)
+  const needsValidation = !!recipe && (recipe.validatedAt === null || recipe.validatedAt === undefined);
 
-  // Show validation modal when recipe loads and needs validation (only once)
+  // Show validation modal when recipe loads and needs validation
   useEffect(() => {
-    if (!isLoading) {
-      setIsValidationModalOpen(needsValidation);
+    if (!isLoading && needsValidation && recipe) {
+      console.log('Opening validation modal for recipe:', recipe.id, 'validatedAt:', recipe.validatedAt);
+      setIsValidationModalOpen(true);
     }
-  }, [needsValidation, isLoading]);
+  }, [isLoading, needsValidation, recipe]);
 
   // Validate recipe mutation
   const validateMutation = useMutation({
@@ -580,10 +580,12 @@ const RecipeDetail: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: async (recipeId: number) => {
       const token = await getAccessTokenSilently();
-      await recipeApi.deleteRecipe(recipeId, token);
+      await deleteRecipeById(recipeId, token);
     },
     onSuccess: () => {
+      // Navigate to home and refetch recipes to show updated list
       navigate('/');
+      fetchRecipes();
     },
   });
 
@@ -593,8 +595,21 @@ const RecipeDetail: React.FC = () => {
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this recipe?')) {
+    if (window.confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) {
       deleteMutation.mutate(recipeId);
+    }
+  };
+
+  const handleRetry = () => {
+    if (!recipe) return;
+
+    if (recipe.sourceUrl) {
+      // Scraped recipe - restart scraping and open scrape modal
+      setIsScrapeModalOpen(true);
+    } else {
+      // Created recipe - open invent modal to allow user to recreate
+      setIsInventModalOpen(true);
+      setIsValidationModalOpen(false);
     }
   };
 
@@ -1012,13 +1027,7 @@ const RecipeDetail: React.FC = () => {
             onValidate={handleValidate}
             onCancel={() => {}}
             onDelete={handleDelete}
-            onRetry={() => {
-              if (recipe.sourceUrl) {
-                setIsScrapeModalOpen(true);
-              } else {
-                alert('No source URL available to retry scraping.');
-              }
-            }}
+            onRetry={handleRetry}
             isLoading={validateMutation.isPending || deleteMutation.isPending}
           />
         )}
@@ -1030,6 +1039,9 @@ const RecipeDetail: React.FC = () => {
           initialUrl={recipe?.sourceUrl}
           autoStart={true}
         />
+
+        {/* Invent Modal for Retry */}
+        <InventRecipeModal open={isInventModalOpen} onClose={() => setIsInventModalOpen(false)} />
       </Container>
     </Layout>
   );

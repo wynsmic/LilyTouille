@@ -212,7 +212,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
         ? typeof entity.validatedAt === 'string'
           ? entity.validatedAt
           : entity.validatedAt.toISOString()
-        : undefined,
+        : null,
     } as Recipe;
   }
 
