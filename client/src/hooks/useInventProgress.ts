@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth0 } from '@auth0/auth0-react';
 import { webSocketManager, ProgressUpdate } from '../services/websocketManager';
 import { useInventRecipeMutation } from '../services/inventApi';
 import { recipeKeys } from './useRecipeQueries';
@@ -27,6 +28,7 @@ export const useInventProgress = () => {
   const totalJobs = useSelector(selectTotalJobs);
 
   const [inventRecipe, { isLoading: isInventing }] = useInventRecipeMutation();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const progressUpdateHandler = useRef<((update: ProgressUpdate) => void) | null>(null);
 
   // Set up progress update listener
@@ -82,8 +84,17 @@ export const useInventProgress = () => {
         );
 
         // Queue the invention
-        console.log('[Hook] → inventRecipe', { title: inventData.title });
-        const result = await inventRecipe(inventData).unwrap();
+        console.log('[Hook] → inventRecipe', { description: inventData.description });
+        const token = isAuthenticated ? await getAccessTokenSilently() : undefined;
+        const result = await inventRecipe({
+          title: inventData.title,
+          description: inventData.description,
+          difficulty: inventData.difficulty,
+          servings: inventData.servings,
+          dietaryRestrictions: inventData.dietaryRestrictions,
+          cookingMethods: inventData.cookingMethods,
+          token,
+        }).unwrap();
         console.log('[Hook] ✓ queued', { taskId: result.taskId });
 
         return { success: true, jobId };
@@ -95,7 +106,7 @@ export const useInventProgress = () => {
         };
       }
     },
-    [dispatch, inventRecipe],
+    [dispatch, inventRecipe, isAuthenticated, getAccessTokenSilently],
   );
 
   // Request queue status

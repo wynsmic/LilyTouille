@@ -75,13 +75,21 @@ export class RecipeService {
     const entity = await repo.findById(id);
     if (!entity) return { allowed: false, reason: 'Recipe not found' };
 
+    const ownerUserId = (entity as any).ownerUserId as number | undefined;
+    console.log(`[canDeleteRecipe] Recipe ${id} ownerUserId: ${ownerUserId}, requesterSub: ${requesterSub}`);
+
     // Allow if ownerUserId matches requester user id
     try {
       const userRepo = this.databaseService.getUserRepository();
       const user = await userRepo.findByAuth0Id(requesterSub);
-      const ownerUserId = (entity as any).ownerUserId as number | undefined;
-      if (user && ownerUserId && user.id === ownerUserId) return { allowed: true };
-    } catch {
+      console.log(`[canDeleteRecipe] Found user: ${user?.id}, ownerUserId: ${ownerUserId}`);
+
+      if (user && ownerUserId && user.id === ownerUserId) {
+        console.log(`[canDeleteRecipe] Access granted: user.id (${user.id}) === ownerUserId (${ownerUserId})`);
+        return { allowed: true };
+      }
+    } catch (error) {
+      console.error('[canDeleteRecipe] Error checking user:', error);
       // User not found or other error - continue to return not allowed
     }
 

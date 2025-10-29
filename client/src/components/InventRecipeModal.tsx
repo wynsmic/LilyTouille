@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useInventProgress } from '../hooks/useInventProgress';
-import { RecipeDifficulty } from '../services/inventApi';
 import AnimationIcon from './AnimationIcon';
 
 const Backdrop = styled.div`
@@ -464,10 +463,10 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
     try {
       // Convert 0-100 range to difficulty enum
-      const getDifficultyEnum = (value: number) => {
-        if (value < 40) return RecipeDifficulty.EASY;
-        if (value < 80) return RecipeDifficulty.MEDIUM;
-        return RecipeDifficulty.HARD;
+      const getDifficultyEnum = (value: number): 'easy' | 'medium' | 'hard' => {
+        if (value < 40) return 'easy';
+        if (value < 80) return 'medium';
+        return 'hard';
       };
 
       const result = await triggerInvent({
@@ -497,10 +496,10 @@ const InventRecipeModal: React.FC<Props> = ({ open, onClose }) => {
 
     try {
       // Convert 0-100 range to difficulty enum
-      const getDifficultyEnum = (value: number) => {
-        if (value < 40) return RecipeDifficulty.EASY;
-        if (value < 80) return RecipeDifficulty.MEDIUM;
-        return RecipeDifficulty.HARD;
+      const getDifficultyEnum = (value: number): 'easy' | 'medium' | 'hard' => {
+        if (value < 40) return 'easy';
+        if (value < 80) return 'medium';
+        return 'hard';
       };
 
       const result = await triggerInvent({

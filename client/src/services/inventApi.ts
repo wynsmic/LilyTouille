@@ -1,10 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-export enum RecipeDifficulty {
-  EASY = 'easy',
-  MEDIUM = 'medium',
-  HARD = 'hard',
-}
+export const RecipeDifficulty = {
+  EASY: 'easy',
+  MEDIUM: 'medium',
+  HARD: 'hard',
+} as const;
+
+export type RecipeDifficulty = (typeof RecipeDifficulty)[keyof typeof RecipeDifficulty];
 
 export enum RecipeCuisine {
   FRENCH = 'french',
@@ -33,7 +35,7 @@ export enum RecipeType {
 }
 
 export interface InventRecipeRequest {
-  title: string;
+  title?: string;
   description?: string;
   cuisine?: RecipeCuisine;
   type?: RecipeType;
@@ -45,6 +47,7 @@ export interface InventRecipeRequest {
   dietaryRestrictions?: string[];
   cookingMethods?: string[];
   specialInstructions?: string;
+  token?: string;
 }
 
 export interface InventRecipeResponse {
@@ -69,10 +72,11 @@ export const inventApi = createApi({
   tagTypes: ['QueueStatus'],
   endpoints: builder => ({
     inventRecipe: builder.mutation<InventRecipeResponse, InventRecipeRequest>({
-      query: body => ({
+      query: ({ token, ...body }) => ({
         url: '/invent',
         method: 'POST',
         body,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       }),
       invalidatesTags: ['QueueStatus'],
     }),

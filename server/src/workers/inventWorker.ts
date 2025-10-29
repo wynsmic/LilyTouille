@@ -224,6 +224,20 @@ async function storeInventedRecipe(
   const db = new DatabaseService();
   await db.initialize();
 
+  // Resolve ownerUserId if userId (Auth0 sub) is provided
+  let ownerUserId: number | undefined;
+  if (task.userId) {
+    try {
+      const userRepo = db.getUserRepository();
+      const user = await userRepo.findByAuth0Id(task.userId);
+      if (user) {
+        ownerUserId = user.id;
+      }
+    } catch (err) {
+      logger.warn('Failed to resolve user ID for invent task', { error: err });
+    }
+  }
+
   // Prepare recipe data for the database
   const recipeForDatabase: RecipeType = {
     ...recipe,
@@ -235,6 +249,11 @@ async function storeInventedRecipe(
     urlMappings: undefined,
     scrapedAt: new Date().toISOString(),
   };
+
+  // Set ownerUserId if available
+  if (ownerUserId) {
+    (recipeForDatabase as any).ownerUserId = ownerUserId;
+  }
 
   // Save recipe with chunks
   const savedRecipe = await db.saveRecipe(recipeForDatabase);
