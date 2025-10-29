@@ -12,7 +12,7 @@ import {
   setSearchQuery,
   setSelectedTags,
 } from '../store/recipeSlice';
-import { useRecipesQuery } from './useRecipeQueries';
+import { useRecipesQuery, recipeKeys } from './useRecipeQueries';
 import { recipeApi } from '../services/api';
 
 export const useRecipes = () => {
@@ -97,13 +97,14 @@ export const useRecipes = () => {
     [state.favoriteRecipeIds],
   );
 
-  // Delete a recipe (no optimistic update; invalidate cache to refetch)
+  // Delete a recipe: remove its detail cache and refresh only list queries
   const deleteRecipeById = useCallback(
     async (recipeId: number, token?: string) => {
       await recipeApi.deleteRecipe(recipeId, token);
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-      // Optionally, force an immediate refetch
-      // void refetchRecipes();
+      // Remove the specific detail query to prevent any refetch of the deleted recipe
+      queryClient.removeQueries({ queryKey: recipeKeys.detail(recipeId), exact: true });
+      // Refresh lists without touching detail queries
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists() });
     },
     [queryClient],
   );

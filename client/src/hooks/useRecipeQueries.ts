@@ -23,11 +23,11 @@ export const useRecipesQuery = (filters?: RecipeFilters) => {
 };
 
 // Hook to fetch a single recipe by ID
-export const useRecipeQuery = (id: number) => {
+export const useRecipeQuery = (id: number, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: recipeKeys.detail(id),
     queryFn: () => recipeApi.getRecipeById(id),
-    enabled: !!id,
+    enabled: !!id && (options?.enabled ?? true),
   });
 };
 

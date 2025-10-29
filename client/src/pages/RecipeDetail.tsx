@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRecipes } from '../hooks';
-import { useRecipeQuery } from '../hooks/useRecipeQueries';
+import { useRecipeQuery, recipeKeys } from '../hooks/useRecipeQueries';
 import { Recipe, recipeApi } from '../services/api';
 import Layout from '../components/Layout';
 import { RecipeValidationModal, ScrapeRecipeModal, InventRecipeModal } from '../components';
@@ -545,10 +545,11 @@ const RecipeDetail: React.FC = () => {
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isScrapeModalOpen, setIsScrapeModalOpen] = useState(false);
   const [isInventModalOpen, setIsInventModalOpen] = useState(false);
+  const [disableFetch, setDisableFetch] = useState(false);
 
   // Fetch recipe directly from API instead of using cached data
   const recipeId = parseInt(id || '0');
-  const { data: recipe, isLoading, error } = useRecipeQuery(recipeId);
+  const { data: recipe, isLoading, error } = useRecipeQuery(recipeId, { enabled: !disableFetch });
 
   const isRecipeFavorite = recipe ? isFavorite(recipe.id.toString()) : false;
 
@@ -572,7 +573,7 @@ const RecipeDetail: React.FC = () => {
     },
     onSuccess: () => {
       setIsValidationModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
+      queryClient.invalidateQueries({ queryKey: recipeKeys.detail(recipeId) });
     },
   });
 
@@ -596,6 +597,7 @@ const RecipeDetail: React.FC = () => {
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this recipe? This action cannot be undone.')) {
+      setDisableFetch(true);
       deleteMutation.mutate(recipeId);
     }
   };
