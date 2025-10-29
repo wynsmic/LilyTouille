@@ -39,7 +39,7 @@ export interface UpdateUserPreferencesRequest {
   };
 }
 
-interface UserContextType {
+export interface UserContextType {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
@@ -203,14 +203,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       // User doesn't exist in our database, create them
       createUserMutation.mutate();
     }
-  }, [userData, isAuthenticated, auth0User, userLoading, createUserMutation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData, isAuthenticated, auth0User, userLoading]);
 
   // Update i18n language when user language changes
   useEffect(() => {
     if (user?.language) {
       i18n.changeLanguage(user.language);
     }
-  }, [user?.language, i18n]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.language]);
 
   const updatePreferences = async (preferences: UpdateUserPreferencesRequest) => {
     await updatePreferencesMutation.mutateAsync(preferences);

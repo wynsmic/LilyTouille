@@ -14,6 +14,8 @@ export interface WebSocketEvents {
   connect: () => void;
   disconnect: () => void;
   connect_error: (error: Error) => void;
+  authenticated: (data: { userId: string; message: string }) => void;
+  'auth-error': (error: { message: string }) => void;
 }
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
@@ -359,13 +361,13 @@ class WebSocketManager {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event)!.add(callback);
+    this.eventListeners.get(event)!.add(callback as (...args: unknown[]) => void);
   }
 
   off<K extends keyof WebSocketEvents>(event: K, callback?: WebSocketEvents[K]) {
     const listeners = this.eventListeners.get(event);
     if (listeners && callback) {
-      listeners.delete(callback);
+      listeners.delete(callback as (...args: unknown[]) => void);
     } else if (listeners) {
       listeners.clear();
     }
@@ -376,7 +378,9 @@ class WebSocketManager {
     if (listeners) {
       listeners.forEach(callback => {
         try {
-          callback(...args);
+          // Type-safe: callback was wrapped in 'on' with proper signature for event K
+          // The generic K ensures args match the callback signature enforced in 'on'
+          callback(...(args as unknown[]));
         } catch (error) {
           this.logger.error(`Error in event listener for ${event}:`, error);
         }

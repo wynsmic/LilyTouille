@@ -187,7 +187,7 @@ const ScrapeRecipeModal: React.FC<Props> = ({ open, onClose, initialUrl, autoSta
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const getCurrentStep = (currentProgress: { stage: string; [key: string]: unknown }) => {
+  const getCurrentStep = (currentProgress: { stage: string } | null | undefined) => {
     if (!currentProgress) return null;
 
     // Map of stages to their "next" or "current" step

@@ -84,7 +84,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children, 
       // Note: We don't disconnect here as the connection should persist
       // until the page is closed or explicitly disconnected
     };
-  }, [autoConnect, isAuthenticated, getAccessTokenSilently, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect, isAuthenticated]);
 
   const contextValue: WebSocketContextType = {
     isConnected: webSocketManager.isConnected(),

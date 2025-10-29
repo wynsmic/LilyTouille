@@ -17,7 +17,8 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     // Load recipes using the hook
     fetchRecipes();
-  }, [fetchRecipes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Router>

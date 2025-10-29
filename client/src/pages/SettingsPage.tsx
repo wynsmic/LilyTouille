@@ -224,7 +224,11 @@ const SettingsPage: React.FC = () => {
           <SettingItem>
             <SettingLabel htmlFor="language">{t('settings.language')}</SettingLabel>
             <SettingDescription>{t('settings.languageDescription')}</SettingDescription>
-            <Select id="language" value={language} onChange={e => setLanguage(e.target.value)}>
+            <Select
+              id="language"
+              value={language}
+              onChange={e => setLanguage(e.target.value as 'en' | 'fr' | 'es' | 'de' | 'it')}
+            >
               <option value="en">{t('settings.english')}</option>
               <option value="fr">{t('settings.french')}</option>
               <option value="es">{t('settings.spanish')}</option>
